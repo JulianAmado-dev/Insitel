@@ -1,0 +1,16 @@
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+/* Dark theme variables - Para usar más adelante con el theme provider */
+[data-theme="dark"] {
+  --background-color: #111827;
+  --card-background: #1f2937;
+  --border-color: #374151;
+  --hover-color: #374151;
+  --primary-color: #60a5fa;
+  --muted-color: #9ca3af;
+}

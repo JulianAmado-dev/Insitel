@@ -1,0 +1,162 @@
+/* Estilos para los iconos de pasos */
+.registration_form {
+  align-items: center;
+  flex-direction: column;
+  display: flex;
+  width: auto;
+}
+.step-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+  transition: var(--transition);
+  position: relative;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.active .step-icon {
+  background-color: var(--primary-color);
+  border-color: var(--primary-dark);
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+.completed .step-icon {
+  background-color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.form_data-type {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 25px;
+  width: fit-content;
+  gap: 90px;
+}
+#separator2 {
+  right: 0;
+  animation: PulseWidth 4s ease-in-out infinite;
+}
+#separator1 {
+  left: 0;
+  animation: PulseWidth 4s ease-in-out infinite;
+}
+.separator {
+  bottom: -5px;
+  width: 0%;
+  height: 3px;
+  border-radius: 2px;
+  background-color: orangered;
+  position: absolute;
+}
+@keyframes PulseWidth {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 50%;
+  }
+}
+.form_data-type img {
+  font-size: 25px;
+}
+.data_block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.data_block-column {
+  padding: 0 25px;
+}
+.data_block-column input,
+label {
+  margin: 0px;
+}
+.data_block-column label {
+  display: flex;
+  position: relative;
+  left: 25px;
+}
+
+/* Estilos para select */
+.data_block-column input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  appearance: none;
+}
+.data_block-element {
+  margin-bottom: 50px;
+  gap: 5px;
+  transition: var(--transition);
+}
+#column2-step2{
+  align-items: end;
+}
+.select-field:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.input_error_message {
+  position: absolute;
+}
+
+/* Estilos para botones específicos */
+.continue-button {
+  background-color: var(--primary-color);
+  color: white;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-button {
+  background-color: var(--text-light);
+  color: white;
+}
+
+.submit-button {
+  background-color: var(--success-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Mejoras para responsive */
+@media (max-width: 600px) {
+  .register_container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .form_data-type {
+    padding: 0;
+  }
+
+  .form_data-type section {
+    width: auto;
+  }
+
+  .buttons-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .buttons-section button {
+    width: 100%;
+  }
+}

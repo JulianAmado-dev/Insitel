@@ -1,0 +1,177 @@
+.container{
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  background-color: rgb(255 255 255);
+  align-items: center;
+  justify-content: space-between;
+  width: 95dvw;
+  height: 90dvh;
+  padding: 1%;
+  left: 2.5%;
+  margin-top: 5dvh;
+  border-radius: 40px;
+}
+.branding-section{
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(rgb(196, 124, 29), #d3b4b4);
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  padding: 4% 2% 4% 3%;
+  justify-content: end;
+  gap: 30px;
+  text-align: start;
+}
+.branding-section h1{
+  font-size: 2.5em;
+}
+.login-section{
+  height: 100%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 2% 8%;
+  align-items: center;
+}
+.login-section .logo-login{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px ;
+  margin-bottom: 130px;
+}
+.titulo-login-section{
+  margin-bottom: 7%;
+}
+.login_items{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.login_items form{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.login_items label{
+  height: 95px;
+  position: top;
+  margin-bottom: 40px ;
+}
+.login_items .titulo-login-section h1{
+  text-align: center;
+  font-size: 2.5rem;
+}
+.login_items .titulo-login-section p{
+  text-align: center;
+  font-size: 0.8rem;
+}
+.label_p{
+  text-align: left;
+  position: relative;
+  top: 12px;
+  left: 15px;
+  padding: 0 15px;
+  border: 1px, solid, rgb(95, 67, 7);
+  border-radius: 25px;
+  width: fit-content;
+  background-color:  rgba(255, 255, 255, 0.637);
+}
+.login_item{
+  background-color: rgba(196, 124, 29, 0.3);
+  border-radius: 15px;
+  display: flex;
+  flex-direction: row;
+  height: 70px;
+  width: 420px;
+  padding: 20px 30px;
+  align-items: center;
+}
+section img{
+  width: 40px;
+  height: 40px;
+}
+section input{
+  height: 30px;
+  border-radius: 12px;
+  border-color: transparent;
+  margin: 0 25px;
+  padding: 15px;
+  width: 100%;
+}
+section input:focus{
+  border-color: transparent;
+}
+.login_item.onRestore{
+  background-color: rgba(196, 124, 29, 0.3);
+  border-radius: 15px;
+  display: flex;
+  flex-direction: row;
+  height: 70px;
+  padding: 20px 30px;
+  align-items: center;
+}
+.password_eye{
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  border-radius: 120px;
+  background-color: transparent;
+  cursor: pointer;
+}
+.password_eye img:focus{
+  border-color: transparent;
+}
+.password_eye img{
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+.recordar_password {
+  display: flex;
+  margin: 0 0 50px 0;
+  align-items: anchor-center;
+  text-align: left;
+  width: 100%;
+  font-size: 0.8rem;
+}
+.recordar_password span{
+  padding-left: 6px;
+  font-weight: 700;
+  color: rgb(25, 107, 155);
+  font-size: 0.9rem;
+}
+.botones_inferiores{
+  padding: 0 25px 0 25px;
+  display: flex;
+  justify-content: space-around;
+}
+.botones_inferiores button{
+  border-radius: 12px;
+}
+.botones_inferiores button:hover{
+  background-color: gray;
+  color: aliceblue;
+}
+.recordar_click.disabled{
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: default;
+}
+.input_error{
+  border: 1px, solid, red;
+}
+.input_error_message{
+  font-size: 0.8rem;
+  text-align: left;
+  position: relative;
+  padding-left: 30px;
+  color: red;
+}

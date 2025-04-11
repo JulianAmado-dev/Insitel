@@ -1,0 +1,799 @@
+/* Estilos generales */
+.unauthorized-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #0f172a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+    "Helvetica Neue", sans-serif;
+  color: #f8fafc;
+}
+
+/* Fondo de código binario */
+.code-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.binary-code {
+  position: absolute;
+  color: #93c5fd;
+  opacity: 0.3;
+  font-family: monospace;
+  font-weight: bold;
+  animation: fallDown linear infinite;
+}
+
+@keyframes fallDown {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+/* Cuadrícula de seguridad */
+.security-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.grid-line {
+  position: absolute;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.horizontal-line-1,
+.horizontal-line-2,
+.horizontal-line-3 {
+  width: 100%;
+  height: 1px;
+  animation: scanLine 8s infinite linear;
+}
+
+.horizontal-line-1 {
+  top: 25%;
+}
+
+.horizontal-line-2 {
+  top: 50%;
+}
+
+.horizontal-line-3 {
+  top: 75%;
+}
+
+.vertical-line-1,
+.vertical-line-2,
+.vertical-line-3 {
+  width: 1px;
+  height: 100%;
+}
+
+.vertical-line-1 {
+  left: 25%;
+}
+
+.vertical-line-2 {
+  left: 50%;
+}
+
+.vertical-line-3 {
+  left: 75%;
+}
+
+@keyframes scanLine {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Cámara de seguridad */
+.security-camera {
+  position: absolute;
+  top: 50px;
+  right: 50px;
+  z-index: 2;
+  animation: cameraMove 10s infinite alternate;
+}
+
+.camera-body {
+  width: 60px;
+  height: 30px;
+  background-color: #64748b;
+  border-radius: 5px;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.camera-lens {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: #000;
+  border-radius: 50%;
+  top: 2px;
+  left: 5px;
+  overflow: hidden;
+}
+
+.camera-iris {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: radial-gradient(circle, #3b82f6, #000);
+  border-radius: 50%;
+  top: 5px;
+  left: 5px;
+  animation: cameraIris 3s infinite alternate;
+}
+
+.camera-light {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  top: 5px;
+  right: 5px;
+  animation: blink 2s infinite;
+}
+
+.camera-mount {
+  width: 10px;
+  height: 40px;
+  background-color: #94a3b8;
+  position: absolute;
+  top: 30px;
+  left: 25px;
+}
+
+@keyframes cameraMove {
+  0% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(10deg);
+  }
+  40% {
+    transform: rotate(-5deg);
+  }
+  60% {
+    transform: rotate(5deg);
+  }
+  80% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes cameraIris {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* Sistema de seguridad principal */
+.security-system {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+  z-index: 3;
+}
+
+/* Puerta de bóveda - Nuevo diseño cuadrado */
+.vault-door {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  background-color: #000000;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: pulse 4s infinite alternate;
+}
+
+.vault-logo {
+  width: 100%;
+  height: 70%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.sigar-logo-svg {
+  width: 75%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Animación para el logo */
+.logo-symbol {
+  animation: none;
+}
+
+@keyframes rotateLogo {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.vault-wave-container {
+  width: 100%;
+  height: 30%;
+  background-color: #111111;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  }
+  100% {
+    transform: scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Mensaje de seguridad */
+.security-message {
+  max-width: 500px;
+  text-align: center;
+  animation: fadeIn 1s ease;
+  position: relative;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.security-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.badge-icon {
+  width: 80px;
+  height: 80px;
+  background-color: #b91c1c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  animation: pulseBadge 2s infinite alternate;
+}
+
+.lock {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.lock-body {
+  position: absolute;
+  width: 30px;
+  height: 20px;
+  background-color: #cbd5e1;
+  border-radius: 5px;
+  bottom: 0;
+  left: 5px;
+}
+
+.lock-shackle {
+  position: absolute;
+  width: 20px;
+  height: 25px;
+  border: 5px solid #cbd5e1;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  top: 0;
+  left: 5px;
+}
+
+.badge-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 2px;
+}
+
+@keyframes pulseBadge {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  }
+  100% {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.7);
+  }
+}
+
+.error-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.error-description {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.login-button,
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.login-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.home-button {
+  background-color: transparent;
+  color: #f8fafc;
+  border: 1px solid #94a3b8;
+}
+
+.login-button:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.home-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+}
+
+.key-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.key-head {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid white;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+}
+
+.key-shaft {
+  position: absolute;
+  width: 15px;
+  height: 2px;
+  background-color: white;
+  top: 5px;
+  left: 5px;
+}
+
+.key-teeth {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid white;
+  border-right: 2px solid white;
+  top: 3px;
+  right: 0;
+}
+
+.home-icon {
+  transition: all 0.3s ease;
+}
+
+.login-button:hover .key-icon {
+  transform: translateX(3px) rotate(10deg);
+}
+
+.home-button:hover .home-icon {
+  transform: translateY(-3px);
+}
+
+/* Escáner de seguridad */
+.security-scan {
+  width: 100%;
+  height: 5px;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 5px;
+  margin-top: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, transparent, #93c5fd, #3b82f6, #93c5fd, transparent);
+  animation: scanAnimation 2s infinite linear;
+}
+
+@keyframes scanAnimation {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Huella digital */
+.fingerprint-container {
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+  z-index: 2;
+}
+
+.fingerprint {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scanFingerprint 4s infinite;
+}
+
+.fingerprint-line {
+  position: absolute;
+  background-color: #3b82f6;
+  border-radius: 10px;
+  opacity: 0.7;
+}
+
+.line-1 {
+  width: 60px;
+  height: 2px;
+  top: 30px;
+  left: 20px;
+}
+
+.line-2 {
+  width: 40px;
+  height: 2px;
+  top: 40px;
+  left: 30px;
+}
+
+.line-3 {
+  width: 50px;
+  height: 2px;
+  top: 50px;
+  left: 25px;
+}
+
+.line-4 {
+  width: 60px;
+  height: 2px;
+  top: 60px;
+  left: 20px;
+}
+
+.line-5 {
+  width: 40px;
+  height: 2px;
+  top: 70px;
+  left: 30px;
+}
+
+.line-6 {
+  width: 30px;
+  height: 2px;
+  top: 80px;
+  left: 35px;
+}
+
+.fingerprint-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #3b82f6;
+  opacity: 0.7;
+}
+
+.circle-1 {
+  width: 40px;
+  height: 40px;
+  top: 30px;
+  left: 30px;
+}
+
+.circle-2 {
+  width: 20px;
+  height: 20px;
+  top: 40px;
+  left: 40px;
+}
+
+.scan-result {
+  position: absolute;
+  bottom: -30px;
+  width: 150px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #ef4444;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+@keyframes scanFingerprint {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Dron de seguridad */
+.security-drone {
+  position: absolute;
+  top: 150px;
+  left: 150px;
+  z-index: 2;
+  animation: droneFly 15s infinite linear;
+}
+
+.drone-body {
+  width: 40px;
+  height: 10px;
+  background-color: #64748b;
+  border-radius: 5px;
+  position: relative;
+}
+
+.drone-camera {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #000;
+  border-radius: 50%;
+  bottom: -5px;
+  left: 15px;
+  border: 2px solid #94a3b8;
+}
+
+.drone-propeller {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #94a3b8;
+  border-radius: 50%;
+}
+
+.propeller-1 {
+  top: -15px;
+  left: 0;
+}
+
+.propeller-2 {
+  top: -15px;
+  right: 0;
+}
+
+.propeller-3 {
+  bottom: -15px;
+  left: 0;
+}
+
+.propeller-4 {
+  bottom: -15px;
+  right: 0;
+}
+
+.propeller-blade {
+  position: absolute;
+  width: 20px;
+  height: 3px;
+  background-color: #cbd5e1;
+  top: 3.5px;
+  left: -5px;
+  animation: rotatePropeller 0.2s infinite linear;
+}
+
+.propeller-blade:nth-child(2) {
+  transform: rotate(90deg);
+}
+
+.drone-light {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  bottom: -2px;
+  right: 5px;
+  animation: blink 1s infinite;
+}
+
+@keyframes rotatePropeller {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes droneFly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(100px, 50px) rotate(10deg);
+  }
+  50% {
+    transform: translate(200px, -50px) rotate(-10deg);
+  }
+  75% {
+    transform: translate(100px, -100px) rotate(5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .security-system {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .vault-door {
+    transform: scale(0.8);
+  }
+
+  .security-camera {
+    top: 20px;
+    right: 20px;
+  }
+
+  .fingerprint-container {
+    bottom: 20px;
+    left: 20px;
+  }
+
+  .security-drone {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .error-title {
+    font-size: 2rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .login-button,
+  .home-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .vault-door {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-title {
+    font-size: 1.5rem;
+  }
+
+  .error-description {
+    font-size: 0.9rem;
+  }
+
+  .security-camera,
+  .fingerprint-container {
+    display: none;
+  }
+
+  .vault-door {
+    width: 200px;
+    height: 200px;
+  }
+}

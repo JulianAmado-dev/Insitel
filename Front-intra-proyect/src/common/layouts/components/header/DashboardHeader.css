@@ -1,0 +1,55 @@
+header {
+  position: relative;
+  display: flex;
+  height: 10%;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 1.5rem;
+}
+
+header .company_section {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.company_logo {
+  height: 3em;
+  width: 3em;
+  border-radius: 50%;
+}
+
+.company_name {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.separador{
+  height: 3.5rem;
+  width: 2px;
+  background-color: rgb(235, 152, 0);
+  left: 50%;
+  position: absolute;
+}
+.user_section {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.user_name {
+  font-weight: 500;
+}
+.user_foto {
+  height: 3rem;
+  width: 3rem;
+  border-radius: 50%;
+  background-color: var(--muted-color);
+}
+.info_cuenta_button{
+  height: fit-content;
+  width: fit-content;
+  padding: 0;
+  border-radius: 50%;
+}
