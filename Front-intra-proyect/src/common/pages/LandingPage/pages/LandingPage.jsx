@@ -11,13 +11,12 @@ import {
 } from "react-icons/fa";
 import "./LandingPage.css";
 import { Link } from "react-router-dom";
-import {useAuth} from '@contexts/AuthContext'
+import { useAuth } from "@contexts/AuthContext";
 
 const LandingPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const auth = useAuth();
-
 
   const handleStartLoading = () => {
     setIsLoading(true);
@@ -40,6 +39,8 @@ const LandingPage = () => {
     }, 300);
   };
 
+  console.log(auth)
+
   return (
     <div className="landing-container">
       <div className="landing-background">
@@ -54,9 +55,18 @@ const LandingPage = () => {
           <span>I+D+i</span>
         </div>
         <nav className="landing-nav">
-          <Link to="/auth/login" className="nav-link">
-            Iniciar sesión
-          </Link>
+          {auth.loading ? (
+            <div>Cargando...</div>
+          ) : auth.isAuthenticated ? (
+            <Link to="/dashboard/content/main" className="nav-link">
+              Ingresar al sistema
+            </Link>
+          ) : (
+            <Link to="/auth/login" className="nav-link">
+              Iniciar sesión
+            </Link>
+          )}
+
           <a href="#" className="nav-link">
             Acerca de
           </a>
@@ -108,7 +118,7 @@ const LandingPage = () => {
               className="start-button"
               onClick={() => {
                 handleStartLoading;
-                console.log(auth)
+                console.log(auth);
               }}
             >
               Iniciar Sistema <FaArrowRight />

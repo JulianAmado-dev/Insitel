@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import "./Projects.css";
 import { Search, MoreHorizontal } from "lucide-react";
-import Axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import { axiosInstance } from "@api/AxiosInstance";
 
 function Projects() {
   const [showActions, setShowActions] = useState(0);
   const [searchValue, setSearchValue] = useState("");
   const [orderedBy, setOrderedBy] = useState("newest");
   const [projectsData, setProjectsData2] = useState([]);
-  const slug  = useParams(); //esto debería ser un prop
+  const slug = useParams();
   const navigate = useNavigate();
 
-  console.log(slug.area)
+  console.log(slug.area);
   const obtenerProyectos = (area) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        Axios.get(`http://localhost:3001/api/Projects/${area}`)
+        axiosInstance
+          .get(`http://localhost:3001/api/Projects/${area}`)
           .then(({ data }) => {
             resolve(data);
             setProjectsData2(data.data);
@@ -50,7 +51,7 @@ function Projects() {
     }
   });
 
-  console.log(orderedObject);
+  console.log(`hay ${orderedObject.length} proyectos en El content`)
 
   const getStatusClass = (estado) => {
     switch (estado.toLowerCase()) {
@@ -77,7 +78,7 @@ function Projects() {
           className="add-project-btn"
           onClick={(e) => {
             e.preventDefault();
-            navigate('./create')
+            navigate("./create");
           }}
         >
           + Agregar Proyecto

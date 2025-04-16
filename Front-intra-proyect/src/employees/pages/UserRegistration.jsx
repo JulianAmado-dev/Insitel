@@ -1,11 +1,11 @@
 import { useState } from "react";
-import Axios from "axios";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import { Formik, Form, Field } from "formik";
 import { MdOutlineCheckCircleOutline } from "react-icons/md";
 /* import { MdOutlineCircle } from "react-icons/md"; */
 import "./UserRegistration.css";
+import { axiosInstance } from "@api/AxiosInstance";
 
 function UserRegistration() {
   let validationSchema = [
@@ -60,7 +60,8 @@ function UserRegistration() {
   const registrarEmpleado = (sendedData) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        Axios.put("http://localhost:3001/api/EmployeeRegistration", sendedData)
+        axiosInstance
+          .put("http://localhost:3001/api/EmployeeRegistration", sendedData)
           .then(({ data }) => {
             Toast.fire({
               icon: "success",

@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import "./CreateProjectsv2.css";
-import Axios from "axios";
+import {axiosInstance} from '@api/AxiosInstance'
 import { useParams } from "react-router-dom";
 
 function CreateProyects() {
@@ -50,7 +50,7 @@ function CreateProyects() {
   const crearProyecto = (sendedData) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        Axios.post("http://localhost:3001/api/Projects/Create", sendedData)
+        axiosInstance.post("http://localhost:3001/api/Projects/Create", sendedData)
           .then(({ data }) => {
             console.log("Proyecto creado en la db")
             resolve(data);

@@ -1,5 +1,6 @@
 import { Strategy, ExtractJwt } from "passport-jwt";
 import { config } from "../../../config/config.js";
+const db = config.db;
 
 const options = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -15,6 +16,7 @@ const JwtStrategy = new Strategy(options, async (payload, done) => {
       "SELECT id_empleado, nombres, rol FROM empleados WHERE id_empleado = ?",
       [payload.sub]
     );
+    console.log("la estrategia jwt con su consulta trae estos datos: ", user)
     if (user && user.length === 1) {
       return done(null, user[0]);
     } else {

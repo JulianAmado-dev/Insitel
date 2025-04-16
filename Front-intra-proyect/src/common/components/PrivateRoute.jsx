@@ -5,19 +5,22 @@ import PropTypes from "prop-types";
 export const PrivateRoute = ({ children, requiredRol }) => {
   const auth = useAuth();
   const location = useLocation();
-  console.log(auth)
+  if (auth.loading) {
+    return <div>Verificando acceso...</div>; // O un spinner global, o null
+  }
+  console.log(auth);
   if (auth.isAuthenticated === false) {
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
-  
-  if (requiredRol && auth.user.userRol !== requiredRol) {
-    console.log("permisos no validos para entrar a esta ruta")
+
+  if (requiredRol && auth.user?.rol !== requiredRol) {
+    console.log("permisos no validos para entrar a esta ruta");
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
 
-  return children;
+  return  children;
 };
-PrivateRoute.propTypes =  {
+PrivateRoute.propTypes = {
   children: PropTypes.node.isRequired,
-  requiredRol: PropTypes.string
-}
+  requiredRol: PropTypes.string,
+};

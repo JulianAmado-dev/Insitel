@@ -7,9 +7,9 @@ import { axiosInstance, setupAxiosAuthFunctions } from "@api/AxiosInstance";
 function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const Toast = Swal.mixin({
     toast: true,
@@ -25,11 +25,10 @@ function AuthProvider({ children }) {
 
   const login = useCallback(
     async (sendedData) => {
-      setLoading(true);
       try {
         const { data } = await axiosInstance.post("/api/login", sendedData);
-        setIsAuthenticated(true);
         console.log(data);
+        setIsAuthenticated(true);
         setAccessToken(data.accessToken);
         setUser(data.user);
         Toast.fire({ icon: "success", title: "Ingreso éxitoso" });
@@ -61,28 +60,30 @@ function AuthProvider({ children }) {
   const refreshToken = useCallback(async () => {
     try {
       const { data } = await axiosInstance.post("/api/auth/refresh_token");
-      if (data) {
-        setAccessToken(data.accessToken);
+      if (data && data.accessToken) {
+        const newAccessToken = data.accessToken;
+        setAccessToken(newAccessToken);
+        console.log(
+          "access token establecido despues de haberse recibido con el end. refresh_token"
+        );
+        return newAccessToken;
       } else {
         throw new Error("el Access token no fue recibido del endpoint");
       }
-      return true;
     } catch (error) {
       console.error("Error refreshing token:", error);
       await logout(); // Logout si el refresh falla
-      return false;
+      return null;
     }
   }, [logout]);
 
   const checkAuthStatus = useCallback(async () => {
     console.log("AuthProvider: Checking auth status on load...");
+    setError(null);
     try {
-      // Intenta obtener datos del usuario. Asume que si hay cookie refresh válida,
-      // el interceptor de request añadirá el token (si existe) o el de response
-      // intentará refrescar si es necesario antes de esta llamada, o esta llamada
-      // directamente devolverá 401 si no hay token válido ni refresh posible.
       const { data } = await axiosInstance.get("/api/auth/me"); // Endpoint que devuelve user si está autenticado
-      if (data.user) {
+      if (data && data.user) {
+        console.log("datos traidos con auth/me: ", data);
         setUser(data.user);
         setIsAuthenticated(true);
         // Podrías necesitar actualizar el accessToken aquí si /me lo devuelve
@@ -112,6 +113,43 @@ function AuthProvider({ children }) {
   useEffect(() => {
     setupAxiosAuthFunctions(() => accessToken, refreshToken, logout);
   }, [accessToken, refreshToken, logout]);
+
+  // Dentro de AuthProvider
+
+  useEffect(() => {
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        // Log más claro y llamada a checkAuthStatus
+        console.log(
+          "%c>>> PAGE SHOW EVENT (persisted: true) - RE-CHECKING AUTH STATUS <<<",
+          "color: orange; font-weight: bold;"
+        );
+        checkAuthStatus();
+      } else {
+        console.log("Page show event (persisted: false) - Normal load.");
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [checkAuthStatus]);
+  // ... resto del AuthProvider ...
+
+  // Dentro de AuthProvider
+  useEffect(() => {
+    console.log(
+      `AuthProvider EFFECT: isAuthenticated cambió a: ${isAuthenticated}`
+    );
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    console.log(`AuthProvider EFFECT: loading cambió a: ${loading}`);
+  }, [loading]);
+
+  useEffect(() => {
+    console.log(`AuthProvider EFFECT: user cambió a:`, user);
+  }, [user]);
 
   useEffect(() => {
     checkAuthStatus();

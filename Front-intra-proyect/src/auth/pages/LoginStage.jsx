@@ -30,10 +30,9 @@ const LoginStage = () => {
     showPassword: false,
   });
 
-  const validarCredenciales = (sendedData) => {
+  const validarCredenciales = async (sendedData) => {
     try {
-      const success = auth.login(sendedData);
-
+      const success = await auth.login(sendedData);
       if (success) {
         const redirect =
           location.state?.from?.pathname || "/dashboard/content/main";

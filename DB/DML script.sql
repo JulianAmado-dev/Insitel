@@ -1,6 +1,6 @@
 INSERT INTO intranet_db.empleados (correo,contrasena,rol,area,nombres,apellidos,edad,direccion,ciudad) VALUES ('julian@gmail.com', '$2b$10$SsyR5iGVR4VIqzUr/TMa5u9UCjzx/JadPiB4QFQTl61i1GsSbO.Eu',"super-user",2,"Julian","Amado",21,"cra 109 # b 41 2","Bogotá");
 INSERT INTO intranet_db.empleados (correo,contrasena,rol,area,nombres,apellidos,edad,direccion,ciudad) VALUES ('camila@gmail.com', '$2b$10$SsyR5iGVR4VIqzUr/TMa5u9UCjzx/JadPiB4QFQTl61i1GsSbO.Eu',"user",1,"Camila","Sanchez",25,"cra 109 # b 41 2","Bogotá");
-INSERT INTO empleados_proyectos(id_empleado, id_proyecto, permisos) VALUES (1,1,"editor");
+INSERT INTO empleados_proyectos(id_empleado, id_proyecto, permisos) VALUES (1,2,"editor");
 INSERT INTO empleados_proyectos(id_empleado, id_proyecto, permisos) VALUES (2,1,"editor");
 
 describe proyectos;

@@ -25,16 +25,10 @@ const REFRESH_TOKEN_EXPIRY = "5d";
 
 console.log("hola1 - Inicio del server");
 
-function verifyToken(token, secret) {
-  return jwt.verify(token, secret);
-}
-
-console.log("hola1 - Función verifyToken definida");
-
 app.listen(config.port, () => {
   console.log(`corriendo en puerto ${config.port}`);
 });
-console.log("hola1 - Server escuchando");
+console.log("hola3 - Server escuchando");
 
 async function executeTransaction(operations) {
   const connection = await db.getConnection();
@@ -50,30 +44,7 @@ async function executeTransaction(operations) {
     connection.release();
   }
 }
-console.log("hola1 - Función executeTransaction definida");
-
-app.get(
-  "/api/auth/me",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      if (!req.user) {
-        return res
-          .status(401)
-          .json({ message: "Usuario no encontrado en token" });
-      }
-      res.status(200).json({ user: req.user });
-      // Si quisieras devolver un nuevo accessToken en cada verificación (con cuidado
-      // de no generar loops infinitos), podrías hacerlo aquí:
-      // const payload = { sub: req.user.id_empleado, rol: req.user.rol, nombre: req.user.nombre };
-      // const newToken = jwt.sign(payload, config.jwtSecret, jwtConfig);
-      // res.status(200).json({ user: req.user, accessToken: newToken });
-    } catch (error) {
-      console.error("Error al obtener información del usuario:", error);
-      res.status(500).json({ message: "Error interno del servidor" });
-    }
-  }
-);
+console.log("hola3 - Función executeTransaction definida");
 
 //PETICIÓN PARA LOGIN
 app.post(
@@ -100,7 +71,7 @@ app.post(
         expiresIn: ACCESS_TOKEN_EXPIRY,
       });
 
-      console.log("hola 4 - Token JWT generado:");
+      console.log("hola 4 - Cookie 'accessToken' establecida");
       console.log("hola 5 - Cookie 'refreshToken' establecida");
       res
         .cookie("refreshToken", refreshToken, {
@@ -116,7 +87,7 @@ app.post(
           accessToken: accessToken,
           user: {
             userId: payload.sub,
-            userRol: payload.rol,
+            rol: payload.rol,
             nombre: payload.nombres,
           },
         });
@@ -129,8 +100,53 @@ app.post(
   }
 );
 
+app.get(
+  "/api/auth/me",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        return res
+          .status(401)
+          .json({ message: "Usuario no encontrado en token" });
+      } else {
+        console.log(
+          "user encontrado con el end. de auth/me con el user: ",
+          req.user
+        );
+        const payload = {
+          sub: req.user.id_empleado,
+          rol: req.user.rol,
+          nombre: req.user.nombre,
+        };
+
+        const newToken = jwt.sign(payload, config.jwtSecret, {
+          expiresIn: ACCESS_TOKEN_EXPIRY,
+        });
+
+        console.log("user del req.user", req.user);
+
+        res.status(200).json({
+          accessToken: newToken,
+          user: req.user,
+        });
+      }
+      // de no generar loops infinitos), podrías hacerlo aquí:
+    } catch (error) {
+      console.error("Error al obtener información del usuario:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  }
+);
+
 app.post("/api/logout", (req, res) => {
   console.log("hola 7 - Entrando a la ruta /api/logout");
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, private"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   res
     .clearCookie("refreshToken", { path: "/" })
     .status(200)
@@ -144,43 +160,52 @@ app.post("/api/auth/refresh_token", async (req, res, next) => {
   console.log("Refresh Token Endpoint: Solicitud recibida.");
   try {
     const incomingRefreshToken = req.cookies.refreshToken;
-    console.log(
-      "Refresh Token Endpoint: Cookie 'refreshToken'=",
-      incomingRefreshToken
-    );
-
     if (!incomingRefreshToken) {
+      console.log(
+        "Refresh token recibida en auth/refresh_token",
+        incomingRefreshToken
+      );
       return res
         .status(401)
         .json({ message: "No autorizado (falta refresh token)" });
     }
-
     // Usa el secreto correcto para refresh tokens
-    const decodedPayload = jwt.verify(
-      incomingRefreshToken,
-      config.jwtSecret
-    );
+    const decodedPayload = jwt.verify(incomingRefreshToken, config.jwtSecret);
     console.log(
       "Refresh Token Endpoint: Refresh token verificado. Payload:",
       decodedPayload
     );
-
-    const newPayload = { sub: decodedPayload.sub, rol: decodedPayload.rol };
-    // Usa el secreto correcto para access tokens
-    const newAccessToken = jwt.sign(newPayload, config.jwtSecret, {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-    });
-
-    console.log("Refresh Token Endpoint: Emitiendo nuevo access token.");
-    // Sintaxis correcta para enviar JSON
-    res.status(200).json({
-      accessToken: newAccessToken,
-    });
+    if (!decodedPayload) {
+      console.log("la verificación falló o no hay payload");
+      res
+        .status(403)
+        .json({ message: "la verificación del refresh token falló" });
+    } else {
+      const newPayload = {
+        sub: decodedPayload.sub,
+        rol: decodedPayload.rol,
+        nombres: decodedPayload.nombres,
+      };
+      // Usa el secreto correcto para access tokens
+      const newAccessToken = jwt.sign(newPayload, config.jwtSecret, {
+        expiresIn: ACCESS_TOKEN_EXPIRY,
+      });
+      console.log("Refresh Token Endpoint: Emitiendo nuevo access token.");
+      // Sintaxis correcta para enviar JSON
+      return res.status(200).json({
+        accessToken: newAccessToken,
+        user: {
+          userId: decodedPayload.sub,
+          rol: decodedPayload.rol,
+          nombres: decodedPayload.nombres,
+        },
+      });
+    }
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       console.warn("Refresh Token Endpoint: Refresh token expirado.");
-      res.clearCookie("refreshToken", { path: "/" });
       return res
+        .clearCookie("refreshToken", { path: "/" })
         .status(401)
         .json({ message: "No autorizado (refresh token expirado)" });
     } else if (error instanceof jwt.JsonWebTokenError) {
@@ -188,8 +213,8 @@ app.post("/api/auth/refresh_token", async (req, res, next) => {
         "Refresh Token Endpoint: Refresh token inválido.",
         error.message
       );
-      res.clearCookie("refreshToken", { path: "/" });
       return res
+        .clearCookie("refreshToken", { path: "/" })
         .status(401)
         .json({ message: "No autorizado (refresh token inválido)" });
     } else {

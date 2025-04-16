@@ -7,19 +7,37 @@ export const axiosInstance = axios.create({
 
 let getAccessTokenFn = () => null;
 let refreshTokenFn = async () => false;
+let logoutFn = async () => {};
 
-export const setupAxiosAuthFunctions = (getAccessToken, refreshToken) => {
+export const setupAxiosAuthFunctions = (
+  getAccessToken,
+  refreshToken,
+  logout
+) => {
   getAccessTokenFn = getAccessToken;
   refreshTokenFn = refreshToken;
+  logoutFn = logout;
 };
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const accessToken = getAccessTokenFn();
-    if (accessToken) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
+    let tokenToUse = null;
+
+    if (config._retry && config._newAccessToken) {
+      console.log(
+        "[Interceptor Req - Retry] Usando token adjunto por interceptor de respuesta."
+      );
+      tokenToUse = config._newAccessToken;
+      delete config._newAccessToken;
+    } else {
+      tokenToUse = getAccessTokenFn();
+    }
+
+    if (tokenToUse) {
+      config.headers["Authorization"] = `Bearer ${tokenToUse}`;
       console.log("Interceptor de petición: Token añadido al header");
     } else {
+      delete config.headers['Authorization']
       console.log("Interceptor de petición: Token no encontrado");
     }
     return config;
@@ -50,14 +68,17 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true; // Marcamos que vamos a reintentar
       try {
         // 2. Intentar refrescar el token llamando a la función del contexto
-        const refreshSuccessful = await refreshTokenFn();
-        if (refreshSuccessful) {
+        const newAccessToken = await refreshTokenFn();
+        if (newAccessToken) {
           // 3. Refresh exitoso: Reintentar la petición original.
           //    El interceptor de *petición* se encargará de añadir el nuevo token.
+          console.log("aaaaaaaaaaaaeeeeeeeee", newAccessToken);
           console.log(
             "Interceptor (Simple): Refresh exitoso, reintentando petición original a:",
             originalRequest.url
           );
+
+          originalRequest._newAccessToken = newAccessToken;
           return axiosInstance(originalRequest);
         } else {
           // 4. Refresh falló (devuelve false): La sesión es inválida.
@@ -74,6 +95,8 @@ axiosInstance.interceptors.response.use(
         );
         return Promise.reject(refreshError); // Rechaza con el error del refresh
       }
+    } else {
+      console.log("aaaaaaaaaaaa");
     } // Fin del if (error 401 relevante)
 
     // 6. Otros Errores: Si no fue un 401 o ya era un reintento,
