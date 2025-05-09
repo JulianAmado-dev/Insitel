@@ -151,7 +151,7 @@ const LandingPage = () => {
 
       <footer className="landing-footer">
         <p>
-          &copy; 2023 Sistema de Planeación y Control de Proyectos I+D+i. Todos
+          &copy; 2025 Sistema de Planeación y Control de Proyectos I+D+i. Todos
           los derechos reservados.
         </p>
       </footer>

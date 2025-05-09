@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Projects.css";
 import { Search, MoreHorizontal } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { axiosInstance } from "@api/AxiosInstance";
 
 function Projects() {
@@ -11,6 +11,7 @@ function Projects() {
   const [projectsData, setProjectsData2] = useState([]);
   const slug = useParams();
   const navigate = useNavigate();
+  const { id_proyecto } = useParams();
 
   console.log(slug.area);
   const obtenerProyectos = (area) => {
@@ -34,6 +35,9 @@ function Projects() {
     obtenerProyectos(slug.area);
   }, [slug]);
 
+  if (id_proyecto) {
+    return <Outlet />;
+  }
   const searchedItems = projectsData.filter((especificItem) => {
     const lowerProjectName = especificItem.nombre_proyecto.toLowerCase();
     const lowerSearchValue = searchValue.toLowerCase();
@@ -51,7 +55,7 @@ function Projects() {
     }
   });
 
-  console.log(`hay ${orderedObject.length} proyectos en El content`)
+  console.log(`hay ${orderedObject.length} proyectos en El content`);
 
   const getStatusClass = (estado) => {
     switch (estado.toLowerCase()) {

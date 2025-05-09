@@ -1,0 +1,531 @@
+@import url("@styles/global2.css");
+
+:root {
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --surface-gradient: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.1)
+  );
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-accent: #a855f7;
+  --bg-dark: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --input-focus: rgba(168, 85, 247, 0.5);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --border-radius-sm: 0.375rem;
+  --border-radius-md: 0.75rem;
+  --border-radius-lg: 1.5rem;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}
+button,
+input {
+  font-family: inherit;
+}
+
+/* 3. CONTENEDOR PRINCIPAL */
+.container {
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 95dvw;
+  height: 90dvh;
+  padding: 0;
+  left: 2.5%;
+  margin-top: 5dvh;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-dark);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+/* 4. EFECTOS DE FONDO */
+.container::before,
+.container::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.container::before {
+  width: 70%;
+  height: 70%;
+  top: -30%;
+  left: -10%;
+  background: var(--gradient-login-left);
+  filter: blur(100px);
+  opacity: 0.3;
+}
+
+.container::after {
+  width: 60%;
+  height: 60%;
+  bottom: -20%;
+  right: -10%;
+  background: var(--gradient-login-right);
+  filter: blur(100px);
+  opacity: 0.3;
+}
+
+/* 5. SECCIÓN DE BRANDING */
+.branding-section {
+  height: 100%;
+  width: 50%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  padding: 4% 4% 4% 5%;
+  justify-content: space-between;
+  gap: 30px;
+  text-align: start;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.branding-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.2;
+  z-index: -1;
+}
+
+.branding-section h1 {
+  font-size: 3.5em;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-top: 20%;
+  background: linear-gradient(to right, #ffffff, #e2e8f0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.branding-section p {
+  font-size: 1.1em;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 20%;
+}
+
+/* 6. SECCIÓN DE LOGIN */
+.login-section {
+  height: 100%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 2% 8%;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 1;
+}
+
+.login-section .logo-login {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 60px;
+}
+
+.logo-login img {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.5));
+}
+
+.logo-login p {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 7. ELEMENTOS DEL FORMULARIO */
+.titulo-login-section {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.login_items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login_items form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login_items label {
+  width: 100%;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.login_items .titulo-login-section h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.login_items .titulo-login-section p {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.label_p {
+  text-align: left;
+  position: relative;
+  top: 12px;
+  left: 15px;
+  padding: 0 15px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+  background-color: var(--bg-dark);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 2;
+  transition: var(--transition-fast);
+}
+
+.login_item {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: row;
+  height: 70px;
+  width: 100%;
+  max-width: 420px;
+  padding: 0 20px;
+  align-items: center;
+  transition: var(--transition-normal);
+}
+
+.login_item:focus-within {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px var(--input-focus);
+}
+
+.login_item:focus-within + .label_p {
+  color: var(--text-accent);
+}
+
+section img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  transition: var(--transition-fast);
+}
+
+.login_item:focus-within img {
+  opacity: 1;
+}
+
+section input {
+  height: 100%;
+  border: none;
+  background: transparent;
+  margin: 0 15px;
+  padding: 0 10px;
+  width: 100%;
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+}
+
+section input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+section input:focus {
+  outline: none;
+}
+
+.login_item.onRestore {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+}
+
+.password_eye {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  border: none;
+  outline: none;
+}
+
+.password_eye:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.password_eye img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+}
+
+.password_eye:hover img {
+  opacity: 1;
+}
+
+/* 8. ENLACES Y BOTONES */
+.recordar_password {
+  display: flex;
+  margin: 0 0 40px 0;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  max-width: 420px;
+}
+
+.recordar_password span {
+  padding-left: 6px;
+  font-weight: 600;
+  color: var(--text-accent);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.recordar_password span:hover {
+  text-decoration: underline;
+}
+
+.botones_inferiores {
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.botones_inferiores button {
+  padding: 12px 24px;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  border: none;
+  outline: none;
+  min-width: 150px;
+}
+
+.botones_inferiores button[type="submit"] {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+}
+
+.botones_inferiores button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+}
+
+.botones_inferiores button[type="button"] {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.botones_inferiores button[type="button"]:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.recordar_click.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 9. MENSAJES DE ERROR */
+.input_error {
+  border-color: #ef4444 !important;
+}
+
+.input_error_message {
+  font-size: 0.8rem;
+  text-align: left;
+  position: relative;
+  padding-left: 30px;
+  color: #ef4444;
+  margin-top: 8px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.background-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(var(--blur-3xl));
+  opacity: 0.3;
+  z-index: var(--z-0);
+}
+
+.glow-1 {
+  width: 70%;
+  height: 70%;
+  top: -30%;
+  left: -10%;
+  background: var(--gradient-purple);
+  animation: float 20s ease-in-out infinite alternate;
+}
+
+.glow-2 {
+  width: 60%;
+  height: 60%;
+  bottom: -20%;
+  right: -10%;
+  background: var(--gradient-blue);
+  animation: float 15s ease-in-out infinite alternate-reverse;
+}
+
+.glow-3 {
+  width: 40%;
+  height: 40%;
+  top: 40%;
+  left: 60%;
+  background: var(--gradient-amber);
+  animation: float 25s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(5%, 5%);
+  }
+}
+
+/* 10. ANIMACIONES */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login_items {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* 11. MEDIA QUERIES */
+@media (max-width: 1024px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    width: 100%;
+    left: 0;
+    margin-top: 0;
+    border-radius: 0;
+  }
+
+  .branding-section,
+  .login-section {
+    width: 100%;
+    padding: 10% 5%;
+  }
+
+  .branding-section {
+    height: auto;
+    min-height: 40vh;
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+  }
+
+  .branding-section h1 {
+    font-size: 2.5em;
+    margin-top: 0;
+  }
+
+  .branding-section p {
+    margin-bottom: 0;
+  }
+
+  .login-section {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login_item,
+  .botones_inferiores,
+  .recordar_password {
+    max-width: 100%;
+  }
+
+  .botones_inferiores {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .botones_inferiores button {
+    width: 100%;
+  }
+
+  .branding-section h1 {
+    font-size: 2em;
+  }
+
+  .login_items .titulo-login-section h1 {
+    font-size: 2rem;
+  }
+}

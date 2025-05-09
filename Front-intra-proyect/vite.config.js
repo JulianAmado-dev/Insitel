@@ -25,7 +25,7 @@ export default defineConfig({
       '@content': path.resolve(__dirname, './src/content'),
       '@forms': path.resolve(__dirname, './src/forms'),
       '@api': path.resolve(__dirname, './src/common/api'),
-
+      '@schemas': path.resolve(__dirname, './src/common/utils')
 
     }
   }

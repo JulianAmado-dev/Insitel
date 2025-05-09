@@ -7,7 +7,18 @@
   background-color: var(--card-background);
   width: 5rem;
   background-color: beige;
-  transition: width 0.2s ease;
+  transition: width 0.5s ease;
+}
+
+.sidebar::before {
+  content: "";
+  display: block;
+  height: 0;
+  width: 100%;
+  /* margin-top: 100dvh; */
+  pointer-events: none; /* Para que no interfiera con la interacción */
+  visibility: hidden;
+  transition: width 0.5s ease;
 }
 
 .sidebar--expanded {
@@ -71,7 +82,7 @@
   text-align: left;
 }
 
-.sidebar__project-button img{
+.sidebar__project-button img {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -90,7 +101,7 @@
   transform: rotate(90deg);
 }
 
-.sidebar__subprojects {
+.sidebar__items {
   margin-left: 1rem;
   margin-top: 0.5rem;
   display: flex;
@@ -108,7 +119,7 @@
   background-color: var(--hover-color);
 }
 
-.create_proyect{
+.create_proyect {
   display: flex;
   flex-direction: row;
   gap: 1px;
@@ -139,4 +150,3 @@
   width: 1rem;
   height: 1rem;
 }
-
