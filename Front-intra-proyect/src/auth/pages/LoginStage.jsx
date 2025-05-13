@@ -106,10 +106,6 @@ const LoginStage = () => {
     }
   }, [action]);
 
-  const validationSchema = useMemo(() => {
-    getValidationSchemaForLogin(action);
-  }, [action]);
-
   // eslint-disable-next-line no-unused-vars
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -137,6 +133,10 @@ const LoginStage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const validationSchema = useMemo(() => {
+    return getValidationSchemaForLogin(action);
+  }, [action]);
+
   const cambiarContrasena = useCallback(
     (sendedData, recoveryToken) => {
       return new Promise((resolve, reject) => {
@@ -146,12 +146,6 @@ const LoginStage = () => {
           "Data:",
           sendedData
         );
-        // Simulación de llamada API
-        // axios
-        //   .post(
-        //     `http://localhost:3001/api/change-password?token=${currentRecoveryToken}`,
-        //     sendedData
-        //   )
         axios
           .post(
             `http://localhost:3001/api/change-password?token=${recoveryToken}`,
@@ -174,6 +168,11 @@ const LoginStage = () => {
           })
           .finally(() => {
             setAction("Iniciar sesión");
+            setEyeState((prevState) => ({
+              ...prevState,
+              isEye1Active: false,
+              isEye2Active: false,
+            }));
           });
       });
     },

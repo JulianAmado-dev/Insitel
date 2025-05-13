@@ -134,13 +134,29 @@ INSERT INTO proyectos (
 );
 INSERT INTO empleados_proyectos(id_empleado, id_proyecto, permisos) VALUES (1,2,"editor");
 INSERT INTO empleados_proyectos(id_empleado, id_proyecto, permisos) VALUES (2,1,"editor");
-INSERT INTO `intraNet_DB`.`roles` (`nombre_rol`, `descripcion`) VALUES ('user', 'Tiene la capacidad de ver proyectos'),('admin', 'Tiene la capacidad de ver, crear proyectos y crear usuarios nuevos pero solo en su propia área'),('super-admin', 'Tiene todas las capacidades anteriores en todas las áreas');
-INSERT INTO `intraNet_DB`.`areas` (`nombre_area`, `descripcion`) VALUES ('I+D', 'Innovación y desarollo'),
-('Operaciones', 'Operaciones operacionales de operatividad operativa'),
-('Me lo acabo de inventar', 'este es una prueba para la base de datos y el sidebar');
-INSERT INTO `intraNet_DB`.`areas_navegacion` (`id_area`,`nombre_item_navBar`, `descripcion`) VALUES ((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'I+D'),'projects', 'Innovación y desarollo'),
-((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'I+D' LIMIT 1),'Riesgos', 'Operaciones operacionales de operatividad operativa'),
-((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'I+D'),'Lecciones aprendidas', 'este es una prueba para la base de datos y el sidebar'),
-((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Operaciones'),'SideBarItem para Operaciones', 'este es una prueba para la base de datos y el sidebar');
+INSERT INTO `intraNet_DB`.`roles` (`nombre_rol`, `descripcion`) VALUES 
+('user', 'Tiene la capacidad de ver proyectos'),
+('admin', 'Tiene la capacidad de ver, crear proyectos y crear usuarios nuevos pero solo en su propia área'),
+('super-admin', 'Tiene todas las capacidades anteriores en todas las áreas');
+INSERT INTO `intraNet_DB`.`areas` (`nombre_area`, `descripcion`, `logo_area`) VALUES 
+('I+D', 'Innovación y desarollo', 'logo_sigar'),
+('Operaciones', 'Operaciones operacionales de operatividad operativa', 'logo_random'),
+('Recursos Humanos', 'este es una prueba para la base de datos y el sidebar', 'logo_insitel');
+INSERT INTO `intraNet_DB`.`areas_navegacion` (`id_area`,`nombre_item_navBar`, `ruta` , `descripcion`, `padre`, `is_father`) VALUES 
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'I+D' LIMIT 1),'projects', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'Innovación y desarollo', null, false),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'I+D' LIMIT 1),'Riesgos', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'Operaciones operacionales de operatividad operativa', null, false),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'I+D' LIMIT 1),'Lecciones aprendidas', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'este es una prueba para la base de datos y el sidebar', null, false),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Operaciones' LIMIT 1),'SideBarItem para Operaciones', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'este es una prueba para la base de datos y el sidebar', null, false),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso de humano 1', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'Innovación y desarollo', null, true),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso de humano 2', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'Operaciones operacionales de operatividad operativa', null, true),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso de humano 3', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'este es una prueba para la base de datos y el sidebar', null, true),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso Externo 1', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'este es una prueba para la base de datos y el sidebar',null, false);
 
-describe proyectos;
+SET @padre_recursos_1 = (SELECT id_item_nav FROM `intraNet_DB`.`areas_navegacion` WHERE nombre_item_navBar = 'Recurso de humano 1' LIMIT 1);
+SET @padre_recursos_2 = (SELECT id_item_nav FROM `intraNet_DB`.`areas_navegacion` WHERE nombre_item_navBar = 'Recurso de humano 2' LIMIT 1);
+SET @padre_recursos_3 = (SELECT id_item_nav FROM `intraNet_DB`.`areas_navegacion` WHERE nombre_item_navBar = 'Recurso de humano 3' LIMIT 1);
+
+INSERT INTO `intraNet_DB`.`areas_navegacion`(`id_area`,`nombre_item_navBar`, `ruta` , `descripcion`, `padre`) VALUES 
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso interno 1', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'Innovación y desarollo',@padre_recursos_1),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso interno 2', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'Operaciones operacionales de operatividad operativa',@padre_recursos_2),
+((SELECT id_area FROM `intraNet_DB`.`areas` WHERE nombre_area = 'Recursos Humanos' LIMIT 1),'Recurso interno 3', 'http://localhost:5173/dashboard/I+D/Proyectos' , 'este es una prueba para la base de datos y el sidebar',@padre_recursos_3); 

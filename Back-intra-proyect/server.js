@@ -231,10 +231,10 @@ app.get(
   async (req, res, next) => {
     try {
       const [areas] = await db.execute(
-        `SELECT id_area, nombre_area FROM areas`
+        `SELECT * FROM areas`
       );
       const [areasItems] = await db.execute(
-        `SELECT nombre_item_navBar, id_area FROM areas_navegacion ORDER BY id_area asc`
+        `SELECT * FROM areas_navegacion ORDER BY id_area asc`
       );
 
       if (!areas) {
@@ -504,7 +504,7 @@ app.get(
 
 app.post(
   "/api/Projects/:area/:id_projects/form/general/fill",
-  /* passport.authenticate("jwt", { session: false }), // RECOMENDACIÓN: Habilitar autenticación para seguridad */
+  passport.authenticate("jwt", { session: false }), // RECOMENDACIÓN: Habilitar autenticación para seguridad
   async (req, res, next) => {
     // RECOMENDACIÓN: Considerar usar una conexión individual para manejar transacciones
     // const connection = await db.getConnection(); // Ejemplo si usas un pool como mysql2/promise
@@ -584,10 +584,7 @@ app.post(
         ref_doc_diseno_sistema, ref_doc_plan_pruebas, ref_doc_manuales, ref_doc_liberacion,
         verif_doc_ideas_iniciales, verif_doc_especificaciones, verif_doc_casos_uso,
         verif_doc_diseno_sistema, verif_doc_plan_pruebas, verif_doc_manuales, 
-        verif_doc_liberacion 
-        // , creado_por_id -- Si tienes esta columna en formulario_general
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
-      // El número de '?' debe coincidir con el número de columnas (43 en tu ejemplo original)
+        verif_doc_liberacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
 
       const valuesFormularioGeneral = [
         id_projects,
@@ -643,7 +640,6 @@ app.post(
         verif_doc_plan_pruebas == "" ? null : verif_doc_plan_pruebas,
         verif_doc_manuales == "" ? null : verif_doc_manuales,
         verif_doc_liberacion == "" ? null : verif_doc_liberacion,
-        // creado_por_id_formulario, // Si lo añades
       ];
 
       console.log(
@@ -747,7 +743,7 @@ app.post(
         return res.status(200).json({
           message: "Datos registrados exitosamente",
           id_proyecto: id_projects,
-          compras_registradas: comprasRegistradasExitosamente,
+          // compras_registradas: comprasRegistradasExitosamente,
         });
       }
 

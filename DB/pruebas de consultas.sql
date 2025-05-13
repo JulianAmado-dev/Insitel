@@ -26,4 +26,4 @@ SELECT p.id_proyecto,
             LEFT JOIN empleados_proyectos ep ON p.id_proyecto = ep.id_proyecto 
             LEFT JOIN empleados AS e ON ep.id_empleado = e.id_empleado 
             WHERE area = I+D;
-(SELECT nombres, apellidos FROM empleados WHERE id_empleado = 1)
+(SELECT nombres, apellidos FROM intranet_db.empleados WHERE id_empleado = 1)

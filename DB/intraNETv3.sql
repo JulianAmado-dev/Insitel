@@ -53,15 +53,20 @@ CREATE TABLE `intraNet_DB`.`areas` (
   `id_area` INT NOT NULL AUTO_INCREMENT,
   `nombre_area` VARCHAR(100) NOT NULL,
   `descripcion` TEXT NULL,
+  `logo_area` varchar(500) null,
   PRIMARY KEY (`id_area`),
   UNIQUE INDEX `nombre_area_UNIQUE` (`nombre_area` ASC) VISIBLE
 ) ENGINE=InnoDB COMMENT='Catálogo de áreas funcionales de la empresa (I+D, Operaciones, etc.)';
 
+SELECT * FROM intraNet_DB.areas;
 
 CREATE TABLE `intraNet_DB`.`areas_navegacion` (
   `id_item_nav` INT NOT NULL auto_increment,
   `id_area` INT NOT NULL,
   `nombre_item_navBar` VARCHAR(100) NOT NULL,
+  `ruta` varchar(500) not null,
+  `padre` INT NULL,
+  `is_father` BOOLEAN NULL,
   `descripcion` TEXT NULL,
   
   primary key (`id_item_nav`),

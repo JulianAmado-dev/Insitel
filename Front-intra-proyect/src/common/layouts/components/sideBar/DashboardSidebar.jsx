@@ -1,13 +1,13 @@
 import "./DashboardSidebar.css";
 import logo_insitel from "@assets/logo-insitel.png";
 import logo_sigar from "@assets/logo-sigar.jpg";
+import insitelDefault from "@assets/logo-insitel-default-nofondo.png";
 import { useEffect, useState } from "react";
 import { ChevronRight, Moon, Settings, Sun } from "lucide-react";
 import { useTheme } from "@contexts/ThemeProvider/ThemeProvider";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "@api/AxiosInstance";
-
-/* import {useAuth} from'@contexts/AuthContext' */
+import { useAuth } from "@contexts/AuthContext";
 
 /* const departments = [
   {
@@ -32,14 +32,26 @@ import { axiosInstance } from "@api/AxiosInstance";
 
 function DashboardSidebar({ isExpanded, setIsExpanded }) {
   const [activeDepartment, setActiveDepartment] = useState(0);
+  const [activeDepartmentItem, setActiveDepartmentItem] = useState(0);
   // Initialize with empty arrays - this is crucial for avoiding the .map() error
   const [departments, setDepartments] = useState([]);
   const [items, setItems] = useState([]);
   // Add loading and error states to improve user experience
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const auth = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+
+  const logosMap = {
+    logo_sigar: logo_sigar,
+    logo_insitel: logo_insitel,
+  };
+
+  const getLogoForArea = (logoName) => {
+    if (!logoName) return insitelDefault;
+    return logosMap[logoName] || insitelDefault;
+  };
 
   // useEffect ensures this only runs after component mounts and prevents infinite re-renders
   useEffect(() => {
@@ -124,7 +136,7 @@ function DashboardSidebar({ isExpanded, setIsExpanded }) {
 
       {/* Content section with loading/error states */}
       <div className="sidebar__content">
-        <div className="sidebar__departments">
+        <div>
           {/* Loading state with user feedback */}
           {isLoading && (
             <div className="sidebar__loading">
@@ -153,44 +165,59 @@ function DashboardSidebar({ isExpanded, setIsExpanded }) {
           {!isLoading &&
             departments.length > 0 &&
             departments.map((department) => (
-              <div key={department.id_area || `dept-${department.nombre_area}`}>
-                <button
-                  className="sidebar__project-button"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    if (activeDepartment === department.id_area) {
-                      setActiveDepartment(0);
-                    } else {
-                      setActiveDepartment(department.id_area);
-                    }
-                  }}
-                >
+              <div
+                key={department.id_area || `dept-${department.nombre_area}`}
+                className="sidebar__area-content"
+              >
+                {" "}
+                <div className="sidebar__area-button">
                   {isExpanded && (
                     <div>
                       <span>{department.nombre_area || department.name}</span>
                     </div>
                   )}
 
-                  {/* Add null check to prevent potential errors */}
-                  {department.department_logo && (
-                    <img
-                      src={department.department_logo}
-                      alt="icono de departamento"
-                      className="department_icon"
-                    />
-                  )}
-
+                  <button
+                    className="sidebar__project-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      navigate(`${department.nombre_area}`);
+                    }}
+                  >
+                    {/* Add null check to prevent potential errors */}
+                    {department.logo_area && (
+                      <img
+                        src={getLogoForArea(department.logo_area)}
+                        alt="icono de departamento"
+                        className="department_icon"
+                      />
+                    )}
+                  </button>
                   {isExpanded && (
-                    <ChevronRight
-                      className={`sidebar__chevron ${
-                        activeDepartment === department.id_area
-                          ? "sidebar__chevron--rotated"
-                          : ""
-                      }`}
-                    />
+                    <button
+                      className="sidebar__project-button"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        if (activeDepartment === department.id_area) {
+                          setActiveDepartment(0);
+                        } else {
+                          setActiveDepartment(department.id_area);
+                        }
+                      }}
+                    >
+                      {/* Add null check to prevent potential errors */}
+                      {isExpanded && (
+                        <ChevronRight
+                          className={`sidebar__chevron ${
+                            activeDepartment === department.id_area
+                              ? "sidebar__chevron--rotated"
+                              : ""
+                          }`}
+                        />
+                      )}
+                    </button>
                   )}
-                </button>
-
+                </div>
                 {/* Department items - only shown when department is active */}
                 {activeDepartment === department.id_area && isExpanded && (
                   <>
@@ -200,54 +227,128 @@ function DashboardSidebar({ isExpanded, setIsExpanded }) {
                         items.length > 0 &&
                         items.map((item) => (
                           <>
-                            {item.id_area === department.id_area ? (
-                              <button
-                                key={item.id_area || `item-${Math.random()}`}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  navigate(
-                                    `${item.nombre_item_navBar}/${
-                                      department.nombre_area || department.name
-                                    }`
-                                  );
-                                }}
-                                className="sidebar__subproject-button"
-                              >
-                                {item.id_area === department.id_area ? (
-                                  <span>{item.nombre_item_navBar}</span>
-                                ) : (
-                                  <></>
-                                )}
-                              </button>
-                            ) : null}
+                            {item.id_area === department.id_area &&
+                              item.is_father === 1 && (
+                                <>
+                                  <div className="sidebar__area-button">
+                                    {isExpanded && (
+                                      <>
+                                        <div>
+                                          <span>
+                                            {item.nombre_item_navBar || null}
+                                          </span>
+                                        </div>
+                                        <button
+                                          className="sidebar__project-button"
+                                          onClick={(event) => {
+                                            event.preventDefault();
+                                            if (
+                                              activeDepartmentItem ===
+                                              item.id_item_nav
+                                            ) {
+                                              setActiveDepartmentItem(0);
+                                            } else {
+                                              setActiveDepartmentItem(
+                                                item.id_item_nav
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          <ChevronRight
+                                            className={`sidebar__chevron ${
+                                              activeDepartmentItem ===
+                                              item.id_item_nav
+                                                ? "sidebar__chevron--rotated"
+                                                : ""
+                                            }`}
+                                          />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                  {item.id_item_nav ===
+                                    activeDepartmentItem && (
+                                    <>
+                                      {items.map((subItem) => (
+                                        <>
+                                          {subItem.padre ===
+                                          activeDepartmentItem ? (
+                                            <>
+                                              <button
+                                                key={
+                                                  item.id_item_nav ||
+                                                  `item-${Math.random()}`
+                                                }
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  navigate(
+                                                    `${department.nombre_area.replace(
+                                                      / /g,
+                                                      "-"
+                                                    )}/${item.nombre_item_navBar.replace(
+                                                      / /g,
+                                                      "-"
+                                                    )}/${subItem.nombre_item_navBar.replace(
+                                                      / /g,
+                                                      "-"
+                                                    )}`
+                                                  );
+                                                }}
+                                                className="sidebar__subproject-button"
+                                              >
+                                                <span>
+                                                  {subItem.nombre_item_navBar}
+                                                </span>
+                                              </button>
+                                            </>
+                                          ) : null}
+                                        </>
+                                      ))}
+                                    </>
+                                  )}
+                                </>
+                              )}
+                            {item.id_area === department.id_area &&
+                              item.is_father === 0 && (
+                                <button
+                                  key={
+                                    item.id_item_nav || `item-${Math.random()}`
+                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    navigate(
+                                      `${department.nombre_area.replace(
+                                        / /g,
+                                        "-"
+                                      )}/${item.nombre_item_navBar.replace(
+                                        / /g,
+                                        "-"
+                                      )}`
+                                    );
+                                  }}
+                                  className="sidebar__subproject-button"
+                                >
+                                  {item.id_area === department.id_area ? (
+                                    <span>{item.nombre_item_navBar}</span>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </button>
+                              )}
                           </>
                         ))}
-
-                      {/* Static department-specific buttons with null checks */}
                     </div>
-
-                    {/* Create project button */}
-                    <button
-                      className="create_proyect"
-                      onClick={() => {
-                        navigate(
-                          `projects/${
-                            department.nombre_area || department.name
-                          }/create`
-                        );
-                      }}
-                    >
-                      <p>+ Crear Proyecto</p>
-                    </button>
                   </>
                 )}
               </div>
             ))}
         </div>
 
-        <div className="create_user_button">
-          <button></button>
-        </div>
+        {auth.rol === "admin" && (
+          <div className="create_user_button">
+            <button></button>
+          </div>
+        )}
       </div>
 
       {/* footer */}

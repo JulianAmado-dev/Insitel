@@ -150,7 +150,16 @@ function Projects() {
                     className="project-avatar"
                     style={{ backgroundColor: project.color }}
                   >
-                    {getInitials(project.nombre_proyecto)}
+                    <button
+                      className="project-avatar"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`${project.id_proyecto}/`);
+                      }}
+                    >
+                      {" "}
+                      {getInitials(project.nombre_proyecto)}
+                    </button>
                   </div>
                   <div className="project-name-text">
                     <div className="name">{project.nombre_proyecto}</div>
