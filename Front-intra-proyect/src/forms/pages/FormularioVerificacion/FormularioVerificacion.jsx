@@ -16,6 +16,7 @@ import {
   // FaFileSignature, // Eliminado porque no se usa en esta versión
   FaQuestionCircle,
 } from "react-icons/fa";
+import { BackButton } from "@forms/components/BackButton"; // Added import
 
 import "./FormularioVerificacion.css";
 
@@ -144,7 +145,7 @@ const FormularioVerificacion = () => {
     }
     try {
       const { data } = await axiosInstance.get(
-        `/api/Projects/${area}/${id_proyecto}/form/verificacion/get`
+        `/api/Proyectos/${area}/${id_proyecto}/form/verificacion/get`
       );
       if (data && data.formulario_verificacion) {
         setFormRecordId(
@@ -202,8 +203,8 @@ const FormularioVerificacion = () => {
 
     const method = formRecordId ? "patch" : "post";
     const endpoint = formRecordId
-      ? `/api/Projects/${area}/${id_proyecto}/form/verificacion/${formRecordId}/update`
-      : `/api/Projects/${area}/${id_proyecto}/form/verificacion/fill`;
+      ? `/api/Proyectos/${area}/${id_proyecto}/form/verificacion/${formRecordId}/update`
+      : `/api/Proyectos/${area}/${id_proyecto}/form/verificacion/fill`;
 
     try {
       await axiosInstance[method](endpoint, payload);
@@ -227,10 +228,11 @@ const FormularioVerificacion = () => {
 
   const currentInitialValues = useMemo(() => initialData, [initialData]);
 
-  return (
-    <div className="project-planning-container">
-      <header className="form-header">
-        <h1>Formulario - VERIFICACIÓN</h1>
+return (
+  <div className="project-planning-container">
+    <BackButton area={area} id_proyecto={id_proyecto} /> {/* Added BackButton component with props */}
+    <header className="form-header">
+      <h1>Formulario - VERIFICACIÓN</h1>
         <div className="form-code">SIGAR-2025</div>
       </header>
 

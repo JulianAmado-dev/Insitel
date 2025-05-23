@@ -18,7 +18,7 @@ function Projects() {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         axiosInstance
-          .get(`http://localhost:3001/api/Projects/${area}`)
+          .get(`http://localhost:3001/api/Proyectos/${area}`)
           .then(({ data }) => {
             resolve(data);
             setProjectsData2(data.data);

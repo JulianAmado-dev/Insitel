@@ -1,0 +1,41 @@
+.back-button {
+  position: absolute; /* Changed to absolute */
+  top: 20px; /* Adjust as needed */
+  left: 20px; /* Adjust as needed */
+  z-index: 1000; /* Ensure it's above other elements */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center; /* Center the icon */
+  width: 40px; /* Circle size */
+  height: 40px; /* Circle size */
+  padding: 0; /* Remove padding if only icon */
+  /* margin-bottom: 20px; Removed as absolute positioning handles spacing */
+  background-color: #ffffff; /* White background */
+  color: #007bff; /* Blue icon color, adjust as needed */
+  text-decoration: none;
+  border-radius: 50%; /* Make it a circle */
+  font-size: 14px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e0e0e0; /* Light border for subtlety */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background-color: #f8f9fa; /* Slightly off-white on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+.back-button-icon {
+  margin-right: 0; /* Remove margin if only icon */
+  width: 20px; /* Icon size */
+  height: 20px; /* Icon size */
+  stroke: #007bff; /* Ensure SVG stroke color matches */
+}
+
+/*
+  Note: For `position: absolute` to work relative to the form's main container
+  (e.g., `.project-planning-container`), that container should have `position: relative;`.
+  If the container does not have `position: relative;`, the button will be positioned
+  relative to the nearest positioned ancestor or the initial containing block (usually the viewport).
+*/

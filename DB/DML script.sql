@@ -274,3 +274,67 @@ INSERT INTO `intraNet_DB`.`formulario_alcance` (
     'Actores: Gerente de proyecto, equipo de desarrollo, departamento de IT, usuarios finales',
     'Presupuesto máximo de $15,000 USD y plazo de 6 meses'
 );
+
+-- Insertar datos en formulario presupuesto INSERT INTO `intraNet_DB`.`formulario_presupuesto` (
+INSERT INTO `intraNet_DB`.`formulario_presupuesto` (
+    `id_proyecto`, `creado_por_id`, 
+    `total_rh_calculado`, `total_suministros_calculado`, `total_servicios_calculado`
+) VALUES (
+    7, 1, -- Proyecto 7, creado por el empleado 10
+    25000.00, 15000.00, 30000.00 -- Totales ficticios
+);
+
+-- Insertar en presupuesto_rh (Recursos Humanos)
+INSERT INTO `intraNet_DB`.`presupuesto_rh` (
+    `id_proyecto`, `id_empleado_asignado`, `nombre_recurso`, 
+    `salario_mensual`, `salario_mensual_parafiscales`, 
+    `costo_dia`, `cantidad_dias`, `valor_total_linea`, `creado_por_id`
+) VALUES
+(7, 1, 'Desarrollador Senior', 5000.00, 500.00, 200.00, 10.00, 2000.00, 1),
+(7, 2, 'Arquitecto de Software', 6000.00, 600.00, 250.00, 10.00, 2500.00, 1),
+(7, NULL, 'Consultor Externo', 0.00, 0.00, 300.00, 15.00, 4500.00, 1);
+
+-- Insertar en presupuesto_suministro (Suministros)
+INSERT INTO `intraNet_DB`.`presupuesto_suministro` (
+    `id_proyecto`, `nombre_proveedor`, `nombre_item`, 
+    `cantidad_suministro`, `unidad_de_medida`, 
+    `valor_unitario_suministro`, `valor_total_linea`, `creado_por_id`
+) VALUES
+(7, 'Proveedor A', 'Laptops', 5.00, 'Unidad', 1000.00, 5000.00, 1),
+(7, 'Proveedor B', 'Licencias de Software', 10.00, 'Paquete', 500.00, 5000.00, 1),
+(7, 'Proveedor C', 'Materiales de Oficina', 20.00, 'Kilo', 250.00, 5000.00, 1);
+
+-- Insertar en presupuesto_servicio (Servicios)
+INSERT INTO `intraNet_DB`.`presupuesto_servicio` (
+    `id_proyecto`, `nombre_proveedor`, `nombre_servicio`, 
+    `cantidad_servicio`, `unidad_de_medida`, 
+    `valor_unitario`, `valor_total_linea`, `creado_por_id`
+) VALUES
+(7, 'Empresa de Pruebas', 'Pruebas de Penetración', 2.00, 'Servicio', 5000.00, 10000.00, 1),
+(7, 'Consultoría XYZ', 'Auditoría de Seguridad', 3.00, 'Visita', 4000.00, 12000.00, 1),
+(7, 'Soporte Técnico S.A.', 'Mantenimiento de Servidores', 5.00, 'Hora', 1600.00, 8000.00, 1);
+-- Insertar datos en el formulario de verificación 
+INSERT INTO `intraNet_DB`.`formulario_verificacion` (
+    `id_proyecto`, `creado_por_id`, `version_verificada`
+) VALUES (
+    7, 1, 'v1.0.0' -- Proyecto 7, creado por el empleado 1, versión ficticia
+);
+
+-- Insertar en verificacion_cumplimiento_requerimientos (Requisitos verificados)
+-- Suponemos que el id_formulario_verificacion generado es 1 (ajustar según el ID real)
+INSERT INTO `intraNet_DB`.`verificacion_cumplimiento_requerimientos` (
+    `id_formulario_verificacion`, `codigo_requisito`, `tipo_requisito`, 
+    `descripcion_requisito`, `cumple`, `observaciones`, `verificado_por_id`
+) VALUES
+(1, 'REQ-001', 'Funcional', 'El sistema debe autenticar usuarios correctamente', TRUE, 'Pruebas exitosas', 1),
+(1, 'REQ-002', 'No Funcional', 'El sistema debe responder en menos de 2 segundos', FALSE, 'Rendimiento insuficiente en pruebas', 1),
+(1, 'REQ-003', 'Seguridad', 'Cifrado de datos sensibles obligatorio', TRUE, 'Implementado con TLS 1.3', 1);
+
+-- Insertar en registro_verificacion_aprobacion (Aprobaciones del formulario)
+-- Suponemos que el id_formulario_verificacion generado es 1 (ajustar según el ID real)
+INSERT INTO `intraNet_DB`.`registro_verificacion_aprobacion` (
+    `id_formulario_verificacion`, `fecha_aprobacion`, `version_aprobada`, 
+    `observaciones`, `nombre_responsable`, `firma_id`
+) VALUES
+(1, '2023-10-20', 'v1.0.0', 'Aprobado con observaciones menores', 'Gerente de Proyecto', 1),
+(1, '2023-10-21', 'v1.0.1', 'Correcciones realizadas y verificadas', 'Arquitecto Técnico', 2);

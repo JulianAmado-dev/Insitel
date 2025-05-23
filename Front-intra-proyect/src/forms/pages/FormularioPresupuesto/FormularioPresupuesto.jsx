@@ -18,6 +18,7 @@ import {
   FaConciergeBell,
   FaCalculator,
 } from "react-icons/fa";
+import { BackButton } from "@forms/components/BackButton"; // Added import
 
 import "./FormularioPresupuesto.css";
 
@@ -212,7 +213,7 @@ const FormularioPresupuesto = () => {
     }
     try {
       const { data } = await axiosInstance.get(
-        `/api/Projects/${area}/${id_proyecto}/form/presupuesto/get`
+        `/api/Proyectos/${area}/${id_proyecto}/form/presupuesto/get`
       );
 
       if (data && data.formulario_presupuesto) {
@@ -306,8 +307,8 @@ const FormularioPresupuesto = () => {
     const isExistingForm = formRecordId;
     const method = isExistingForm ? "patch" : "post";
     const endpoint = isExistingForm
-      ? `/api/Projects/${area}/${id_proyecto}/form/presupuesto/update`
-      : `/api/Projects/${area}/${id_proyecto}/form/presupuesto/fill`;
+      ? `/api/Proyectos/${area}/${id_proyecto}/form/presupuesto/update`
+      : `/api/Proyectos/${area}/${id_proyecto}/form/presupuesto/fill`;
 
     console.log(`Attempting ${method} to ${endpoint} with payload:`, payload);
 
@@ -332,11 +333,12 @@ const FormularioPresupuesto = () => {
     return initialData;
   }, [initialData]);
 
-  return (
-    <>
-      <div className="project-planning-container">
-        <header className="form-header">
-          <h1>Planificación del Proyecto - Presupuesto</h1>
+return (
+  <>
+    <div className="project-planning-container">
+      <BackButton area={area} id_proyecto={id_proyecto} /> {/* Added BackButton component with props */}
+      <header className="form-header">
+        <h1>Planificación del Proyecto - Presupuesto</h1>
           <div className="form-code">SIGAR-2025</div>
         </header>
         <Formik

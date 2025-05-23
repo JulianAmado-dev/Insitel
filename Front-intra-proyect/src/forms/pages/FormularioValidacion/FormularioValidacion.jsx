@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { useParams } from "react-router-dom"; // Added useParams
 import { axiosInstance } from "../../../common/api/axiosInstance";
+import { BackButton } from "@forms/components/BackButton"; // Added import
 
 function FormularioValidacion() {
+  const { area, id_proyecto } = useParams(); // Get params
   const [files, setFiles] = useState([]);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -30,9 +33,11 @@ function FormularioValidacion() {
   };
 
   return (
-    <div {...getRootProps()} className="dropzone">
-      <input {...getInputProps()} />
-      <p>Arrastra y suelta un archivo aquí, o haz clic para seleccionar uno</p>
+    <div> {/* Added a wrapper div */}
+      <BackButton area={area} id_proyecto={id_proyecto} /> {/* Added BackButton component with props */}
+      <div {...getRootProps()} className="dropzone">
+        <input {...getInputProps()} />
+        <p>Arrastra y suelta un archivo aquí, o haz clic para seleccionar uno</p>
       <ul>
         {/* {files.map((file, index) => (
           <li key={index}>{file.name}</li>
@@ -51,6 +56,7 @@ function FormularioValidacion() {
           </li>
         ))}
       </ul>
+      </div>
     </div>
   );
 }

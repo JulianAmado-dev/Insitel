@@ -60,6 +60,7 @@
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   font-family: "Poppins", sans-serif;
+  position: relative; /* Added position relative */
 }
 
 .presupuesto-form-container h1 {

@@ -41,6 +41,7 @@ import {
   FaSave,
   FaExclamationTriangle,
 } from "react-icons/fa";
+import { BackButton } from "@forms/components/BackButton"; // Added import
 
 import "./FormularioGeneral.css";
 
@@ -196,17 +197,18 @@ const FormularioGeneral = () => {
     try {
       console.log(`Fetching General Form data for project ID: ${id_proyecto}, area: ${area}`);
       const { data } = await axiosInstance.get(
-        `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/get`
+        `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/general/get`
       );
       console.log("Fetched general form data (raw API response):", data);
 
-      const generalDataArray = data.formulario_general;
+      const generalDataObject = data.formulario_general; // API returns an object
       const teamData = data.miembros_proyecto || [];
       const buysData = data.compras_proyecto || [];
 
       // Determine edit/create mode based on whether a record for id_proyecto was found
-      if (generalDataArray && generalDataArray.length > 0 && generalDataArray[0]) {
-        const generalDataFromServer = generalDataArray[0];
+      // Corrected condition to check if generalDataObject is a valid object
+      if (generalDataObject && typeof generalDataObject === 'object' && generalDataObject !== null && Object.keys(generalDataObject).length > 0 && generalDataObject.id_proyecto !== undefined) {
+        const generalDataFromServer = generalDataObject; // Use the object directly
         console.log("EDIT MODE: Record found for id_proyecto", id_proyecto, ". Data:", generalDataFromServer);
         
         setFormRecordId(id_proyecto); // Use id_proyecto from URL params for Formik key
@@ -239,7 +241,7 @@ const FormularioGeneral = () => {
         console.log("Set initialData for EDIT mode. formRecordId (now id_proyecto):", id_proyecto, "Processed initialData (booleans ensured):", processedData);
 
       } else {
-        console.log("CREATE MODE: No existing general form data found for id_proyecto", id_proyecto, ". Setting defaults. data.formulario_general:", generalDataArray);
+        console.log("CREATE MODE: No valid existing general form data found for id_proyecto", id_proyecto, ". Setting defaults. Received data.formulario_general:", generalDataObject);
         setFormRecordId(null); // No specific record ID, so null for Formik key (create context)
         setInitialData(createModeDefaultData);
       }
@@ -466,7 +468,7 @@ const FormularioGeneral = () => {
       if (formRecordId) {
         try {
           await axiosInstance.patch(
-            `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/update`,
+            `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/general/update`,
             payload // Send the processed payload
           );
           Toast.fire({
@@ -683,7 +685,7 @@ const FormularioGeneral = () => {
 
         console.log("Final payload to POST to /fill (General) (booleans formatted):", createPayload);
         response = await axiosInstance.post(
-          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/fill`,
+          `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/general/fill`,
           createPayload
         );
         Toast.fire({ icon: "success", title: "Formulario General creado con éxito." });
@@ -698,7 +700,7 @@ const FormularioGeneral = () => {
         }
         console.log("Final payload to PATCH to /update (General):", payloadToSend);
         response = await axiosInstance.patch(
-          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/update`,
+          `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/general/update`,
           payloadToSend // payloadToSend is already formatted
         );
         Toast.fire({ icon: "success", title: "Formulario General actualizado con éxito." });
@@ -2055,11 +2057,12 @@ const FormularioGeneral = () => {
     );
   };
 
-  // Renderizado del componente principal
-  return (
-    <div className="project-planning-container">
-      <header className="form-header">
-        <h1>Formulario de Planeación de Proyectos</h1>
+// Renderizado del componente principal
+return (
+  <div className="project-planning-container">
+    <BackButton area={area} id_proyecto={id_proyecto} /> {/* Added BackButton component with props */}
+    <header className="form-header">
+      <h1>Formulario de Planeación de Proyectos</h1>
         <div className="form-code">SIGAR-2025</div>
       </header>
 

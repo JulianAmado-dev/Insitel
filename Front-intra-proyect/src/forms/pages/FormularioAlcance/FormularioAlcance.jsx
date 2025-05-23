@@ -28,6 +28,7 @@ import {
   FaSquareRootVariable,
 } from "react-icons/fa6";
 import { BiInfoCircle } from "react-icons/bi";
+import { BackButton } from "@forms/components/BackButton"; // Added import
 import "./FormularioAlcance.css";
 import { isEqual } from "lodash";
 
@@ -115,26 +116,28 @@ const FormularioAlcance = () => {
     try {
       console.log(`Fetching Alcance Form data for project ID: ${id_proyecto}, area: ${area}`);
       const { data } = await axiosInstance.get(
-        `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/get`
+        `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/alcance/get`
       );
       console.log("Fetched Alcance form data (raw API response):", data);
 
-      const alcanceDataArray = data.formulario_alcance;
+      const alcanceDataObject = data.formulario_alcance; // API returns an object
 
-      if (alcanceDataArray && alcanceDataArray.length > 0 && alcanceDataArray[0]) {
-        const alcanceDataFromServer = alcanceDataArray[0];
+      // Check if alcanceDataObject is a non-null object and has expected properties
+      if (alcanceDataObject && typeof alcanceDataObject === 'object' && alcanceDataObject !== null && Object.keys(alcanceDataObject).length > 0 && alcanceDataObject.id_proyecto !== undefined) {
+        const alcanceDataFromServer = alcanceDataObject; // Use the object directly
         console.log("EDIT MODE: Record found for id_proyecto", id_proyecto, "in formulario_alcance. Data:", alcanceDataFromServer);
         
         setFormRecordId(id_proyecto); // Use id_proyecto from URL for Formik key
         
         const processedData = {
-          ...createModeDefaultDataAlcance,
-          ...alcanceDataFromServer,
+          ...createModeDefaultDataAlcance, // Start with defaults
+          ...alcanceDataFromServer,       // Override with fetched data
         };
         setInitialData(processedData);
         console.log("Set initialData for EDIT mode (Alcance). formRecordId (now id_proyecto):", id_proyecto, "Processed initialData:", processedData);
       } else {
-        console.log("CREATE MODE: No existing Alcance form data found for id_proyecto", id_proyecto, ". Setting defaults. data.formulario_alcance:", alcanceDataArray);
+        // Log the actual data received if it didn't meet EDIT mode criteria
+        console.log("CREATE MODE: No valid existing Alcance form data found for id_proyecto", id_proyecto, ". Setting defaults. Received data.formulario_alcance:", alcanceDataObject);
         setFormRecordId(null);
         setInitialData(createModeDefaultDataAlcance);
       }
@@ -188,7 +191,7 @@ const FormularioAlcance = () => {
       if (formRecordId) { // formRecordId is id_proyecto here
         try {
           await axiosInstance.patch(
-            `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/update`,
+            `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/alcance/update`,
             camposCambiados
           );
           Toast.fire({
@@ -309,7 +312,7 @@ const FormularioAlcance = () => {
         const payloadForCreation = { ...values }; 
         console.log("Final payload to POST to /fill (Alcance):", payloadForCreation);
         response = await axiosInstance.post(
-          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/fill`,
+          `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/alcance/fill`,
           payloadForCreation
         );
         Toast.fire({ icon: "success", title: "Formulario de Alcance creado con éxito." });
@@ -330,7 +333,7 @@ const FormularioAlcance = () => {
         }
         console.log("Final payload to PATCH to /update (Alcance):", changedFields);
         response = await axiosInstance.patch(
-          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/update`,
+          `http://localhost:3001/api/Proyectos/${area}/${id_proyecto}/form/alcance/update`,
           changedFields
         );
         Toast.fire({ icon: "success", title: "Formulario de Alcance actualizado con éxito." });
@@ -744,11 +747,12 @@ const FormularioAlcance = () => {
     </div>
   );
 
-  // Renderizado del componente principal
-  return (
-    <div className="project-planning-container">
-      <header className="form-header">
-        <h1>Formulario de Alcance</h1>
+// Renderizado del componente principal
+return (
+  <div className="project-planning-container">
+    <BackButton area={area} id_proyecto={id_proyecto} /> {/* Added BackButton component with props */}
+    <header className="form-header">
+      <h1>Formulario de Alcance</h1>
         <div className="form-code">SIGAR-2025</div>
       </header>
 

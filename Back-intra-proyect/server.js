@@ -455,11 +455,11 @@ app.put(
 );
 
 app.get(
-  "/api/Projects/:area",
+  "/api/Proyectos/:area",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     console.log(
-      "hola 14 - Entrando a la ruta /api/Projects/:area con área:",
+      "hola 14 - Entrando a la ruta /api/Proyectos/:area con área:",
       req.params.area
     );
     try {
@@ -506,7 +506,7 @@ app.get(
         data: proyectos,
       });
     } catch (error) {
-      console.error("Error en la ruta /api/Projects/:area:", error);
+      console.error("Error en la ruta /api/Proyectos/:area:", error);
       next(error);
       return res.status(500).json({
         status: "error",
@@ -519,7 +519,7 @@ app.get(
 
 // --- Formulario General Endpoints ---
 app.get(
-  "/api/Projects/:area/:id_proyecto/form/general/get",
+  "/api/Proyectos/:area/:id_proyecto/form/general/get",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     try {
@@ -563,7 +563,7 @@ app.get(
 );
 
 app.post(
-  "/api/Projects/:area/:id_proyecto/form/general/fill",
+  "/api/Proyectos/:area/:id_proyecto/form/general/fill",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     // Added next
@@ -648,7 +648,7 @@ app.post(
 );
 
 app.patch(
-  "/api/Projects/:area/:id_proyecto/form/general/update",
+  "/api/Proyectos/:area/:id_proyecto/form/general/update",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     // Added next
@@ -737,7 +737,7 @@ app.patch(
 
 // --- Formulario Alcance Endpoints ---
 app.get(
-  "/api/Projects/:area/:id_proyecto/form/alcance/get",
+  "/api/Proyectos/:area/:id_proyecto/form/alcance/get",
   passport.authenticate("jwt", { session: false }), // Added auth
   async (req, res, next) => {
     try {
@@ -767,7 +767,7 @@ app.get(
 );
 
 app.post(
-  "/api/Projects/:area/:id_proyecto/form/alcance/fill",
+  "/api/Proyectos/:area/:id_proyecto/form/alcance/fill",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -800,7 +800,7 @@ app.post(
 );
 
 app.patch(
-  "/api/Projects/:area/:id_proyecto/form/alcance/update",
+  "/api/Proyectos/:area/:id_proyecto/form/alcance/update",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -834,7 +834,7 @@ app.patch(
 
 // --- Formulario Presupuesto Endpoints ---
 app.post(
-  "/api/Projects/:area/:id_proyecto/form/presupuesto/fill",
+  "/api/Proyectos/:area/:id_proyecto/form/presupuesto/fill",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -958,7 +958,7 @@ app.post(
 );
 
 app.get(
-  "/api/Projects/:area/:id_proyecto/form/presupuesto/get",
+  "/api/Proyectos/:area/:id_proyecto/form/presupuesto/get",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -1006,7 +1006,7 @@ app.get(
 );
 
 app.patch(
-  "/api/Projects/:area/:id_proyecto/form/presupuesto/update",
+  "/api/Proyectos/:area/:id_proyecto/form/presupuesto/update",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -1144,10 +1144,10 @@ app.patch(
 );
 
 app.post(
-  "/api/Projects/Create",
+  "/api/Proyectos/Create",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    console.log("hola 18 - Entrando a la ruta /api/Projects/Create");
+    console.log("hola 18 - Entrando a la ruta /api/Proyectos/Create");
     const { nombre_proyecto, empresa_asociada, summary, prioridad, area } =
       req.body;
 
@@ -1186,7 +1186,7 @@ app.post(
       });
       console.log("hola 21 - Proyecto creado, respuesta enviada");
     } catch (error) {
-      console.error("Error en la ruta /api/Projects/Create:", error);
+      console.error("Error en la ruta /api/Proyectos/Create:", error);
       res.status(500).json({
         message: "Error interno del servidor",
         error: error.message,
@@ -1198,7 +1198,7 @@ app.post(
 
 // --- Formulario Verificacion Endpoints ---
 app.post(
-  "/api/Projects/:area/:id_proyecto/form/verificacion/fill",
+  "/api/Proyectos/:area/:id_proyecto/form/verificacion/fill",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -1275,7 +1275,7 @@ app.post(
 );
 
 app.get(
-  "/api/Projects/:area/:id_proyecto/form/verificacion/get",
+  "/api/Proyectos/:area/:id_proyecto/form/verificacion/get",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -1324,7 +1324,7 @@ app.get(
 );
 
 app.patch(
-  "/api/Projects/:area/:id_proyecto/form/verificacion/:id_form_verif/update",
+  "/api/Proyectos/:area/:id_proyecto/form/verificacion/:id_form_verif/update",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto, id_form_verif } = req.params;
