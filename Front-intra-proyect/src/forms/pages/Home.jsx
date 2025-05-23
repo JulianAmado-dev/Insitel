@@ -366,9 +366,7 @@ function Home() {
           <footer className="form-footer">
             <button
               className="form-button"
-              onClick={() =>
-                navigate(`/proyecto/${id_proyecto}/form/presupuesto`)
-              }
+              onClick={() => navigate(`form/presupuesto`)}
             >
               Acceder
             </button>
@@ -410,7 +408,7 @@ function Home() {
           <footer className="form-footer">
             <button
               className="form-button"
-              onClick={() => navigate(`/proyecto/${id_proyecto}/form/riesgos`)}
+              onClick={() => navigate(`form/riesgos`)}
             >
               Acceder
             </button>
@@ -453,7 +451,7 @@ function Home() {
             <button
               className="form-button"
               onClick={() =>
-                navigate(`/proyecto/${id_proyecto}/form/verificacion`)
+                navigate(`form/verificacion`)
               }
             >
               Acceder
@@ -497,7 +495,7 @@ function Home() {
             <button
               className="form-button"
               onClick={() =>
-                navigate(`/proyecto/${id_proyecto}/form/validacion`)
+                navigate(`form/validacion`)
               }
             >
               Acceder

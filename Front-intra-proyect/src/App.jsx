@@ -23,7 +23,7 @@ function App() {
             <Route path="/auth/*" element={<AuthRoutes />} />
 
             <Route path="/dashboard" element={<DashboardDeploy />}>
-              <Route path="projects/*" element={<ProjectsRoutes />} />
+              <Route path=":area/*" element={<ProjectsRoutes />} />
               <Route path="content/*" element={<DashboardContent />} />
               <Route
                 path="create-employees/*"

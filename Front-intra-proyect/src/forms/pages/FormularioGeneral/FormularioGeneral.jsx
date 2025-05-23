@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Swal from "sweetalert2";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { axiosInstance } from "@api/AxiosInstance";
-
+import isEqual from "lodash/isEqual"; // Re-added isEqual
+import PropTypes from "prop-types";
 import {
   differenceInDays,
   differenceInWeeks,
   differenceInMonths,
   differenceInYears,
   intervalToDuration,
-  formatDuration,
   parseISO,
   isValid,
+  format,
 } from "date-fns";
 // Importa los esquemas Yup desde el archivo separado
 import { wizardValidationSchemas } from "@schemas/schemas.js";
@@ -42,7 +43,6 @@ import {
 } from "react-icons/fa";
 
 import "./FormularioGeneral.css";
-import { number } from "yup";
 
 // Componente de Tooltip personalizado
 const Tooltip = ({ text, children }) => (
@@ -51,6 +51,11 @@ const Tooltip = ({ text, children }) => (
     <span className="tooltip-text">{text}</span>
   </div>
 );
+
+Tooltip.propTypes = {
+  text: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 // Componente de campo con etiqueta e información adicional
 const FormField = ({
@@ -75,186 +80,105 @@ const FormField = ({
   </div>
 );
 
+FormField.propTypes = {
+  label: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  required: PropTypes.bool,
+  tooltip: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  className: PropTypes.string,
+};
+
+
+// Define default structure for initialData (especially for create mode)
+// Moved outside the component to be a stable reference
+const createModeDefaultData = {
+  area_solicitante: "",
+  nombre_solicitante: "",
+  descripcion_solicitud: "",
+  genera_cambio_tipo: "Estandar",
+  departamento_interno: "",
+  cliente_final: "",
+  tipo_proyecto: [],
+  nivel_hardware: "",
+  componentes_hardware: "",
+  otro_valor_componentes_hardware: "",
+  nivel_software: "",
+  componentes_software: "",
+  otro_valor_componentes_software: "",
+  entregables: "",
+  requisitos_seguimiento_y_medicion: "",
+  criterios_de_aceptacion: "",
+  consecuencias_por_fallar: "",
+  fecha_inicio_planificada: "",
+  fecha_final_planificada: "",
+  ruta_proyecto_desarrollo: "",
+  ruta_cotizacion: "",
+  aplica_doc_ideas_iniciales: true,
+  aplica_doc_especificaciones: true,
+  aplica_doc_casos_uso: true,
+  aplica_doc_diseno_sistema: true,
+  aplica_doc_plan_pruebas: true,
+  aplica_doc_manuales: true,
+  aplica_doc_liberacion: true,
+  ref_doc_ideas_iniciales: "",
+  ref_doc_especificaciones: "",
+  ref_doc_casos_uso: "",
+  ref_doc_diseno_sistema: "",
+  ref_doc_plan_pruebas: "",
+  ref_doc_manuales: "",
+  ref_doc_liberacion: "",
+  verif_doc_ideas_iniciales: false,
+  verif_doc_especificaciones: false,
+  verif_doc_casos_uso: false,
+  verif_doc_diseno_sistema: false,
+  verif_doc_plan_pruebas: false,
+  verif_doc_manuales: false,
+  verif_doc_liberacion: false,
+  equipo: [{ id_empleado: null, rol_en_proyecto: "", responsabilidades: "" }],
+  compras: [{ proveedor: "", descripcion: "", cantidad: 0, unidad_medida: "", total_usd: null, total_cop: null, orden_compra: "", estado_compra: "" }],
+};
+
+// Array of boolean checkbox field names
+const booleanCheckboxFields = [
+  "aplica_doc_ideas_iniciales", "verif_doc_ideas_iniciales",
+  "aplica_doc_especificaciones", "verif_doc_especificaciones",
+  "aplica_doc_casos_uso", "verif_doc_casos_uso",
+  "aplica_doc_diseno_sistema", "verif_doc_diseno_sistema",
+  "aplica_doc_plan_pruebas", "verif_doc_plan_pruebas",
+  "aplica_doc_manuales", "verif_doc_manuales",
+  "aplica_doc_liberacion", "verif_doc_liberacion",
+];
+
+// Helper function to process boolean fields for payload before sending to backend
+const formatBooleanFieldsForPayload = (payloadObject) => {
+  booleanCheckboxFields.forEach(field => {
+    if (Object.prototype.hasOwnProperty.call(payloadObject, field)) {
+      let value = payloadObject[field];
+      // If value is somehow an array (e.g., ['0'] or [false]), take the first element
+      if (Array.isArray(value) && value.length > 0) {
+        value = value[0];
+      }
+      // Convert true, 'true', '1', 1 to 1, otherwise 0
+      payloadObject[field] = (value === true || value === 'true' || value === '1' || value === 1) ? 1 : 0;
+    }
+  });
+};
+
 // --- Componente Principal ---
 const FormularioGeneral = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const [animateSection, setAnimateSection] = useState(true);
+  // Initialize initialData with the default structure
+  const [initialData, setInitialData] = useState(createModeDefaultData);
+  const [formRecordId, setFormRecordId] = useState(null); // Stores the PK of the form_general record
+
   const { id_proyecto } = useParams();
   const { area } = useParams();
 
-  const totalSteps = wizardValidationSchemas.length;
+  const totalSteps = wizardValidationSchemas.length -1; // Adjusted for 0-based indexing
   const today = new Date();
-  /* const navigate = useNavigate(); */
-
-  const initialValues = {
-    // Paso 1
-    area_solicitante: "",
-    nombre_solicitante: "",
-    descripcion_solicitud: "",
-    genera_cambio_tipo: "Estandar",
-    departamento_interno: "",
-    cliente_final: "",
-    // Paso 2
-    tipo_proyecto: [],
-    nivel_hardware: "",
-    componentes_hardware: "",
-    otro_valor_componentes_hardware: "",
-    nivel_software: "",
-    componentes_software: "",
-    otro_valor_componentes_software: "",
-    entregables: "",
-    requisitos_seguimiento_y_medicion: "",
-    criterios_de_aceptacion: "",
-    consecuencias_por_fallar: "",
-    fecha_inicio_planificada: "",
-    fecha_final_planificada: "",
-    //tiempo total debería ser un calculo
-    // Paso 3
-    ruta_proyecto_desarrollo: "",
-    ruta_cotizacion: "",
-    aplica_doc_ideas_iniciales: true,
-    aplica_doc_especificaciones: true,
-    aplica_doc_casos_uso: true,
-    aplica_doc_diseno_sistema: true,
-    aplica_doc_plan_pruebas: true,
-    aplica_doc_manuales: true,
-    aplica_doc_liberacion: true,
-    ref_doc_ideas_iniciales: "",
-    ref_doc_especificaciones: "",
-    ref_doc_casos_uso: "",
-    ref_doc_diseno_sistema: "",
-    ref_doc_plan_pruebas: "",
-    ref_doc_manuales: "",
-    ref_doc_liberacion: "",
-    verif_doc_ideas_iniciales: false,
-    verif_doc_especificaciones: false,
-    verif_doc_casos_uso: false,
-    verif_doc_diseno_sistema: false,
-    verif_doc_plan_pruebas: false,
-    verif_doc_manuales: false,
-    verif_doc_liberacion: false,
-    // Paso 4
-    equipo: [{ id_empleado: null, rol_en_proyecto: "", responsabilidades: "" }],
-    // Paso 5
-    compras: [
-      {
-        proveedor: "",
-        descripcion: "",
-        cantidad: 137,
-        unidad_medida: "",
-        total_usd: null,
-        total_cop: null,
-        orden_compra: "",
-        estado_compra: "",
-      },
-    ],
-  };
-
-  // Ajustar a medianoche para evitar problemas con la hora al comparar solo fechas
-  today.setHours(0, 0, 0, 0);
-  const nowLocalISO = new Date(Date.now() - today.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
-
-  const formatDateDifference = useCallback(
-    (fecha_inicio_ingreso, fecha_final_ingreso) => {
-      if (!fecha_inicio_ingreso || !fecha_final_ingreso) {
-        return ["(seleccione ambas fechas)"];
-      }
-
-      const fecha_inicio = parseISO(fecha_inicio_ingreso);
-      const fecha_final = parseISO(fecha_final_ingreso);
-
-      if (!isValid(fecha_inicio) || !isValid(fecha_final)) {
-        return ["Fechas invalidas"];
-      }
-
-      if (!isValid(fecha_inicio) || !isValid(fecha_final)) {
-        return ["(Fechas inválidas)"];
-      }
-
-      if (fecha_final < fecha_inicio) {
-        return ["(Fecha fin anterior a fecha inicio)"];
-      }
-
-      let diferenciaArray = [];
-
-      const anos = differenceInYears(fecha_final, fecha_inicio);
-      const meses = differenceInMonths(fecha_final, fecha_inicio);
-      const semanas = differenceInWeeks(fecha_final, fecha_inicio);
-      const dias = differenceInDays(fecha_final, fecha_inicio);
-
-      // Esta lógica sigue siendo incorrecta para descomposición, pero evita NaN
-      if (anos !== 0) {
-        diferenciaArray.push(`${anos} año${anos > 1 ? "s" : ""}`);
-      } else "";
-      if (meses !== 0) {
-        diferenciaArray.push(`${meses} mes${meses > 1 ? "es" : ""}`);
-      } else "";
-      if (semanas !== 0) {
-        diferenciaArray.push(`${semanas} semana${semanas > 1 ? "s" : ""}`);
-      } else "";
-      if (dias >= 0) {
-        diferenciaArray.push(`${dias} día${dias !== 1 ? "s" : ""}`);
-      }
-
-      console.log("soy response", diferenciaArray);
-      return diferenciaArray;
-    },
-    []
-  );
-
-  const formatIntervalDuration = useCallback((fecha_inicio, fecha_final) => {
-    if (!fecha_inicio || !fecha_final) {
-      return "ingrese fechas validas";
-    }
-
-    const startDate = parseISO(fecha_inicio);
-    const endDate = parseISO(fecha_final);
-
-    // Validar fechas ANTES de calcular
-    if (!isValid(startDate) || !isValid(endDate)) {
-      return "(Ingrese fechas válidas 134)";
-    }
-
-    if (endDate < startDate) {
-      return "(Fecha fin < Fecha inicio)";
-    }
-
-    const duration = intervalToDuration({
-      start: startDate,
-      end: endDate,
-    });
-
-    const years = duration.years;
-    const months = duration.months;
-    console.log("aqui la duracion");
-    const weeks = duration.days / 7;
-    const remainingDays = duration.days % 7;
-
-    const tiempoFormateado = [];
-
-    if (years !== 0 && years) {
-      tiempoFormateado.push(`${years} año${years > 1 ? "s" : ""}`);
-    } else "";
-    if (months !== 0 && months) {
-      tiempoFormateado.push(`${months} mes${months > 1 ? "es" : ""}`);
-    } else "";
-    if (Math.floor(weeks) !== 0 && weeks) {
-      tiempoFormateado.push(
-        `${Math.floor(weeks)} semana${Math.floor(weeks) > 1 ? "s" : ""}`
-      );
-    } else "";
-    if (remainingDays >= 0 && remainingDays) {
-      tiempoFormateado.push(
-        `${remainingDays} día${remainingDays !== 1 ? "s" : ""}`
-      );
-    }
-
-    console.log("holahola", tiempoFormateado);
-    return tiempoFormateado.join(", ");
-  }, []);
 
   const Toast = Swal.mixin({
     toast: true,
@@ -268,33 +192,310 @@ const FormularioGeneral = () => {
     },
   });
 
-  const registrarDatos = (sendedData, area, id_proyecto) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        axiosInstance
-          .post(
-            `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/fill`,
-            sendedData
-          )
-          .then(({ data }) => {
-            Toast.fire({
-              icon: "success",
-              title: "Datos enviados",
-            });
-            resolve(data);
-          })
-          .catch(({ response }) => {
-            console.log("hola, soy response", response);
-            Toast.fire({
-              icon: "warning",
-              timer: 5000,
-              title: response.data.error,
-            });
-            reject(response);
-            throw response;
-          });
-      }, 2000);
+  const obtenerFormulario = useCallback(async () => {
+    try {
+      console.log(`Fetching General Form data for project ID: ${id_proyecto}, area: ${area}`);
+      const { data } = await axiosInstance.get(
+        `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/get`
+      );
+      console.log("Fetched general form data (raw API response):", data);
+
+      const generalDataArray = data.formulario_general;
+      const teamData = data.miembros_proyecto || [];
+      const buysData = data.compras_proyecto || [];
+
+      // Determine edit/create mode based on whether a record for id_proyecto was found
+      if (generalDataArray && generalDataArray.length > 0 && generalDataArray[0]) {
+        const generalDataFromServer = generalDataArray[0];
+        console.log("EDIT MODE: Record found for id_proyecto", id_proyecto, ". Data:", generalDataFromServer);
+        
+        setFormRecordId(id_proyecto); // Use id_proyecto from URL params for Formik key
+        
+        const fecha_inicio_formateada = generalDataFromServer?.fecha_inicio_planificada
+          ? format(parseISO(generalDataFromServer.fecha_inicio_planificada), "yyyy-MM-dd'T'HH:mm")
+          : "";
+        const fecha_final_formateada = generalDataFromServer?.fecha_final_planificada
+          ? format(parseISO(generalDataFromServer.fecha_final_planificada), "yyyy-MM-dd'T'HH:mm")
+          : "";
+        
+        const processedData = {
+          ...createModeDefaultData, 
+          ...generalDataFromServer, 
+          fecha_inicio_planificada: fecha_inicio_formateada,
+          fecha_final_planificada: fecha_final_formateada,
+          tipo_proyecto: generalDataFromServer?.tipo_proyecto 
+            ? generalDataFromServer.tipo_proyecto.split(",") 
+            : createModeDefaultData.tipo_proyecto,
+          equipo: teamData.length > 0 ? teamData : createModeDefaultData.equipo,
+          compras: buysData.length > 0 ? buysData : createModeDefaultData.compras,
+        };
+        // Ensure boolean fields from server (0/1) are converted to true/false for initialData
+        booleanCheckboxFields.forEach(field => {
+          if (Object.prototype.hasOwnProperty.call(processedData, field)) {
+            processedData[field] = !!processedData[field]; // Converts 0 to false, 1 to true
+          }
+        });
+        setInitialData(processedData);
+        console.log("Set initialData for EDIT mode. formRecordId (now id_proyecto):", id_proyecto, "Processed initialData (booleans ensured):", processedData);
+
+      } else {
+        console.log("CREATE MODE: No existing general form data found for id_proyecto", id_proyecto, ". Setting defaults. data.formulario_general:", generalDataArray);
+        setFormRecordId(null); // No specific record ID, so null for Formik key (create context)
+        setInitialData(createModeDefaultData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch general form data:", error);
+      if (error.response && error.response.status === 404) {
+        console.log("CREATE MODE (404): Form for id_proyecto", id_proyecto, "does not exist. Setting defaults.");
+      } else {
+        console.error("CREATE MODE (Error): Unexpected error fetching for id_proyecto", id_proyecto, ". Setting defaults.", error);
+      }
+      setFormRecordId(null);
+      setInitialData(createModeDefaultData);
+    }
+  }, [id_proyecto, area]);
+
+  useEffect(() => {
+    obtenerFormulario();
+  }, [obtenerFormulario]);
+  
+  // Memoize initialValues to ensure stable reference unless initialData changes
+  const initialValues = useMemo(() => {
+    console.log("useMemo: Recalculating initialValues for Formik based on initialData:", initialData);
+    return {
+      area_solicitante: initialData?.area_solicitante || "",
+      nombre_solicitante: initialData?.nombre_solicitante || "",
+      descripcion_solicitud: initialData?.descripcion_solicitud || "",
+      genera_cambio_tipo: initialData?.genera_cambio_tipo || "Estandar",
+      departamento_interno: initialData?.departamento_interno || "",
+      cliente_final: initialData?.cliente_final || "",
+      tipo_proyecto: initialData?.tipo_proyecto || [],
+      nivel_hardware: initialData?.nivel_hardware || "",
+      componentes_hardware: initialData?.componentes_hardware || "",
+      otro_valor_componentes_hardware: initialData?.otro_valor_componentes_hardware || "",
+      nivel_software: initialData?.nivel_software || "",
+      componentes_software: initialData?.componentes_software || "",
+      otro_valor_componentes_software: initialData?.otro_valor_componentes_software || "",
+      entregables: initialData?.entregables || "",
+      requisitos_seguimiento_y_medicion: initialData?.requisitos_seguimiento_y_medicion || "",
+      criterios_de_aceptacion: initialData?.criterios_de_aceptacion || "",
+      consecuencias_por_fallar: initialData?.consecuencias_por_fallar || "",
+      fecha_inicio_planificada: initialData?.fecha_inicio_planificada || "",
+      fecha_final_planificada: initialData?.fecha_final_planificada || "",
+      ruta_proyecto_desarrollo: initialData?.ruta_proyecto_desarrollo || "",
+      ruta_cotizacion: initialData?.ruta_cotizacion || "",
+      aplica_doc_ideas_iniciales: initialData?.aplica_doc_ideas_iniciales === undefined ? true : initialData.aplica_doc_ideas_iniciales,
+      aplica_doc_especificaciones: initialData?.aplica_doc_especificaciones === undefined ? true : initialData.aplica_doc_especificaciones,
+      aplica_doc_casos_uso: initialData?.aplica_doc_casos_uso === undefined ? true : initialData.aplica_doc_casos_uso,
+      aplica_doc_diseno_sistema: initialData?.aplica_doc_diseno_sistema === undefined ? true : initialData.aplica_doc_diseno_sistema,
+      aplica_doc_plan_pruebas: initialData?.aplica_doc_plan_pruebas === undefined ? true : initialData.aplica_doc_plan_pruebas,
+      aplica_doc_manuales: initialData?.aplica_doc_manuales === undefined ? true : initialData.aplica_doc_manuales,
+      aplica_doc_liberacion: initialData?.aplica_doc_liberacion === undefined ? true : initialData.aplica_doc_liberacion,
+      ref_doc_ideas_iniciales: initialData?.ref_doc_ideas_iniciales || "",
+      ref_doc_especificaciones: initialData?.ref_doc_especificaciones || "",
+      ref_doc_casos_uso: initialData?.ref_doc_casos_uso || "",
+      ref_doc_diseno_sistema: initialData?.ref_doc_diseno_sistema || "",
+      ref_doc_plan_pruebas: initialData?.ref_doc_plan_pruebas || "",
+      ref_doc_manuales: initialData?.ref_doc_manuales || "",
+      ref_doc_liberacion: initialData?.ref_doc_liberacion || "",
+      verif_doc_ideas_iniciales: initialData?.verif_doc_ideas_iniciales || false,
+      verif_doc_especificaciones: initialData?.verif_doc_especificaciones || false,
+      verif_doc_casos_uso: initialData?.verif_doc_casos_uso || false,
+      verif_doc_diseno_sistema: initialData?.verif_doc_diseno_sistema || false,
+      verif_doc_plan_pruebas: initialData?.verif_doc_plan_pruebas || false,
+      verif_doc_manuales: initialData?.verif_doc_manuales || false,
+      verif_doc_liberacion: initialData?.verif_doc_liberacion || false,
+      equipo: initialData?.equipo && initialData.equipo.length > 0 ? initialData.equipo : [{ id_empleado: null, rol_en_proyecto: "", responsabilidades: "" }],
+      compras: initialData?.compras && initialData.compras.length > 0 ? initialData.compras : [{ proveedor: "", descripcion: "", cantidad: 0, unidad_medida: "", total_usd: null, total_cop: null, orden_compra: "", estado_compra: "" }],
+    };
+  }, [initialData]);
+  
+  // Paso 1
+  // area_solicitante: initialData?.area_solicitante || "",
+    // nombre_solicitante: initialData?.nombre_solicitante || "", // ... rest of the fields
+  // };
+
+  // Ajustar a medianoche para evitar problemas con la hora al comparar solo fechas
+  today.setHours(0, 0, 0, 0);
+  const nowLocalISO = new Date(Date.now() - today.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+
+  const formatDateDifference = useCallback( // Keep useCallback if dependencies are stable or empty
+    (fecha_inicio_ingreso, fecha_final_ingreso) => {
+      if (!fecha_inicio_ingreso || !fecha_final_ingreso) {
+        return ["(seleccione ambas fechas)"];
+      }
+
+      const fecha_inicio = parseISO(fecha_inicio_ingreso);
+      const fecha_final = parseISO(fecha_final_ingreso);
+
+      if (!isValid(fecha_inicio) || !isValid(fecha_final)) {
+        return ["Fechas invalidas"];
+      }
+
+      if (fecha_final < fecha_inicio) {
+        return ["(Fecha fin anterior a fecha inicio)"];
+      }
+
+      let diferenciaArray = [];
+      const anos = differenceInYears(fecha_final, fecha_inicio);
+      const meses = differenceInMonths(fecha_final, fecha_inicio);
+      const semanas = differenceInWeeks(fecha_final, fecha_inicio);
+      const dias = differenceInDays(fecha_final, fecha_inicio);
+
+      if (anos > 0) diferenciaArray.push(`${anos} año${anos > 1 ? "s" : ""}`);
+      if (meses > 0) diferenciaArray.push(`${meses} mes${meses > 1 ? "es" : ""}`);
+      if (semanas > 0) diferenciaArray.push(`${semanas} semana${semanas > 1 ? "s" : ""}`);
+      if (dias >= 0) diferenciaArray.push(`${dias} día${dias !== 1 ? "s" : ""}`);
+      
+      return diferenciaArray.length > 0 ? diferenciaArray : ["(Fechas iguales o inválidas para diferencia)"];
+    },
+    []
+  );
+
+  const formatIntervalDuration = useCallback((fecha_inicio, fecha_final) => {
+    if (!fecha_inicio || !fecha_final) {
+      return "Ingrese fechas válidas";
+    }
+    const startDate = parseISO(fecha_inicio);
+    const endDate = parseISO(fecha_final);
+
+    if (!isValid(startDate) || !isValid(endDate)) {
+      return "(Ingrese fechas válidas)";
+    }
+    if (endDate < startDate) {
+      return "(Fecha fin < Fecha inicio)";
+    }
+
+    const duration = intervalToDuration({ start: startDate, end: endDate });
+    const { years, months, days } = duration;
+    const weeks = Math.floor(days / 7);
+    const remainingDays = days % 7;
+    
+    const tiempoFormateado = [];
+    if (years > 0) tiempoFormateado.push(`${years} año${years > 1 ? "s" : ""}`);
+    if (months > 0) tiempoFormateado.push(`${months} mes${months > 1 ? "es" : ""}`);
+    if (weeks > 0) tiempoFormateado.push(`${weeks} semana${weeks > 1 ? "s" : ""}`);
+    if (remainingDays > 0) tiempoFormateado.push(`${remainingDays} día${remainingDays !== 1 ? "s" : ""}`);
+    
+    return tiempoFormateado.length > 0 ? tiempoFormateado.join(", ") : "Misma fecha";
+  }, []);
+
+  // registrarDatos will be replaced by guardarSeccion and modified handleSubmit
+
+  const camposPorSeccion = {
+    0: [ // Información de la solicitud
+      "area_solicitante", "nombre_solicitante", "descripcion_solicitud",
+      "genera_cambio_tipo", "departamento_interno", "cliente_final",
+    ],
+    1: [ // Información del Requerimiento
+      "tipo_proyecto", "nivel_hardware", "componentes_hardware", "otro_valor_componentes_hardware",
+      "nivel_software", "componentes_software", "otro_valor_componentes_software",
+      "entregables", "requisitos_seguimiento_y_medicion", "criterios_de_aceptacion",
+      "consecuencias_por_fallar", "fecha_inicio_planificada", "fecha_final_planificada",
+    ],
+    2: [ // Gestión Documental
+      "ruta_proyecto_desarrollo", "ruta_cotizacion",
+      "aplica_doc_ideas_iniciales", "ref_doc_ideas_iniciales", "verif_doc_ideas_iniciales",
+      "aplica_doc_especificaciones", "ref_doc_especificaciones", "verif_doc_especificaciones",
+      "aplica_doc_casos_uso", "ref_doc_casos_uso", "verif_doc_casos_uso",
+      "aplica_doc_diseno_sistema", "ref_doc_diseno_sistema", "verif_doc_diseno_sistema",
+      "aplica_doc_plan_pruebas", "ref_doc_plan_pruebas", "verif_doc_plan_pruebas",
+      "aplica_doc_manuales", "ref_doc_manuales", "verif_doc_manuales",
+      "aplica_doc_liberacion", "ref_doc_liberacion", "verif_doc_liberacion",
+    ],
+    3: ["equipo"], // Equipo del Proyecto (array)
+    4: ["compras"], // Proceso de Compras (array)
+  };
+
+  const guardarSeccion = async (sendedData, seccionIndex) => {
+    const camposDeSeccionActual = camposPorSeccion[seccionIndex];
+    if (!camposDeSeccionActual) {
+      console.warn(`No field definition found for section index: ${seccionIndex}`);
+      return;
+    }
+
+    const camposCambiados = {};
+    camposDeSeccionActual.forEach((campo) => {
+      const formValue = sendedData[campo];
+      // Use Object.prototype.hasOwnProperty.call for safer check
+      const initialValue = Object.prototype.hasOwnProperty.call(initialData, campo) ? initialData[campo] : undefined;
+
+      if (!isEqual(formValue, initialValue)) {
+        camposCambiados[campo] = formValue;
+      }
     });
+    
+    const payload = { ...camposCambiados };
+    // Refined date formatting with validation
+    if (Object.prototype.hasOwnProperty.call(payload, "fecha_inicio_planificada")) {
+        const dateVal = payload.fecha_inicio_planificada;
+        if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+            payload.fecha_inicio_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+        } else if (!dateVal) {
+            payload.fecha_inicio_planificada = null;
+        }
+        // If dateVal is not a string or not valid, it remains as is or could be explicitly nulled
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "fecha_final_planificada")) {
+        const dateVal = payload.fecha_final_planificada;
+        if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+            payload.fecha_final_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+        } else if (!dateVal) {
+            payload.fecha_final_planificada = null;
+        }
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "tipo_proyecto") && Array.isArray(payload.tipo_proyecto)) {
+        payload.tipo_proyecto = payload.tipo_proyecto.join(',');
+    }
+    
+    formatBooleanFieldsForPayload(payload); // Format booleans to 0/1
+
+    console.log("Campos cambiados en sección", seccionIndex, "a enviar (booleans formatted):", payload);
+
+    if (Object.keys(payload).length > 0) {
+      // Update initialData locally with the changes from the current section
+      const updatedInitialDataFieldsFromForm = {};
+      Object.keys(camposCambiados).forEach(key => {
+          updatedInitialDataFieldsFromForm[key] = sendedData[key];
+      });
+      setInitialData((prev) => ({ ...prev, ...updatedInitialDataFieldsFromForm }));
+
+      // Only attempt to PATCH if it's an existing form record
+      if (formRecordId) {
+        try {
+          await axiosInstance.patch(
+            `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/update`,
+            payload // Send the processed payload
+          );
+          Toast.fire({
+            icon: "success",
+            title: `Sección ${seccionIndex + 1} guardada en el servidor.`,
+          });
+        } catch (error) {
+          console.error("Error updating section:", error);
+          Toast.fire({
+            icon: "error",
+            title: "Error al actualizar la sección en el servidor.",
+          });
+        }
+      } else {
+        // For a new form, changes are staged locally.
+        console.log(`Sección ${seccionIndex + 1} (nuevo formulario) actualizada localmente. Se guardará al finalizar.`);
+        // Optionally, inform user that changes are local until final save
+        // Toast.fire({
+        //   icon: "info",
+        //   title: `Cambios en sección ${seccionIndex + 1} preparados.`,
+        // });
+      }
+    } else {
+      console.log(`No changes to save in section ${seccionIndex + 1}.`);
+      Toast.fire({
+        icon: "info",
+        title: `No hay cambios para guardar en la sección ${seccionIndex + 1}.`,
+      });
+    }
   };
 
   // Efecto para animar la transición entre pasos
@@ -358,64 +559,206 @@ const FormularioGeneral = () => {
 
   // Función para manejar el envío del formulario
   const handleSubmit = async (values, { setSubmitting }) => {
-    console.log(
-      "Enviando formulario completo:",
-      JSON.stringify(values, null, 2)
-    );
-    registrarDatos(values, area, id_proyecto);
-    setSubmitting(false);
-    // Aquí iría la lógica para enviar los datos al servidor
-    setTimeout(() => {
-      // Simulación
-      alert("Formulario Enviado (Simulación)");
-      setSubmitting(false);
-      // Opcional: resetForm();
-    }, 1500);
-  };
+    console.log("Attempting final submission for FormularioGeneral...");
+    setSubmitting(true);
+    // First, ensure the current (last) section's changes are saved
+    await guardarSeccion(values, currentStep);
 
-  // Función para validar el paso actual
+    // Then, determine all changes across the entire form compared to the *original* initialData
+    // (or decide if guardarSeccion on the last step is sufficient)
+    // For simplicity matching FormularioAlcance, the final submit often just re-saves the last section
+    // or confirms. If a full diff against original load is needed, that's more complex.
+    // Here, we'll assume guardarSeccion on the last step is the primary save action for it.
+
+    // Collect all fields that have changed compared to the most up-to-date initialData
+    // This initialData would have been updated by guardarSeccion if intermediate steps were saved.
+    const changedFieldsPayload = {};
+    Object.keys(values).forEach(key => {
+      const formValue = values[key];
+      const initialValue = Object.prototype.hasOwnProperty.call(initialData, key) ? initialData[key] : undefined;
+      if (!isEqual(formValue, initialValue)) {
+        changedFieldsPayload[key] = formValue;
+      }
+    });
+
+    // Format specific fields for the backend
+    const finalPayload = { ...changedFieldsPayload }; // Start with changed fields
+
+    // If it's a new form (no initialData.id), we might need to send the full payload
+    // or ensure the backend can infer missing fields or handle partial data for creation via PATCH.
+    // For simplicity and to revert to original-like behavior, we'll prepare a potentially full payload
+    // if no ID exists, or stick to changedFields if an ID exists.
+    // However, the original logic sent all `changedFieldsPayload` to PATCH.
+
+    if (Object.prototype.hasOwnProperty.call(finalPayload, "fecha_inicio_planificada")) {
+        const dateVal = finalPayload.fecha_inicio_planificada;
+        if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+            finalPayload.fecha_inicio_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+        } else if (!dateVal) {
+            finalPayload.fecha_inicio_planificada = null;
+        }
+    }
+    if (Object.prototype.hasOwnProperty.call(finalPayload, "fecha_final_planificada")) {
+        const dateVal = finalPayload.fecha_final_planificada;
+        if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+            finalPayload.fecha_final_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+        } else if (!dateVal) {
+            finalPayload.fecha_final_planificada = null;
+        }
+    }
+    if (Object.prototype.hasOwnProperty.call(finalPayload, "tipo_proyecto") && Array.isArray(finalPayload.tipo_proyecto)) {
+      finalPayload.tipo_proyecto = finalPayload.tipo_proyecto.join(',');
+    }
+    formatBooleanFieldsForPayload(finalPayload); // Format booleans to 0/1
+
+    // If there are no changes and it's an existing form, inform the user.
+    if (initialData?.id && Object.keys(finalPayload).length === 0) { // initialData.id might not be the right check if formRecordId is id_proyecto
+      Toast.fire({
+        icon: "info",
+        title: "No hay nuevos cambios para guardar en el formulario general.",
+      });
+      setSubmitting(false);
+      return;
+    }
+    
+    // If it's a new form (no id) but there are no "changes" (because initialData was empty),
+    // then finalPayload would be empty. In this case, we should send all of `values` (formatted).
+    let payloadToSend = finalPayload;
+    if (!initialData?.id && Object.keys(finalPayload).length === 0) {
+        // This is a new form, and no "changes" were detected against an empty initialData.
+        // We need to send all form values, formatted.
+        const allValuesFormatted = { ...values };
+        if (Object.prototype.hasOwnProperty.call(allValuesFormatted, "fecha_inicio_planificada")) {
+            const dateVal = allValuesFormatted.fecha_inicio_planificada;
+            if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+                allValuesFormatted.fecha_inicio_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+            } else if (!dateVal) {
+                allValuesFormatted.fecha_inicio_planificada = null;
+            }
+        }
+        if (Object.prototype.hasOwnProperty.call(allValuesFormatted, "fecha_final_planificada")) {
+            const dateVal = allValuesFormatted.fecha_final_planificada;
+            if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+                allValuesFormatted.fecha_final_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+            } else if (!dateVal) {
+                allValuesFormatted.fecha_final_planificada = null;
+            }
+        }
+        if (Object.prototype.hasOwnProperty.call(allValuesFormatted, "tipo_proyecto") && Array.isArray(allValuesFormatted.tipo_proyecto)) {
+          allValuesFormatted.tipo_proyecto = allValuesFormatted.tipo_proyecto.join(',');
+        }
+        formatBooleanFieldsForPayload(allValuesFormatted); // Format booleans to 0/1
+        payloadToSend = allValuesFormatted;
+    } else {
+       // finalPayload is already formatted if this block is skipped
+       // payloadToSend = finalPayload; // This line is redundant if finalPayload is already assigned to payloadToSend
+    }
+
+
+    const isExistingRecord = !!formRecordId; // True if formRecordId (which is id_proyecto) is not null
+    let response;
+
+    try {
+      if (!isExistingRecord) { // Create new form record
+        const createPayload = { ...values }; // Send all form values
+        // Format fields for creation as needed by the backend /fill endpoint
+        if (Object.prototype.hasOwnProperty.call(createPayload, "fecha_inicio_planificada")) {
+            const dateVal = createPayload.fecha_inicio_planificada;
+            if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+                createPayload.fecha_inicio_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+            } else if (!dateVal) createPayload.fecha_inicio_planificada = null;
+        }
+        if (Object.prototype.hasOwnProperty.call(createPayload, "fecha_final_planificada")) {
+            const dateVal = createPayload.fecha_final_planificada;
+            if (dateVal && typeof dateVal === 'string' && isValid(parseISO(dateVal))) {
+                createPayload.fecha_final_planificada = format(parseISO(dateVal), "yyyy-MM-dd HH:mm:ss");
+            } else if (!dateVal) createPayload.fecha_final_planificada = null;
+        }
+        if (Object.prototype.hasOwnProperty.call(createPayload, "tipo_proyecto") && Array.isArray(createPayload.tipo_proyecto)) {
+          createPayload.tipo_proyecto = createPayload.tipo_proyecto.join(',');
+        }
+        createPayload.equipo = createPayload.equipo || [];
+        createPayload.compras = createPayload.compras || [];
+        formatBooleanFieldsForPayload(createPayload); // Format booleans to 0/1
+
+        console.log("Final payload to POST to /fill (General) (booleans formatted):", createPayload);
+        response = await axiosInstance.post(
+          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/fill`,
+          createPayload
+        );
+        Toast.fire({ icon: "success", title: "Formulario General creado con éxito." });
+        // After successful creation, re-fetch to get the new record's ID and update state
+        await obtenerFormulario(); 
+      } else { // Update existing form record
+        // payloadToSend was calculated earlier with changed fields
+        if (Object.keys(payloadToSend).length === 0) {
+          Toast.fire({ icon: "info", title: "No hay nuevos cambios para guardar." });
+          setSubmitting(false);
+          return;
+        }
+        console.log("Final payload to PATCH to /update (General):", payloadToSend);
+        response = await axiosInstance.patch(
+          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/general/update`,
+          payloadToSend // payloadToSend is already formatted
+        );
+        Toast.fire({ icon: "success", title: "Formulario General actualizado con éxito." });
+        // After successful update, update initialData with the current form values
+        // and any specific data returned by the PATCH response (though often PATCH returns 204 or minimal data)
+        const responseData = response.data?.formulario_general?.[0] || response.data?.data || response.data || {};
+        const updatedData = { ...initialData, ...values, ...responseData };
+         // Re-format dates from server response if necessary
+        if (updatedData.fecha_inicio_planificada && typeof updatedData.fecha_inicio_planificada === 'string') {
+            updatedData.fecha_inicio_planificada = format(parseISO(updatedData.fecha_inicio_planificada), "yyyy-MM-dd'T'HH:mm");
+        }
+        if (updatedData.fecha_final_planificada && typeof updatedData.fecha_final_planificada === 'string') {
+            updatedData.fecha_final_planificada = format(parseISO(updatedData.fecha_final_planificada), "yyyy-MM-dd'T'HH:mm");
+        }
+        if (updatedData.tipo_proyecto && typeof updatedData.tipo_proyecto === 'string') {
+            updatedData.tipo_proyecto = updatedData.tipo_proyecto.split(',');
+        }
+        setInitialData(updatedData);
+      }
+    } catch (error) {
+      console.error("Error submitting final form (General):", error);
+      const action = isExistingRecord ? "actualizar" : "crear";
+      Toast.fire({ icon: "error", title: `Error al ${action} el formulario general.` });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Navegación del Wizard
   const handleNavigation = async (direction, formikBag) => {
     setShowErrors(false);
-    const { validateForm, setTouched, submitForm, values } = formikBag;
-
-    // 0. Validar hacia donde quiere ir el usuario
+    const { validateForm, setTouched, values } = formikBag; // Removed submitForm
 
     if (direction === "prev") {
       if (currentStep > 0) {
         setCurrentStep((prev) => prev - 1);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
+      return;
     }
 
-    // 1. Validar formulario completo (usará el schema del paso actual)
     const errors = await validateForm();
-
-    // 2. Obtener campos *definidos* en el schema del paso actual
-    const currentSchemaFields = Object.keys(
-      wizardValidationSchemas[currentStep].fields
-    );
-
-    // 3. Filtrar errores solo para los campos de este paso
+    const currentSchemaFields = Object.keys(wizardValidationSchemas[currentStep].fields);
     const stepErrors = {};
     let firstErrorFieldName = null;
+
     currentSchemaFields.forEach((field) => {
-      const fieldError = getNestedValue(errors, field); // Usa tu helper para buscar el error
+      const fieldError = getNestedValue(errors, field);
       if (fieldError) {
         stepErrors[field] = fieldError;
         if (!firstErrorFieldName) firstErrorFieldName = field;
       }
     });
 
-    // 4. Marcar *todos* los campos del paso actual como tocados si hay algún error en el paso
     if (Object.keys(stepErrors).length > 0) {
       const touchedFields = {};
       currentSchemaFields.forEach((field) => {
-        // Manejo para tocar campos dentro de arrays
         if ((field === "equipo" || field === "compras") && values[field]) {
           values[field].forEach((_, index) => {
-            const subSchemaKeys = Object.keys(initialValues[field][0]);
+            const subSchemaKeys = Object.keys(initialValues[field][0] || {}); // Ensure initialValues[field][0] exists
             subSchemaKeys.forEach((subField) => {
               touchedFields[`${field}[${index}].${subField}`] = true;
             });
@@ -424,87 +767,29 @@ const FormularioGeneral = () => {
           touchedFields[field] = true;
         }
       });
-      await setTouched(touchedFields, true); // Marcar como tocado (true para que se muestren errores)
-    }
-
-    // 5. Decidir si avanzar o mostrar errores
-    if (Object.keys(stepErrors).length === 0) {
-      // Sin errores relevantes para este paso
-      if (direction === "next") {
-        if (
-          currentStep <
-          6 /*esto es la longitud de pasos, es decir, cuantas secciones hay*/ -
-            1
-        ) {
-          setCurrentStep((prev) => prev + 1);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-          /* handleSubmit(values); */
-          console.log(
-            "Validación del último paso OK. Click en Guardar para enviar."
-          );
-          // No necesitamos llamar a submitForm aquí si el botón es type="submit"
-        }
-      } else if (direction === "prev") {
-        if (currentStep > 0) {
-          setCurrentStep((prev) => prev - 1);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-      }
-    } else {
-      // Hay errores en este paso
-      setShowErrors(true); // Mostrar mensaje general
+      await setTouched(touchedFields, true);
+      setShowErrors(true);
       console.error("Errores de validación en paso:", stepErrors);
-      // Intentar hacer focus en el primer campo con error
+      // Focus logic (simplified for brevity, can be expanded)
       if (firstErrorFieldName) {
         const elements = document.getElementsByName(firstErrorFieldName);
         if (elements.length > 0) {
           elements[0].focus({ preventScroll: true });
           elements[0].scrollIntoView({ behavior: "smooth", block: "center" });
-        } else if (
-          firstErrorFieldName === "equipo" ||
-          firstErrorFieldName === "compras"
-        ) {
-          // Lógica de focus para arrays (puede necesitar ajustes)
-          const firstArrayErrorIndex = errors[firstErrorFieldName]?.findIndex(
-            (item) => !!item
-          );
-          if (
-            firstArrayErrorIndex !== -1 &&
-            firstArrayErrorIndex !== undefined
-          ) {
-            const firstSubFieldError = Object.keys(
-              errors[firstErrorFieldName][firstArrayErrorIndex] || {}
-            )[0];
-            if (firstSubFieldError) {
-              const fieldToFocus = document.querySelector(
-                `[name="${firstErrorFieldName}[${firstArrayErrorIndex}].${firstSubFieldError}"]`
-              );
-              fieldToFocus?.focus({ preventScroll: true });
-              fieldToFocus?.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-            } else {
-              // Si no hay sub-error, enfocar el resumen
-              document
-                .querySelector(".error-summary")
-                ?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-          } else {
-            document
-              .querySelector(".error-summary")
-              ?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
         } else {
-          document
-            .querySelector(".error-summary")
-            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+           document.querySelector(".error-summary")?.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       } else {
-        document
-          .querySelector(".error-summary")
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        document.querySelector(".error-summary")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    } else {
+      await guardarSeccion(values, currentStep); 
+      if (direction === "next" && currentStep < totalSteps) {
+        setCurrentStep((prev) => prev + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (direction === "next" && currentStep === totalSteps) {
+        console.log("Validación del último paso OK. Click en Guardar para enviar.");
+        // Final submit is handled by the submit button
       }
     }
   };
@@ -516,14 +801,15 @@ const FormularioGeneral = () => {
     handleNavigation("next", formikBag);
   };
 
-  // Calcular el progreso del formulario
   const calculateProgress = () => {
-    return (currentStep / wizardValidationSchemas.length) * 125;
+    // Ensure wizardValidationSchemas.length is not 0 to avoid division by zero
+    return wizardValidationSchemas.length > 0 ? (currentStep / (wizardValidationSchemas.length -1)) * 100 : 0;
   };
+  
 
   // Renderizado del paso actual
   const renderStepContent = (formikProps, additionalProps) => {
-    const { values, errors, touched, isSubmitting } = formikProps;
+    const { values, errors, touched } = formikProps; // Removed isSubmitting
 
     switch (currentStep) {
       case 0:
@@ -537,12 +823,10 @@ const FormularioGeneral = () => {
       case 4:
         return renderStep5(values, errors, touched, formikProps);
       default:
-        return "";
+        return <div>Paso no encontrado</div>; // Default case
     }
   };
-  {
-    /*<div>Paso no encontrado</div> */
-  }
+
   // Paso 1: Información general de la solicitud
   const renderStep1 = (values, errors, touched) => (
     <div className={`form-section ${animateSection ? "animate" : ""}`}>
@@ -628,11 +912,19 @@ const FormularioGeneral = () => {
           className="radio-group"
         >
           <label className="radio-label">
-            <Field type="radio" name="genera_cambio_tipo" value="Estandar" />
+            <Field
+              type="radio"
+              name="genera_cambio_tipo"
+              value="Estandar"
+            />
             <span className="radio-custom"></span> Estándar
           </label>
           <label className="radio-label">
-            <Field type="radio" name="genera_cambio_tipo" value="Recurrente" />
+            <Field
+              type="radio"
+              name="genera_cambio_tipo"
+              value="Recurrente"
+            />
             <span className="radio-custom"></span> Recurrente
           </label>
           <label className="radio-label">
@@ -680,7 +972,6 @@ const FormularioGeneral = () => {
         </FormField>
       </div>
 
-      {/* Tarjeta de resumen */}
       {values.area_solicitante && values.nombre_solicitante && (
         <div className="summary-card">
           <h4>Resumen de la Solicitud</h4>
@@ -719,17 +1010,24 @@ const FormularioGeneral = () => {
           className="radio-group"
         >
           <label className="radio-label">
-            <Field type="checkbox" name="tipo_proyecto" value="Hardware" />
+            <Field
+              type="checkbox"
+              name="tipo_proyecto"
+              value="Hardware"
+            />
             <span className="radio-custom"></span> Hardware
           </label>
           <label className="radio-label">
-            <Field type="checkbox" name="tipo_proyecto" value="Software" />
+            <Field
+              type="checkbox"
+              name="tipo_proyecto"
+              value="Software"
+            />
             <span className="radio-custom"></span> Software
           </label>
         </div>
       </FormField>
 
-      {/* Campos Condicionales Hardware */}
       {values.tipo_proyecto.includes("Hardware") && (
         <div className="conditional-section">
           <div className="section-divider">
@@ -789,7 +1087,7 @@ const FormularioGeneral = () => {
                 type="text"
                 id="otro_valor_componentes_hardware"
                 name="otro_valor_componentes_hardware"
-                className={`form-input ${
+                className={`form-input text-uppercase ${
                   touched.otro_valor_componentes_hardware &&
                   errors.otro_valor_componentes_hardware
                     ? "input-error"
@@ -800,7 +1098,6 @@ const FormularioGeneral = () => {
           )}
         </div>
       )}
-      {/* Campos Condicionales Software */}
       {values.tipo_proyecto.includes("Software") && (
         <div className="conditional-section">
           <div className="section-divider">
@@ -1041,7 +1338,7 @@ const FormularioGeneral = () => {
 
       <div className="form-grid">
         <FormField
-          label="Ruta Proyecto Desarrollo (URL)"
+          label="Ruta Proyecto Desarrollo (URL o Ruta)"
           name="ruta_proyecto_desarrollo"
           tooltip="Enlace al repositorio o ubicación del proyecto"
         >
@@ -1050,7 +1347,7 @@ const FormularioGeneral = () => {
               type="url"
               id="ruta_proyecto_desarrollo"
               name="ruta_proyecto_desarrollo"
-              placeholder="http://..."
+              placeholder="http://... o /..."
               className={`form-input ${
                 touched.ruta_proyecto_desarrollo &&
                 errors.ruta_proyecto_desarrollo
@@ -1063,7 +1360,7 @@ const FormularioGeneral = () => {
         </FormField>
 
         <FormField
-          label="Ruta Cotización (URL)"
+          label="Ruta Cotización (URL o Ruta)"
           name="ruta_cotizacion"
           tooltip="Enlace al documento de cotización"
         >
@@ -1072,7 +1369,7 @@ const FormularioGeneral = () => {
               type="url"
               id="ruta_cotizacion"
               name="ruta_cotizacion"
-              placeholder="http://..."
+              placeholder="http://... o /..."
               className={`form-input ${
                 touched.ruta_cotizacion && errors.ruta_cotizacion
                   ? "input-error"
@@ -1196,7 +1493,10 @@ const FormularioGeneral = () => {
               </td>
               <td>
                 <label className="checkbox-container">
-                  <Field type="checkbox" name="aplica_doc_casos_uso" />
+                  <Field
+                    type="checkbox"
+                    name="aplica_doc_casos_uso"
+                  />
                   <span className="checkmark"></span>
                 </label>
               </td>
@@ -1509,7 +1809,7 @@ const FormularioGeneral = () => {
                 as="textarea"
                 name={`equipo[${index}].responsabilidades`}
                 placeholder="Describa las responsabilidades..."
-                className={`form-textarea ${
+                className={`form-textarea  ${
                   getNestedValue(
                     touched,
                     `equipo[${index}].responsabilidades`
@@ -1772,7 +2072,7 @@ const FormularioGeneral = () => {
         </div>
 
         <div className="progress-steps">
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: wizardValidationSchemas.length }).map((_, index) => (
             <div
               key={index}
               className={`progress-step ${
@@ -1787,13 +2087,16 @@ const FormularioGeneral = () => {
       </div>
 
       <Formik
+        key={formRecordId || 'new-form-key'} // Force re-mount when formRecordId changes
         initialValues={initialValues}
         validationSchema={wizardValidationSchemas[currentStep]}
         onSubmit={handleSubmit}
-        validateOnChange={true}
-        validateOnBlur={true}
+        enableReinitialize // Still good practice, though key might make it redundant for this specific case
+        validateOnChange={false} 
+        validateOnBlur={false}  
       >
         {(formikProps) => {
+          console.log("Formik initialValues in render:", formikProps.initialValues); // Log what Formik sees
           const dateFormatDifferenceArray =
             formikProps.values.fecha_inicio_planificada &&
             formikProps.values.fecha_final_planificada

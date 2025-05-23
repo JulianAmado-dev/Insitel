@@ -285,85 +285,98 @@ CREATE TABLE `intraNet_DB`.`formulario_alcance` (
     FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE
 ) ENGINE=InnoDB COMMENT='Datos del formulario de alcance (1 por proyecto)';
 
--- Tabla de Datos: Formulario "Presupuesto" (Principal) (1 Proyecto -> N Presupuestos)
+-- Tabla de Datos: Formulario "Presupuesto" (Principal) (1 Proyecto -> 1 Presupuestos)
 CREATE TABLE `intraNet_DB`.`formulario_presupuesto`(
-    `id_formulario_presupuesto` INT NOT NULL AUTO_INCREMENT,
     `id_proyecto` INT NOT NULL,
-    `version_presupuesto` INT NOT NULL DEFAULT 1,
-    `estado` ENUM('Borrador', 'En Revisión', 'Aprobado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
-    `notas_generales` TEXT NULL,
+    -- Versión será pk solo cuando haya control de versiones `version_presupuesto` INT NOT NULL DEFAULT 1,
+    -- `estado` ENUM('Borrador', 'En Revisión', 'Aprobado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
+    -- `notas_generales` TEXT NULL,
     `creado_por_id` INT NULL,
-    `fecha_aprobacion` DATETIME NULL,
+    `actualizado_por_id`INT NULL,
+    -- `fecha_aprobacion` DATETIME NULL,
     `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `fecha_actualizacion` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    -- Totales calculados (opcional, si decides guardarlos)
-    -- `total_rh_calculado` DECIMAL(15, 2) NULL,
-    -- `total_suministros_calculado` DECIMAL(15, 2) NULL,
-    -- `total_servicios_calculado` DECIMAL(15, 2) NULL,
-    -- `total_general_calculado` DECIMAL(15, 2) NULL,
-    PRIMARY KEY (`id_formulario_presupuesto`),
+    -- Totales calculados (se decidió guardarlos)
+    `total_rh_calculado` DECIMAL(15, 2) NULL,
+    `total_suministros_calculado` DECIMAL(15, 2) NULL,
+    `total_servicios_calculado` DECIMAL(15, 2) NULL,
+    PRIMARY KEY (`id_proyecto`/* , `version_presupuesto` */ ),
     INDEX `idx_presupuesto_proyecto` (`id_proyecto`),
     FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
     FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Cabecera de cada versión del presupuesto de un proyecto';
 
--- Tabla de Datos: Detalles RH del Presupuesto (N líneas -> 1 Presupuesto)
+-- Tabla de Datos: Detalles RH del Presupuesto
+-- (1 Formulario presupuesto (aplica sí el formulario solo va a tener una versión) -> N Presupuestos para rh)
 CREATE TABLE `intraNet_DB`.`presupuesto_rh` (
     `id_fila_rh` INT NOT NULL AUTO_INCREMENT,
-    `id_formulario_presupuesto` INT NOT NULL,
+    `id_proyecto` INT NOT NULL,
+    -- (aún no será implementado el control de versiones)
+    -- `version_presupuesto`INT NOT NULL,
     `id_empleado_asignado` INT NULL COMMENT 'FK a empleados si es interno',
     `nombre_recurso` VARCHAR(150) NOT NULL COMMENT 'Nombre del rol o persona',
     `salario_mensual` DECIMAL(15, 2) NULL,
     `salario_mensual_parafiscales` DECIMAL(15, 2) NULL,
     `costo_dia` DECIMAL(15, 2) NULL,
     `cantidad_dias` DECIMAL(10, 2) NOT NULL,
-    -- `total_linea` DECIMAL(15, 2) NULL, -- Calcular al vuelo
+    `valor_total_linea` DECIMAL(15, 2) NULL, -- Calcular al vuelo
     `creado_por_id` INT NULL,
     `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id_fila_rh`),
-    INDEX `idx_prh_presupuesto` (`id_formulario_presupuesto`),
+    
     INDEX `idx_prh_empleado` (`id_empleado_asignado`),
     INDEX `idx_prh_creador` (`creado_por_id`),
-    FOREIGN KEY (`id_formulario_presupuesto`) REFERENCES `formulario_presupuesto`(`id_formulario_presupuesto`) ON DELETE CASCADE,
+    INDEX `idx_prh_presupuesto` (/*`version_presupuesto`,*/ `id_proyecto`),
+    FOREIGN KEY (`id_proyecto`/*, `version_presupuesto`*/) 
+    REFERENCES `formulario_presupuesto`(`id_proyecto`/*, `version_presupuesto`*/) 
+    ON DELETE CASCADE,	
     FOREIGN KEY (`id_empleado_asignado`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL,
     FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Líneas de detalle de Recurso Humano para un presupuesto';
 
 -- Tabla de Datos: Detalles Suministros del Presupuesto (N líneas -> 1 Presupuesto)
-CREATE TABLE `intraNet_DB`.`presupuesto_suministros` (
-    `id_fila_suministros` INT NOT NULL AUTO_INCREMENT,
-    `id_formulario_presupuesto` INT NOT NULL,
+CREATE TABLE `intraNet_DB`.`presupuesto_suministro` (
+    `id_fila_suministro` INT NOT NULL AUTO_INCREMENT,
+    `id_proyecto` INT NOT NULL,
+    -- (aún no será implementado el control de versiones)
+    -- `version_presupuesto` INT NOT NULL,
     `nombre_proveedor` VARCHAR(200) NULL,
     `nombre_item` TEXT NOT NULL,
-    `cant_item` DECIMAL(10, 2) NOT NULL,
-    `unidad` VARCHAR(50) NOT NULL,
-    `valor_unitario` DECIMAL(15, 2) NOT NULL,
-    -- `valor_total_linea` DECIMAL(15, 2) NULL, -- Calcular al vuelo
+    `cantidad_suministro` DECIMAL(10, 2) NOT NULL,
+    `unidad_de_medida` VARCHAR(50) NOT NULL,
+    `valor_unitario_suministro` DECIMAL(15, 2) NOT NULL,
+    `valor_total_linea` DECIMAL(15, 2) NULL, -- Calcular al vuelo
     `creado_por_id` INT NULL,
     `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id_fila_suministros`),
-    INDEX `idx_psum_presupuesto` (`id_formulario_presupuesto`),
+    PRIMARY KEY (`id_fila_suministro`),
     INDEX `idx_psum_creador` (`creado_por_id`),
-    FOREIGN KEY (`id_formulario_presupuesto`) REFERENCES `formulario_presupuesto`(`id_formulario_presupuesto`) ON DELETE CASCADE,
+	INDEX `idx_prh_presupuesto` (/*`version_presupuesto`,*/ `id_proyecto`),
+    FOREIGN KEY (`id_proyecto`/*, `version_presupuesto`*/) 
+    REFERENCES `formulario_presupuesto`(`id_proyecto`/*, `version_presupuesto`*/) 
+    ON DELETE CASCADE,	
     FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Líneas de detalle de Suministros para un presupuesto';
 
 -- Tabla de Datos: Detalles Servicios del Presupuesto (N líneas -> 1 Presupuesto)
-CREATE TABLE `intraNet_DB`.`presupuesto_servicios` (
-    `id_fila_servicios` INT NOT NULL AUTO_INCREMENT,
-    `id_formulario_presupuesto` INT NOT NULL,
+CREATE TABLE `intraNet_DB`.`presupuesto_servicio` (
+    `id_fila_servicio` INT NOT NULL AUTO_INCREMENT,
+    `id_proyecto` INT NOT NULL,
+    -- (aún no será implementado el control de versiones)
+    -- `version_presupuesto` INT NOT NULL,
     `nombre_proveedor` VARCHAR(200) NULL,
     `nombre_servicio` TEXT NOT NULL,
-    `cant_item` DECIMAL(10, 2) NOT NULL,
-    `unidad` VARCHAR(50) NOT NULL,
+    `cantidad_servicio` DECIMAL(10, 2) NOT NULL,
+    `unidad_de_medida` VARCHAR(50) NOT NULL,
     `valor_unitario` DECIMAL(15, 2) NOT NULL,
-    -- `valor_total_linea` DECIMAL(15, 2) NULL, -- Calcular al vuelo
+    `valor_total_linea` DECIMAL(15, 2) NULL, -- Calcular al vuelo
     `creado_por_id` INT NULL,
     `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id_fila_servicios`),
-    INDEX `idx_pser_presupuesto` (`id_formulario_presupuesto`),
+    PRIMARY KEY (`id_fila_servicio`),
     INDEX `idx_pser_creador` (`creado_por_id`),
-    FOREIGN KEY (`id_formulario_presupuesto`) REFERENCES `formulario_presupuesto`(`id_formulario_presupuesto`) ON DELETE CASCADE,
+    INDEX `idx_prh_presupuesto` (/*`version_presupuesto`,*/ `id_proyecto`),
+    FOREIGN KEY (`id_proyecto`/*, `version_presupuesto`*/) 
+    REFERENCES `formulario_presupuesto`(`id_proyecto`/*, `version_presupuesto`*/) 
+    ON DELETE CASCADE,	
     FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Líneas de detalle de Servicios para un presupuesto';
 
@@ -394,7 +407,7 @@ CREATE TABLE `intraNet_DB`.`formulario_riesgos`(
   INDEX `idx_riesgos_proyecto` (`id_proyecto`),
   INDEX `idx_riesgos_responsable` (`id_responsable`),
   FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
-  FOREIGN KEY (`id_responsable`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
+    FOREIGN KEY (`id_responsable`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Registro de riesgos identificados para un proyecto';
 
 -- Tabla de Datos: Formulario "Verificación" (Principal) (1 Proyecto -> N Verificaciones)
@@ -405,6 +418,7 @@ CREATE TABLE `intraNet_DB`.`formulario_verificacion` (
     `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `fecha_actualizacion` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `creado_por_id` INT NULL,
+    `actualizado_por_id` INT NULL,
     PRIMARY KEY (`id_formulario_verificacion`),
     INDEX `idx_verif_proyecto` (`id_proyecto`),
     FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
@@ -436,7 +450,7 @@ CREATE TABLE `intraNet_DB`.`registro_verificacion_aprobacion` (
     `fecha_aprobacion` DATE NULL, -- Renombrado
     `version_aprobada` VARCHAR(100) NULL, -- Renombrado desde 'ver'
     `observaciones` TEXT NULL,
-    `rol_responsable` VARCHAR(150) NULL, -- Rol del que aprueba/verifica
+    `nombre_responsable` VARCHAR(150) NULL, -- Rol del que aprueba/verifica
     `firma_id` INT NULL, -- Quién aprueba/firma. Permitir NULL?
     PRIMARY KEY (`id_fila_aprobacion`),
     INDEX `idx_aprob_verif` (`id_formulario_verificacion`),

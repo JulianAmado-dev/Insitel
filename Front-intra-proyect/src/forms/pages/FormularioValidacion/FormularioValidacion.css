@@ -1,0 +1,169 @@
+.formulario-validacion-container {
+  font-family: sans-serif;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  max-width: 800px;
+  margin: 20px auto;
+  background-color: #f9f9f9;
+}
+
+.dropzone {
+  border: 2px dashed #007bff;
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  background-color: #fff;
+  color: #007bff;
+  margin-bottom: 20px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.dropzone.active {
+  background-color: #e9ecef;
+  border-color: #0056b3;
+}
+
+.dropzone p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+}
+
+.file-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.file-preview-container {
+  margin-right: 15px;
+  flex-shrink: 0; /* Prevent shrinking if filename is long */
+}
+
+.file-preview-container img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.file-preview-container .pdf-preview-wrapper {
+  width: 80px; /* Fixed width for PDF preview */
+  height: 120px; /* Fixed height for PDF preview */
+  border: 1px solid #ccc;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0; /* Fallback background */
+}
+
+.file-preview-container .pdf-preview-wrapper .react-pdf__Page__canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* Ensure the PDF page fits within the bounds */
+}
+
+
+.file-info {
+  flex-grow: 1;
+  overflow: hidden; /* For long filenames */
+}
+
+.file-info p {
+  margin: 0 0 5px 0;
+  word-break: break-all; /* Break long filenames */
+}
+
+.file-info small {
+  color: #555;
+  font-size: 0.85em;
+}
+
+.file-actions button,
+.upload-all-button {
+  margin-left: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.file-actions .download-button {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+.file-actions .download-button:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.file-actions .delete-button {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+.file-actions .delete-button:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.upload-all-button {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  display: block; /* Make it a block to center or manage width */
+  margin-top: 10px;
+}
+.upload-all-button:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+.upload-all-button:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+.status-message.uploading {
+  color: #007bff;
+}
+.status-message.error {
+  color: #dc3545;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}

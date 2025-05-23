@@ -22,21 +22,6 @@
   --muted-color: #6b7280;
 }
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 body {
 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -46,6 +31,10 @@ body {
   min-height: 100dvh;
   position: relative;
   background: linear-gradient(rgb(196, 124, 29) , #d3b4b4);
+
+  /* Scrollbar hiding properties */
+  scrollbar-width: none;  /* Firefox: Hide scrollbar by default */
+  -ms-overflow-style: -ms-autohiding-scrollbar; /* IE/Edge: Standard auto-hiding */
 }
 
 
@@ -100,3 +89,47 @@ button {
     background-color: #f9f9f9;
   }
 }
+
+/* ===== ESTILOS DE SCROLLBAR PERSONALIZADOS (CON AUTO-OCULTAMIENTO) ===== */
+
+/* Para navegadores WebKit (Chrome, Safari, Edge Chromium) */
+::-webkit-scrollbar {
+  width: 10px; /* Ancho del scrollbar vertical */
+  height: 10px; /* Alto del scrollbar horizontal */
+  background-color: transparent; /* Oculto por defecto */
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent; /* Oculto por defecto */
+  border-radius: 10px;
+  transition: background-color 0.3s ease-out; /* Transición para aparición suave */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Oculto por defecto */
+  border-radius: 10px;
+  transition: background-color 0.3s ease-out; /* Transición para aparición suave */
+}
+
+/* Mostrar scrollbar en WebKit al hacer hover sobre el elemento scrollable */
+*:hover::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.05); /* Un fondo muy sutil para el track en hover */
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary, #ee7d30);
+  border: 2px solid rgba(0, 0, 0, 0.05); /* Borde coincide con el track hover */
+}
+
+*:hover::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-secondary, #30397a);
+}
+
+/* Para Firefox: Mostrar scrollbar al hacer hover en el body */
+/* La propiedad `scrollbar-width: none;` ya está en la regla principal de `body` */
+body:hover {
+  scrollbar-width: thin; /* Mostrar scrollbar delgado al hacer hover */
+  scrollbar-color: var(--color-primary, #ee7d30) rgba(0, 0, 0, 0.05); /* thumb y track (track sutil) */
+}
+
+/* IE y Edge (legacy) ya usan -ms-autohiding-scrollbar definido en la regla principal de body */

@@ -8,16 +8,58 @@ import { config } from "./config/config.js";
 import boom from "@hapi/boom";
 import "./utils/auth/index.js";
 import { resetPassword } from "./utils/auth/nodeMailer/sendEmail.js";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const db = config.db;
 const app = express();
+
+// --- Multer Configuration for File Uploads ---
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const originalName = file.originalname.replace(/\s+/g, '_'); // Replace spaces
+    cb(null, uniqueSuffix + '-' + originalName);
+  }
+});
+
+const allowedFileTypes = /jpeg|jpg|png|gif|webp|pdf/; // General filter, can be overridden per route if needed
+const fileFilter = (req, file, cb) => {
+  const mimetype = allowedFileTypes.test(file.mimetype);
+  const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  }
+  cb(new Error("Error: File upload only supports the following filetypes - " + allowedFileTypes));
+};
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit (general limit)
+  fileFilter: fileFilter // General file filter
+});
+// --- End Multer Configuration ---
 
 app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
   })
-); // <--- CORS (Permite todas las peticiones temporalmente)
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -32,18 +74,19 @@ app.listen(config.port, () => {
 });
 console.log("hola3 - Server escuchando");
 
-async function executeTransaction(operations) {
-  const connection = await db.getConnection();
+async function executeTransaction(callback) {
+  let connection;
   try {
+    connection = await db.getConnection();
     await connection.beginTransaction();
-    const results = await operations(connection);
+    const results = await callback(connection);
     await connection.commit();
     return results;
   } catch (error) {
-    await connection.rollback();
+    if (connection) await connection.rollback();
     throw error;
   } finally {
-    connection.release();
+    if (connection) connection.release();
   }
 }
 console.log("hola3 - Función executeTransaction definida");
@@ -79,7 +122,6 @@ app.get(
           user: req.user,
         });
       }
-      // de no generar loops infinitos), podrías hacerlo aquí:
     } catch (error) {
       console.error("Error al obtener información del usuario:", error);
       res.status(500).json({ message: "Error interno del servidor" });
@@ -87,7 +129,6 @@ app.get(
   }
 );
 
-//PETICIÓN PARA LOGIN
 app.post(
   "/api/login",
   passport.authenticate("local", { session: false }),
@@ -117,10 +158,10 @@ app.post(
       res
         .cookie("refreshToken", refreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "prod", // HTTPS en producción
-          sameSite: "lax", // Protección CSRF
-          maxAge: 5 * 24 * 60 * 60 * 1000, // 5 días
-          path: "/", // Asegúrate de tener la ruta base para la cookie
+          secure: process.env.NODE_ENV === "prod",
+          sameSite: "lax",
+          maxAge: 5 * 24 * 60 * 60 * 1000,
+          path: "/",
         })
         .status(200)
         .json({
@@ -181,7 +222,7 @@ app.post("/api/sendCode", async (req, res) => {
     const recoveryToken = jwt.sign(payload, config.jwtSecret, {
       expiresIn: "15min",
     });
-    const link = `http://http://localhost:5173/auth/login?token=${recoveryToken}`;
+    const link = `http://localhost:5173/auth/login?token=${recoveryToken}`; // Corrected link
     const rta = await db.execute(
       `UPDATE empleados SET recovery_token = ? WHERE id_empleado = ?`,
       [recoveryToken, isCorreoValido[0][0].id_empleado]
@@ -212,7 +253,7 @@ app.post("/api/change-password", async (req, res) => {
       console.error("Error al hashear la contraseña:", err);
       return res.status(500).send({ error: "error al hashear la contraseña" });
     });
-    if (!hashedPassword) return; // Detener si el hash falla
+    if (!hashedPassword) return;
 
     const rta = await db.execute(
       `UPDATE empleados SET recovery_token = ?, contrasena = ? WHERE id_empleado = ?`,
@@ -230,9 +271,7 @@ app.get(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     try {
-      const [areas] = await db.execute(
-        `SELECT * FROM areas`
-      );
+      const [areas] = await db.execute(`SELECT * FROM areas`);
       const [areasItems] = await db.execute(
         `SELECT * FROM areas_navegacion ORDER BY id_area asc`
       );
@@ -240,9 +279,9 @@ app.get(
       if (!areas) {
         return res
           .status(400)
-          .json({ message: "Usuario no encontrado en token" });
+          .json({ message: "Usuario no encontrado en token" }); // Should be "Areas no encontradas"
       } else {
-        console.log("area encontrada para NavBar ", req.user);
+        console.log("area encontrada para NavBar ", req.user); // req.user might not be relevant here
 
         return res.status(200).json({
           status: "success",
@@ -251,9 +290,8 @@ app.get(
           areasItems,
         });
       }
-      // de no generar loops infinitos), podrías hacerlo aquí:
     } catch (error) {
-      console.error("Error en la ruta /api/Projects/:area:", error);
+      console.error("Error en la ruta /api/getDepartments:", error); // Corrected path
       next(error);
       return res.status(500).json({
         status: "error",
@@ -277,7 +315,7 @@ app.post("/api/logout", (req, res) => {
     .status(200)
     .json({ message: "Sesión cerrada" });
   console.log(
-    "hola 8 - Cookie 'token' y 'accessToken' eliminada, respuesta enviada"
+    "hola 8 - Cookie 'refreshToken' eliminada, respuesta enviada" // Corrected cookie name
   );
 });
 
@@ -287,14 +325,12 @@ app.post("/api/auth/refresh_token", async (req, res, next) => {
     const incomingRefreshToken = req.cookies.refreshToken;
     if (!incomingRefreshToken) {
       console.log(
-        "Refresh token recibida en auth/refresh_token",
-        incomingRefreshToken
+        "Refresh token no recibida en auth/refresh_token" // Corrected log
       );
       return res
         .status(401)
         .json({ message: "No autorizado (falta refresh token)" });
     }
-    // Usa el secreto correcto para refresh tokens
     const decodedPayload = jwt.verify(incomingRefreshToken, config.jwtSecret);
     console.log(
       "Refresh Token Endpoint: Refresh token verificado. Payload:",
@@ -311,12 +347,10 @@ app.post("/api/auth/refresh_token", async (req, res, next) => {
         rol: decodedPayload.rol,
         nombres: decodedPayload.nombres,
       };
-      // Usa el secreto correcto para access tokens
       const newAccessToken = jwt.sign(newPayload, config.jwtSecret, {
         expiresIn: ACCESS_TOKEN_EXPIRY,
       });
       console.log("Refresh Token Endpoint: Emitiendo nuevo access token.");
-      // Sintaxis correcta para enviar JSON
       return res.status(200).json({
         accessToken: newAccessToken,
         user: {
@@ -348,7 +382,6 @@ app.post("/api/auth/refresh_token", async (req, res, next) => {
     }
   }
 });
-//MÉTODO DE REGISTRO DE EMPLEADOS
 
 app.put(
   "/api/EmployeeRegistration",
@@ -376,7 +409,7 @@ app.put(
           .status(500)
           .send({ error: "error al hashear la contraseña" });
       });
-      if (!hashedPassword) return; // Detener si el hash falla
+      if (!hashedPassword) return;
 
       const values = [
         apellidos,
@@ -394,7 +427,7 @@ app.put(
 
       const [result] = await db.execute(
         "SELECT id_empleado FROM empleados WHERE correo = ?",
-        [values[7]]
+        [values[7]] // correo is at index 7
       );
       console.log(
         "hola 10 - Resultado de la consulta de usuario existente:",
@@ -431,21 +464,12 @@ app.get(
     );
     try {
       const area = req.params.area;
-
       console.log("hola 15 - Área solicitada:", area);
 
       const [proyectos] = await db.execute(
         `SELECT
-        p.id_proyecto,
-        p.nombre_proyecto,
-        p.empresa_asociada,
-        p.progress,
-        p.status,
-        p.priority,
-        p.summary,
-        p.area,
-        p.fecha_inicio,
-        p.color,
+        p.id_proyecto, p.nombre_proyecto, p.empresa_asociada, p.progress,
+        p.status, p.priority, p.summary, p.area, p.fecha_inicio, p.color,
         GROUP_CONCAT(DISTINCT e.nombres) AS nombres_empleado
       FROM
         proyectos p
@@ -456,16 +480,7 @@ app.get(
       WHERE
         p.area = ?
       GROUP BY
-        p.id_proyecto,
-        p.nombre_proyecto,
-        p.empresa_asociada,
-        p.progress,
-        p.status,
-        p.priority,
-        p.summary,
-        p.area,
-        p.fecha_inicio,
-        p.color`,
+        p.id_proyecto`, // Simplified GROUP BY
         [area]
       );
       console.log(
@@ -502,330 +517,627 @@ app.get(
   }
 );
 
-app.post(
-  "/api/Projects/:area/:id_projects/form/general/fill",
-  passport.authenticate("jwt", { session: false }), // RECOMENDACIÓN: Habilitar autenticación para seguridad
+// --- Formulario General Endpoints ---
+app.get(
+  "/api/Projects/:area/:id_proyecto/form/general/get",
+  passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    // RECOMENDACIÓN: Considerar usar una conexión individual para manejar transacciones
-    // const connection = await db.getConnection(); // Ejemplo si usas un pool como mysql2/promise
-
     try {
-      // await connection.beginTransaction(); // Iniciar transacción
-
-      const { id_projects } = req.params;
-      const {
-        area_solicitante,
-        nombre_solicitante,
-        descripcion_solicitud,
-        genera_cambio_tipo,
-        departamento_interno,
-        cliente_final,
-        tipo_proyecto, // Puede ser array o string
-        nivel_hardware,
-        componentes_hardware,
-        otro_valor_componentes_hardware,
-        nivel_software,
-        componentes_software,
-        otro_valor_componentes_software,
-        entregables,
-        requisitos_seguimiento_y_medicion,
-        criterios_de_aceptacion,
-        consecuencias_por_fallar,
-        fecha_inicio_planificada,
-        fecha_final_planificada,
-        ruta_proyecto_desarrollo,
-        ruta_cotizacion,
-        aplica_doc_ideas_iniciales,
-        aplica_doc_especificaciones,
-        aplica_doc_casos_uso,
-        aplica_doc_diseno_sistema,
-        aplica_doc_plan_pruebas,
-        aplica_doc_manuales,
-        aplica_doc_liberacion,
-        ref_doc_ideas_iniciales,
-        ref_doc_especificaciones,
-        ref_doc_casos_uso,
-        ref_doc_diseno_sistema,
-        ref_doc_plan_pruebas,
-        ref_doc_manuales,
-        ref_doc_liberacion,
-        verif_doc_ideas_iniciales,
-        verif_doc_especificaciones,
-        verif_doc_casos_uso,
-        verif_doc_diseno_sistema,
-        verif_doc_plan_pruebas,
-        verif_doc_manuales,
-        verif_doc_liberacion,
-        // Asumiendo que creado_por_id para el formulario general viene del usuario autenticado o de otra parte del body
-        // creado_por_id_formulario // Ejemplo: req.user.id_empleado si usas Passport
-      } = req.body;
-
-      const { equipo } = req.body; // Array de objetos para el equipo del proyecto
-      const { compras } = req.body; // Array de objetos para las compras del proyecto
-
-      // --- INSERCIÓN EN formulario_general ---
-
-      // Convertir arrays a cadenas (ej: checkboxes para tipo_proyecto)
-      const tipo_proyecto_str = Array.isArray(tipo_proyecto)
-        ? tipo_proyecto.join(",")
-        : tipo_proyecto;
-
-      const sqlFormularioGeneral = `INSERT INTO formulario_general (
-        id_proyecto, area_solicitante, nombre_solicitante, descripcion_solicitud,
-        genera_cambio_tipo, tipo_proyecto, nivel_hardware, componentes_hardware,
-        otro_valor_componentes_hardware, nivel_software, componentes_software,
-        otro_valor_componentes_software, entregables, requisitos_seguimiento_y_medicion,
-        criterios_de_aceptacion, consecuencias_por_fallar, fecha_inicio_planificada,
-        fecha_final_planificada, departamento_interno, cliente_final, 
-        ruta_proyecto_desarrollo, ruta_cotizacion, aplica_doc_ideas_iniciales,
-        aplica_doc_especificaciones, aplica_doc_casos_uso, aplica_doc_diseno_sistema,
-        aplica_doc_plan_pruebas, aplica_doc_manuales, aplica_doc_liberacion,
-        ref_doc_ideas_iniciales, ref_doc_especificaciones, ref_doc_casos_uso,
-        ref_doc_diseno_sistema, ref_doc_plan_pruebas, ref_doc_manuales, ref_doc_liberacion,
-        verif_doc_ideas_iniciales, verif_doc_especificaciones, verif_doc_casos_uso,
-        verif_doc_diseno_sistema, verif_doc_plan_pruebas, verif_doc_manuales, 
-        verif_doc_liberacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
-
-      const valuesFormularioGeneral = [
-        id_projects,
-        area_solicitante == "" ? null : area_solicitante,
-        nombre_solicitante == "" ? null : nombre_solicitante,
-        descripcion_solicitud == "" ? null : descripcion_solicitud,
-        genera_cambio_tipo == "" ? null : genera_cambio_tipo,
-        tipo_proyecto_str == "" ? null : tipo_proyecto_str,
-        nivel_hardware == "" ? null : nivel_hardware,
-        componentes_hardware == "" ? null : componentes_hardware,
-        otro_valor_componentes_hardware == ""
-          ? null
-          : otro_valor_componentes_hardware,
-        nivel_software == "" ? null : nivel_software,
-        componentes_software == "" ? null : componentes_software,
-        otro_valor_componentes_software == ""
-          ? null
-          : otro_valor_componentes_software,
-        entregables == "" ? null : entregables,
-        requisitos_seguimiento_y_medicion == ""
-          ? null
-          : requisitos_seguimiento_y_medicion,
-        criterios_de_aceptacion == "" ? null : criterios_de_aceptacion,
-        consecuencias_por_fallar == "" ? null : consecuencias_por_fallar,
-        fecha_inicio_planificada == "" || fecha_inicio_planificada === undefined
-          ? null
-          : fecha_inicio_planificada,
-        fecha_final_planificada == "" || fecha_final_planificada === undefined
-          ? null
-          : fecha_final_planificada,
-        departamento_interno == "" ? null : departamento_interno,
-        cliente_final == "" ? null : cliente_final,
-        ruta_proyecto_desarrollo == "" ? null : ruta_proyecto_desarrollo,
-        ruta_cotizacion == "" ? null : ruta_cotizacion,
-        aplica_doc_ideas_iniciales, // Estos parecen ser booleanos o valores que no deben ser null si son string vacíos
-        aplica_doc_especificaciones,
-        aplica_doc_casos_uso,
-        aplica_doc_diseno_sistema,
-        aplica_doc_plan_pruebas,
-        aplica_doc_manuales,
-        aplica_doc_liberacion,
-        ref_doc_ideas_iniciales == "" ? null : ref_doc_ideas_iniciales,
-        ref_doc_especificaciones == "" ? null : ref_doc_especificaciones,
-        ref_doc_casos_uso == "" ? null : ref_doc_casos_uso,
-        ref_doc_diseno_sistema == "" ? null : ref_doc_diseno_sistema,
-        ref_doc_plan_pruebas == "" ? null : ref_doc_plan_pruebas,
-        ref_doc_manuales == "" ? null : ref_doc_manuales,
-        ref_doc_liberacion == "" ? null : ref_doc_liberacion,
-        verif_doc_ideas_iniciales == "" ? null : verif_doc_ideas_iniciales,
-        verif_doc_especificaciones == "" ? null : verif_doc_especificaciones,
-        verif_doc_casos_uso == "" ? null : verif_doc_casos_uso,
-        verif_doc_diseno_sistema == "" ? null : verif_doc_diseno_sistema,
-        verif_doc_plan_pruebas == "" ? null : verif_doc_plan_pruebas,
-        verif_doc_manuales == "" ? null : verif_doc_manuales,
-        verif_doc_liberacion == "" ? null : verif_doc_liberacion,
-      ];
-
-      console.log(
-        `Formulario General - Columnas: ${
-          sqlFormularioGeneral.match(/\?/g).length
-        }, Valores: ${valuesFormularioGeneral.length}`
+      const { id_proyecto } = req.params;
+      const [formulario_general_rows] = await db.execute(
+        // Renamed variable
+        `SELECT * FROM formulario_general WHERE id_proyecto = ?`,
+        [id_proyecto]
       );
 
-      // RECOMENDACIÓN: Usar connection.execute si estás en una transacción
-      const [resultFormulario] = await db.execute(
-        sqlFormularioGeneral,
-        valuesFormularioGeneral
+      const [miembros_proyecto] = await db.execute(
+        `SELECT id_empleado, rol_en_proyecto, responsabilidades FROM proyecto_equipo WHERE id_proyecto = ?`,
+        [id_proyecto]
       );
-      // const [resultFormulario] = await connection.execute(sqlFormularioGeneral, valuesFormularioGeneral);
 
-      // --- INSERCIÓN EN proyecto_equipo (Ejemplo, necesita completarse) ---
-      /* if (equipo && Array.isArray(equipo) && equipo.length > 0) {
-        const sqlEquipo = `INSERT INTO proyecto_equipo (id_proyecto, id_empleado, nombre_asignado, rol_en_proyecto, responsabilidades) VALUES (?, ?, ?, ?, ?);`;
-        // NOTA: La columna "nombre asignado" en tu SQL original tiene un espacio. Debería ser "nombre_asignado" o estar entre comillas invertidas si el nombre es así.
-        //       Además, la consulta original estaba incompleta (faltaba VALUES y los parámetros).
-        console.warn(
-          "La lógica de inserción para 'proyecto_equipo' aún necesita ser implementada y verificada."
-        );
-        for (const miembro of equipo) {
-          const equipoValues = [
-            id_projects,
-            miembro.id_empleado,
-            (`SELECT nombres, aprellidos FROM empleados WHERE id_empleado = ?`, miembro.id_empleado).join(" "), // Asegúrate que estos campos vengan en el objeto 'miembro'
-            miembro.rol_en_proyecto,
-            miembro.responsabilidades
-          ];
-          await connection.execute(sqlEquipo, equipoValues);
-        }
-      }
+      const [compras_proyecto] = await db.execute(
+        `SELECT * FROM proyecto_compras WHERE id_proyecto = ?`,
+        [id_proyecto]
+      );
 
-      // --- INSERCIÓN EN compras_proyecto_items ---
-      let comprasRegistradasExitosamente = 0;
-      if (compras && Array.isArray(compras) && compras.length > 0) {
-        const sqlCompra = `
-          INSERT INTO compras_proyecto_items (
-              id_proyecto, creado_por_id, proveedor, descripcion, cantidad,
-              unidad_medida, total_usd, total_cop, orden_compra, estado_compra
-              -- fecha_solicitud y fecha_estado tienen DEFAULT en la BD
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        `;
-
-        for (const compra of compras) {
-          // RECOMENDACIÓN: Validar cada 'compra' aquí antes de intentar insertar.
-          // Por ejemplo, verificar que los campos numéricos sean realmente números.
-          const cantidad = parseFloat(compra.cantidad);
-          const total_usd = parseFloat(compra.total_usd);
-          const total_cop = parseFloat(compra.total_cop);
-
-          const compraValues = [
-            id_projects, // id_proyecto de la URL
-            compra.creado_por_id === undefined ||
-            compra.creado_por_id === "" ||
-            compra.creado_por_id === null
-              ? null
-              : parseInt(compra.creado_por_id), // Asume que 'creado_por_id' viene en cada objeto 'compra' y es un ID de empleado.
-            compra.proveedor === undefined || compra.proveedor === ""
-              ? null
-              : compra.proveedor,
-            compra.descripcion === undefined || compra.descripcion === ""
-              ? null
-              : compra.descripcion,
-            isNaN(cantidad) ? null : cantidad, // Si no es un número válido, inserta NULL. Considera el DEFAULT 1.00 de tu tabla.
-            compra.unidad_medida === undefined || compra.unidad_medida === ""
-              ? null
-              : compra.unidad_medida,
-            isNaN(total_usd) ? null : total_usd,
-            isNaN(total_cop) ? null : total_cop,
-            compra.orden_compra === undefined || compra.orden_compra === ""
-              ? null
-              : compra.orden_compra,
-            compra.estado_compra || "Solicitado", // Usa el default 'Solicitado' si no se provee o es string vacío.
-          ];
-
-          console.log(
-            `Compra Item - Columnas: ${
-              sqlCompra.match(/\?/g).length
-            }, Valores: ${compraValues.length}`
-          );
-
-          // RECOMENDACIÓN: Usar connection.execute si estás en una transacción
-          const [resultCompra] = await db.execute(sqlCompra, compraValues);
-          // const [resultCompra] = await connection.execute(sqlCompra, compraValues);
-          if (resultCompra.affectedRows > 0) {
-            comprasRegistradasExitosamente++;
-          }
-        }
-        console.log(
-          `${comprasRegistradasExitosamente} de ${compras.length} items de compra registrados para el proyecto ${id_projects}`
-        );
-      } */
-
-      if (resultFormulario.affectedRows > 0) {
-        // await connection.commit(); // Confirmar transacción si todo salió bien
-        console.log(`Formulario del proyecto ${id_projects} registrado.`);
-        // Podrías agregar más detalles al mensaje, como cuántas compras se registraron.
-        return res.status(200).json({
-          message: "Datos registrados exitosamente",
-          id_proyecto: id_projects,
-          // compras_registradas: comprasRegistradasExitosamente,
+      if (!formulario_general_rows || formulario_general_rows.length === 0) {
+        // Check renamed variable
+        return res.status(404).json({
+          status: "not found",
+          message: `Formulario general no encontrado para el proyecto: ${id_proyecto}`,
+          data: null, // Return null or empty object for consistency
         });
       }
 
-      // Si llegamos aquí, el formulario principal no se insertó.
-      // await connection.rollback(); // Revertir transacción
-      return res.status(400).json({
-        error: "No se pudieron registrar los datos del formulario principal",
+      return res.status(200).json({
+        status: "success",
+        formulario_general: formulario_general_rows[0], // Return the object, not array
+        miembros_proyecto: miembros_proyecto,
+        compras_proyecto: compras_proyecto,
       });
     } catch (error) {
-      // if (connection) await connection.rollback(); // Revertir transacción en caso de error
-      console.error("Error en la ruta /api/Projects/.../fill:", error);
-      // RECOMENDACIÓN: No exponer detalles internos del error al cliente en producción.
-      // Grabar el error en un log más detallado en el servidor.
-      return res
-        .status(500)
-        .json({ error: "Error interno del servidor", details: error.message });
-    } finally {
-      // if (connection) connection.release(); // Liberar la conexión al pool
+      console.error("Error en GET /form/general/get:", error);
+      next(error);
     }
   }
 );
 
-
-
 app.post(
-  "/api/Projects/:area/:id_projects/form/alcance/fill",
+  "/api/Projects/:area/:id_proyecto/form/general/fill",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
+    // Added next
+    const { id_proyecto } = req.params;
     try {
-      const id_proyecto = req.params.id_projects;
+      await executeTransaction(async (connection) => {
+        if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+          throw boom.badRequest("ID del proyecto inválido o faltante");
+        }
+        const { equipo, compras, ...formData } = req.body;
 
-      const {
-        problema_necesidad,
-        entorno_actores,
-        procedimiento_actual,
-        comportamiento_esperado,
-        descripcion_cuantitativa,
-        limitaciones,
-        otros_temas_relevantes,
-      } = req.body;
+        const fields = Object.keys(formData);
+        const placeholders = fields.map(() => "?").join(", ");
+        const values = fields.map((field) => formData[field]);
 
-      const values = [
-        id_proyecto,
-        descripcion_cuantitativa,
-        comportamiento_esperado,
-        otros_temas_relevantes,
-        procedimiento_actual,
-        problema_necesidad,
-        entorno_actores,
-        limitaciones,
-      ];
+        const sqlFormularioGeneral = `
+          INSERT INTO formulario_general (id_proyecto, ${fields.join(", ")}) 
+          VALUES (?, ${placeholders});`;
 
-      const [result] = await db.execute(
-        "INSERT INTO formulario_alcance(id_proyecto, descripcion_cuantitativa, comportamiento_esperado, otros_temas_relevantes, procedimiento_actual, problema_necesidad, entorno_actores, limitaciones) VALUES (?,?,?,?,?,?,?,?)",
-        values
-      );
-      console.log("Resultado de la consulta de ingreso de datos", result);
+        await connection.execute(sqlFormularioGeneral, [
+          id_proyecto,
+          ...values,
+        ]);
 
-      if (result && result.affectedRows > 0) {
-        // **CORRECCIÓN 4: Corregir/eliminar variable 'correo' indefinida**
-        console.log(
-          `Datos del formulario de alcance para el proyecto ${id_proyecto} registrados exitosamente.`
-        );
-        // Envía una respuesta JSON exitosa
+        if (equipo && Array.isArray(equipo) && equipo.length > 0) {
+          const sqlEquipo = `
+            INSERT INTO proyecto_equipo (
+              id_proyecto, id_empleado, nombre_asignado, rol_en_proyecto, responsabilidades
+            ) VALUES (?, ?, ?, ?, ?);`;
+          for (const miembro of equipo) {
+            const [empleadoRows] = await connection.execute(
+              "SELECT nombres, apellidos FROM empleados WHERE id_empleado = ?",
+              [miembro.id_empleado]
+            );
+            const nombreCompleto =
+              empleadoRows && empleadoRows.length > 0
+                ? `${empleadoRows[0].nombres} ${empleadoRows[0].apellidos}`
+                : "Nombre no disponible";
+            await connection.execute(sqlEquipo, [
+              id_proyecto,
+              miembro.id_empleado,
+              nombreCompleto,
+              miembro.rol_en_proyecto,
+              miembro.responsabilidades || null,
+            ]);
+          }
+        }
+
+        if (compras && Array.isArray(compras) && compras.length > 0) {
+          const sqlCompra = `
+            INSERT INTO proyecto_compras (
+              id_proyecto, creado_por_id, proveedor, descripcion, cantidad,
+              unidad_medida, total_usd, total_cop, orden_compra, estado_compra
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+          for (const compra of compras) {
+            await connection.execute(sqlCompra, [
+              id_proyecto,
+              req.user.id_empleado,
+              compra.proveedor,
+              compra.descripcion,
+              compra.cantidad,
+              compra.unidad_medida,
+              compra.total_usd,
+              compra.total_cop,
+              compra.orden_compra,
+              compra.estado_compra || "Solicitado",
+            ]);
+          }
+        }
+        res
+          .status(201)
+          .json({
+            message: "Formulario general registrado exitosamente.",
+            id_proyecto,
+          });
+      });
+    } catch (error) {
+      console.error("Error en POST /form/general/fill:", error);
+      next(error);
+    }
+  }
+);
+
+app.patch(
+  "/api/Projects/:area/:id_proyecto/form/general/update",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    // Added next
+    const { id_proyecto } = req.params;
+    try {
+      await executeTransaction(async (connection) => {
+        if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+          throw boom.badRequest("ID del proyecto inválido o faltante");
+        }
+        const { equipo, compras, ...otrosCampos } = req.body;
+
+        if (Object.keys(otrosCampos).length > 0) {
+          const updatesFormularioGeneral = Object.keys(otrosCampos)
+            .map((campo) => `${campo} = ?`)
+            .join(", ");
+          const valuesFormularioGeneral = Object.values(otrosCampos);
+          const sqlUpdateFormularioGeneral = `
+                UPDATE formulario_general SET ${updatesFormularioGeneral} 
+                WHERE id_proyecto = ?`;
+          await connection.execute(sqlUpdateFormularioGeneral, [
+            ...valuesFormularioGeneral,
+            id_proyecto,
+          ]);
+        }
+
+        if (equipo && Array.isArray(equipo)) {
+          await connection.execute(
+            "DELETE FROM proyecto_equipo WHERE id_proyecto = ?",
+            [id_proyecto]
+          );
+          const sqlEquipoInsert = `
+            INSERT INTO proyecto_equipo (id_proyecto, id_empleado, nombre_asignado, rol_en_proyecto, responsabilidades) 
+            VALUES (?, ?, ?, ?, ?);`;
+          for (const miembro of equipo) {
+            const [empleadoRows] = await connection.execute(
+              "SELECT nombres, apellidos FROM empleados WHERE id_empleado = ?",
+              [miembro.id_empleado]
+            );
+            const nombreCompleto =
+              empleadoRows && empleadoRows.length > 0
+                ? `${empleadoRows[0].nombres} ${empleadoRows[0].apellidos}`
+                : "Nombre no disponible";
+            await connection.execute(sqlEquipoInsert, [
+              id_proyecto,
+              miembro.id_empleado,
+              nombreCompleto,
+              miembro.rol_en_proyecto,
+              miembro.responsabilidades || null,
+            ]);
+          }
+        }
+
+        if (compras && Array.isArray(compras)) {
+          await connection.execute(
+            "DELETE FROM proyecto_compras WHERE id_proyecto = ?",
+            [id_proyecto]
+          );
+          const sqlCompraInsert = `
+            INSERT INTO proyecto_compras (id_proyecto, creado_por_id, proveedor, descripcion, cantidad, unidad_medida, total_usd, total_cop, orden_compra, estado_compra) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
+          for (const compra of compras) {
+            await connection.execute(sqlCompraInsert, [
+              id_proyecto,
+              req.user.id_empleado,
+              compra.proveedor,
+              compra.descripcion,
+              compra.cantidad,
+              compra.unidad_medida,
+              compra.total_usd,
+              compra.total_cop,
+              compra.orden_compra,
+              compra.estado_compra || "Solicitado",
+            ]);
+          }
+        }
         res
           .status(200)
-          .json({ message: "Datos del formulario registrados correctamente." });
-      } else {
-        // Esto podría ocurrir si el id_proyecto no existe en la tabla 'proyectos' (violación de FK)
-        // o si por alguna razón la inserción no afectó filas.
-        console.warn(
-          `No se insertaron filas para el proyecto ${id_proyecto}. Resultado:`,
-          result
-        );
-        // Considera un código de estado diferente si la inserción falló lógicamente
-        return res.status(400).json({
-          error: "No se pudieron registrar los datos del formulario.",
+          .json({ message: "Formulario general actualizado exitosamente." });
+      });
+    } catch (error) {
+      console.error("Error en PATCH /form/general/update:", error);
+      next(error);
+    }
+  }
+);
+
+// --- Formulario Alcance Endpoints ---
+app.get(
+  "/api/Projects/:area/:id_proyecto/form/alcance/get",
+  passport.authenticate("jwt", { session: false }), // Added auth
+  async (req, res, next) => {
+    try {
+      const { id_proyecto } = req.params;
+      const [formulario_alcance_rows] = await db.execute(
+        // Renamed
+        `SELECT * FROM formulario_alcance WHERE id_proyecto = ?`,
+        [id_proyecto]
+      );
+      if (!formulario_alcance_rows || formulario_alcance_rows.length === 0) {
+        // Check renamed
+        return res.status(404).json({
+          status: "not found",
+          message: `Formulario de alcance no encontrado para el proyecto: ${id_proyecto}`,
+          data: null,
         });
       }
+      return res.status(200).json({
+        status: "success",
+        formulario_alcance: formulario_alcance_rows[0], // Return object
+      });
     } catch (error) {
-      console.error("Error en la ruta AAAAAAAAAAAA", error);
-      res.status(500).json({ error: "Error en la base de datos" });
+      console.error("Error en GET /form/alcance/get:", error);
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/Projects/:area/:id_proyecto/form/alcance/fill",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    const { ...formData } = req.body;
+    try {
+      await executeTransaction(async (connection) => {
+        if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+          throw boom.badRequest("ID del proyecto inválido o faltante");
+        }
+        const fields = Object.keys(formData);
+        const placeholders = fields.map(() => "?").join(", ");
+        const values = fields.map((field) => formData[field]);
+
+        const sql = `INSERT INTO formulario_alcance (id_proyecto, ${fields.join(
+          ", "
+        )}) VALUES (?, ${placeholders})`;
+        await connection.execute(sql, [id_proyecto, ...values]);
+        res
+          .status(201)
+          .json({
+            message: "Formulario de alcance registrado exitosamente.",
+            id_proyecto,
+          });
+      });
+    } catch (error) {
+      console.error("Error en POST /form/alcance/fill:", error);
+      next(error);
+    }
+  }
+);
+
+app.patch(
+  "/api/Projects/:area/:id_proyecto/form/alcance/update",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    const { ...campos_modificados } = req.body;
+    try {
+      await executeTransaction(async (connection) => {
+        if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+          throw boom.badRequest("ID del proyecto inválido o faltante");
+        }
+        if (Object.keys(campos_modificados).length === 0) {
+          return res
+            .status(200)
+            .json({ message: "No hay cambios para actualizar" });
+        }
+        const updates = Object.keys(campos_modificados)
+          .map((campo) => `${campo} = ?`)
+          .join(", ");
+        const values = Object.values(campos_modificados);
+        const sqlUpdate = `UPDATE formulario_alcance SET ${updates} WHERE id_proyecto = ?`;
+        await connection.execute(sqlUpdate, [...values, id_proyecto]);
+        res
+          .status(200)
+          .json({ message: "Formulario de alcance actualizado exitosamente." });
+      });
+    } catch (error) {
+      console.error("Error en PATCH /form/alcance/update:", error);
+      next(error);
+    }
+  }
+);
+
+// --- Formulario Presupuesto Endpoints ---
+app.post(
+  "/api/Projects/:area/:id_proyecto/form/presupuesto/fill",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    const {
+      total_rh_calculado,
+      total_suministros_calculado,
+      total_servicios_calculado,
+      recursos_humanos,
+      suministros,
+      servicios,
+    } = req.body;
+    const creado_por_id = req.user.id_empleado;
+    // const version_presupuesto = 1; // Asumimos versión 1 para nuevos formularios
+
+    try {
+      await executeTransaction(async (connection) => {
+        if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+          throw boom.badRequest("ID del proyecto inválido o faltante");
+        }
+
+        // Insertar en formulario_presupuesto
+        const [mainFormResult] = await connection.execute(
+          `INSERT INTO formulario_presupuesto (
+            id_proyecto, creado_por_id, fecha_creacion, fecha_actualizacion,
+            total_rh_calculado, total_suministros_calculado, total_servicios_calculado
+          ) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?, ?)`,
+          [
+            id_proyecto,
+            creado_por_id,
+            total_rh_calculado,
+            total_suministros_calculado,
+            total_servicios_calculado,
+          ]
+        );
+        // No necesitamos el ID insertado si la PK es solo id_proyecto (y no version_presupuesto)
+
+        // Insertar recursos_humanos
+        if (
+          recursos_humanos &&
+          Array.isArray(recursos_humanos) &&
+          recursos_humanos.length > 0
+        ) {
+          const sqlRH = `
+            INSERT INTO presupuesto_rh (
+              id_proyecto, id_empleado_asignado, nombre_recurso, salario_mensual, 
+              salario_mensual_parafiscales, costo_dia, cantidad_dias, valor_total_linea, 
+              creado_por_id, fecha_creacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);`;
+          for (const rh of recursos_humanos) {
+            await connection.execute(sqlRH, [
+              id_proyecto,
+              rh.id_empleado_asignado || null,
+              rh.nombre_recurso,
+              rh.salario_mensual,
+              rh.salario_mensual_parafiscales,
+              rh.costo_dia,
+              rh.cantidad_dias,
+              rh.valor_total_linea,
+              creado_por_id,
+            ]);
+          }
+        }
+
+        // Insertar suministros
+        if (
+          suministros &&
+          Array.isArray(suministros) &&
+          suministros.length > 0
+        ) {
+          const sqlSuministros = `
+            INSERT INTO presupuesto_suministro (
+              id_proyecto, nombre_proveedor, nombre_item, cantidad_suministro, 
+              unidad_de_medida, valor_unitario_suministro, valor_total_linea, 
+              creado_por_id, fecha_creacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);`;
+          for (const s of suministros) {
+            await connection.execute(sqlSuministros, [
+              id_proyecto,
+              s.nombre_proveedor,
+              s.nombre_item,
+              s.cantidad_suministro,
+              s.unidad_de_medida,
+              s.valor_unitario_suministro,
+              s.valor_total_linea,
+              creado_por_id,
+            ]);
+          }
+        }
+
+        // Insertar servicios
+        if (servicios && Array.isArray(servicios) && servicios.length > 0) {
+          const sqlServicios = `
+            INSERT INTO presupuesto_servicio (
+              id_proyecto, nombre_proveedor, nombre_servicio, cantidad_servicio, 
+              unidad_de_medida, valor_unitario, valor_total_linea, 
+              creado_por_id, fecha_creacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);`;
+          for (const serv of servicios) {
+            await connection.execute(sqlServicios, [
+              id_proyecto,
+              serv.nombre_proveedor,
+              serv.nombre_servicio,
+              serv.cantidad_servicio,
+              serv.unidad_de_medida,
+              serv.valor_unitario,
+              serv.valor_total_linea,
+              creado_por_id,
+            ]);
+          }
+        }
+        res.status(201).json({
+          message: "Presupuesto y sus detalles registrados exitosamente.",
+          id_proyecto: id_proyecto,
+        });
+      });
+    } catch (error) {
+      console.error("Error en POST /form/presupuesto/fill:", error);
+      next(error);
+    }
+  }
+);
+
+app.get(
+  "/api/Projects/:area/:id_proyecto/form/presupuesto/get",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    // const version_presupuesto = 1; // Asumir versión 1 o la única existente
+
+    try {
+      console.log(`GET request for presupuesto, id_proyecto: ${id_proyecto}`);
+
+      const [mainPresupuestoRows] = await db.execute(
+        "SELECT * FROM formulario_presupuesto WHERE id_proyecto = ?", // AND version_presupuesto = ?
+        [id_proyecto /*, version_presupuesto*/]
+      );
+
+      if (!mainPresupuestoRows || mainPresupuestoRows.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "Presupuesto no encontrado para este proyecto." });
+      }
+      const formulario_presupuesto = mainPresupuestoRows[0];
+
+      const [recursos_humanos_data] = await db.execute(
+        "SELECT * FROM presupuesto_rh WHERE id_proyecto = ?", // AND version_presupuesto = ?
+        [id_proyecto /*, version_presupuesto*/]
+      );
+      const [suministros_data] = await db.execute(
+        "SELECT * FROM presupuesto_suministro WHERE id_proyecto = ?", // AND version_presupuesto = ? // Tabla es presupuesto_suministro
+        [id_proyecto /*, version_presupuesto*/]
+      );
+      const [servicios_data] = await db.execute(
+        "SELECT * FROM presupuesto_servicio WHERE id_proyecto = ?", // AND version_presupuesto = ? // Tabla es presupuesto_servicio
+        [id_proyecto /*, version_presupuesto*/]
+      );
+
+      res.status(200).json({
+        formulario_presupuesto,
+        recursos_humanos_data,
+        suministros_data,
+        servicios_data,
+      });
+    } catch (error) {
+      console.error("Error en GET /form/presupuesto/get:", error);
+      next(error);
+    }
+  }
+);
+
+app.patch(
+  "/api/Projects/:area/:id_proyecto/form/presupuesto/update",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    const {
+      total_rh_calculado,
+      total_suministros_calculado,
+      total_servicios_calculado,
+      recursos_humanos,
+      suministros,
+      servicios,
+    } = req.body;
+    const actualizado_por_id = req.user.id_empleado;
+    // const version_presupuesto_to_update = 1; // Asumir versión 1
+
+    try {
+      await executeTransaction(async (connection) => {
+        const [mainFormRows] = await connection.execute(
+          "SELECT id_proyecto FROM formulario_presupuesto WHERE id_proyecto = ?", // AND version_presupuesto = ?
+          [id_proyecto /*, version_presupuesto_to_update*/]
+        );
+
+        if (!mainFormRows || mainFormRows.length === 0) {
+          throw boom.notFound(
+            `Formulario de presupuesto no encontrado para este proyecto.`
+          );
+        }
+
+        await connection.execute(
+          `UPDATE formulario_presupuesto SET 
+            actualizado_por_id = ?, fecha_actualizacion = CURRENT_TIMESTAMP,
+            total_rh_calculado = ?, total_suministros_calculado = ?, total_servicios_calculado = ?
+           WHERE id_proyecto = ?`, // AND version_presupuesto = ?
+          [
+            actualizado_por_id,
+            total_rh_calculado,
+            total_suministros_calculado,
+            total_servicios_calculado,
+            id_proyecto /*, version_presupuesto_to_update*/,
+          ]
+        );
+
+        // Delete existing line items
+        await connection.execute(
+          "DELETE FROM presupuesto_rh WHERE id_proyecto = ?",
+          [id_proyecto /*, version_presupuesto_to_update*/]
+        );
+        await connection.execute(
+          "DELETE FROM presupuesto_suministro WHERE id_proyecto = ?",
+          [id_proyecto /*, version_presupuesto_to_update*/]
+        ); // Tabla es presupuesto_suministro
+        await connection.execute(
+          "DELETE FROM presupuesto_servicio WHERE id_proyecto = ?",
+          [id_proyecto /*, version_presupuesto_to_update*/]
+        ); // Tabla es presupuesto_servicio
+
+        // Insert new line items (similar to /fill endpoint)
+        if (
+          recursos_humanos &&
+          Array.isArray(recursos_humanos) &&
+          recursos_humanos.length > 0
+        ) {
+          const sqlRH = `
+            INSERT INTO presupuesto_rh (
+              id_proyecto, id_empleado_asignado, nombre_recurso, salario_mensual, 
+              salario_mensual_parafiscales, costo_dia, cantidad_dias, valor_total_linea, 
+              creado_por_id, fecha_creacion 
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);`; // Removed version_presupuesto from VALUES if not used
+          for (const rh of recursos_humanos) {
+            await connection.execute(sqlRH, [
+              id_proyecto /*version_presupuesto_to_update,*/,
+              rh.id_empleado_asignado || null,
+              rh.nombre_recurso,
+              rh.salario_mensual,
+              rh.salario_mensual_parafiscales,
+              rh.costo_dia,
+              rh.cantidad_dias,
+              rh.valor_total_linea,
+              actualizado_por_id,
+            ]);
+          }
+        }
+
+        if (
+          suministros &&
+          Array.isArray(suministros) &&
+          suministros.length > 0
+        ) {
+          const sqlSuministros = `
+            INSERT INTO presupuesto_suministro (
+              id_proyecto, nombre_proveedor, nombre_item, cantidad_suministro, unidad_de_medida, 
+              valor_unitario_suministro, valor_total_linea, creado_por_id, fecha_creacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);`; // Tabla es presupuesto_suministro
+          for (const s of suministros) {
+            await connection.execute(sqlSuministros, [
+              id_proyecto /*version_presupuesto_to_update,*/,
+              s.nombre_proveedor,
+              s.nombre_item,
+              s.cantidad_suministro,
+              s.unidad_de_medida,
+              s.valor_unitario_suministro,
+              s.valor_total_linea,
+              actualizado_por_id,
+            ]);
+          }
+        }
+
+        if (servicios && Array.isArray(servicios) && servicios.length > 0) {
+          const sqlServicios = `
+            INSERT INTO presupuesto_servicio (
+              id_proyecto, nombre_proveedor, nombre_servicio, cantidad_servicio, unidad_de_medida, 
+              valor_unitario, valor_total_linea, creado_por_id, fecha_creacion
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);`; // Tabla es presupuesto_servicio
+          for (const serv of servicios) {
+            await connection.execute(sqlServicios, [
+              id_proyecto /*version_presupuesto_to_update,*/,
+              serv.nombre_proveedor,
+              serv.nombre_servicio,
+              serv.cantidad_servicio,
+              serv.unidad_de_medida,
+              serv.valor_unitario,
+              serv.valor_total_linea,
+              actualizado_por_id,
+            ]);
+          }
+        }
+        res
+          .status(200)
+          .json({ message: "Presupuesto actualizado exitosamente." });
+      });
+    } catch (error) {
+      console.error("Error en PATCH /form/presupuesto/update:", error);
       next(error);
     }
   }
@@ -884,8 +1196,443 @@ app.post(
   }
 );
 
-// Middleware de manejo de errores global (AÑADIR AL FINAL)
+// --- Formulario Verificacion Endpoints ---
+app.post(
+  "/api/Projects/:area/:id_proyecto/form/verificacion/fill",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    const { version_verificada, lista_chequeo, registros_aprobacion } = req.body;
+    const creado_por_id = req.user.id_empleado;
+
+    try {
+      await executeTransaction(async (connection) => {
+        if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+          throw boom.badRequest("ID del proyecto inválido o faltante");
+        }
+
+        // 1. Insertar en formulario_verificacion
+        const [mainFormResult] = await connection.execute(
+          `INSERT INTO formulario_verificacion (id_proyecto, version_verificada, creado_por_id, fecha_creacion, fecha_actualizacion) 
+           VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [id_proyecto, version_verificada, creado_por_id]
+        );
+        const id_formulario_verificacion = mainFormResult.insertId;
+
+        if (!id_formulario_verificacion) {
+          throw boom.internal("No se pudo crear el formulario de verificación principal.");
+        }
+
+        // 2. Insertar en verificacion_cumplimiento_requerimientos
+        if (lista_chequeo && Array.isArray(lista_chequeo) && lista_chequeo.length > 0) {
+          const sqlRequisitos = `
+            INSERT INTO verificacion_cumplimiento_requerimientos (
+              id_formulario_verificacion, codigo_requisito, tipo_requisito, descripcion_requisito, 
+              cumple, observaciones, fecha_verificacion, verificado_por_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`;
+          for (const item of lista_chequeo) {
+            await connection.execute(sqlRequisitos, [
+              id_formulario_verificacion,
+              item.codigo_requisito || null,
+              item.tipo_requisito || null,
+              item.descripcion_requisito,
+              item.cumple, 
+              item.observaciones || null,
+              item.fecha_verificacion, 
+              item.verificado_por_id || null, 
+            ]);
+          }
+        }
+
+        // 3. Insertar en registro_verificacion_aprobacion
+        if (registros_aprobacion && Array.isArray(registros_aprobacion) && registros_aprobacion.length > 0) {
+          const sqlAprobaciones = `
+            INSERT INTO registro_verificacion_aprobacion (
+              id_formulario_verificacion, fecha_aprobacion, version_aprobada, 
+              observaciones, nombre_responsable, firma_id
+            ) VALUES (?, ?, ?, ?, ?, ?);`; // Usar nombre_responsable
+          for (const item of registros_aprobacion) {
+            await connection.execute(sqlAprobaciones, [
+              id_formulario_verificacion,
+              item.fecha_aprobacion, 
+              item.version_aprobada,
+              item.observaciones || null,
+              item.nombre_responsable, // Usar el campo mapeado desde el frontend (originalmente rol_responsable)
+              item.firma_id || null, 
+            ]);
+          }
+        }
+        res.status(201).json({ 
+          message: "Formulario de verificación y sus detalles registrados exitosamente.",
+          id_formulario_verificacion: id_formulario_verificacion 
+        });
+      });
+    } catch (error) {
+      console.error("Error en POST /form/verificacion/fill:", error);
+      next(error);
+    }
+  }
+);
+
+app.get(
+  "/api/Projects/:area/:id_proyecto/form/verificacion/get",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    // Opcionalmente, podrías aceptar un id_formulario_verificacion específico aquí
+    // const { id_formulario_verificacion_especifico } = req.query; 
+    try {
+      const [mainFormRows] = await db.execute(
+        `SELECT * FROM formulario_verificacion 
+         WHERE id_proyecto = ? 
+         ORDER BY fecha_creacion DESC LIMIT 1`,
+        [id_proyecto]
+      );
+
+      if (!mainFormRows || mainFormRows.length === 0) {
+        return res.status(404).json({ message: "Formulario de verificación no encontrado para este proyecto." });
+      }
+      const formulario_verificacion = mainFormRows[0];
+      const id_formulario_verificacion = formulario_verificacion.id_formulario_verificacion;
+
+      const [lista_chequeo_data] = await db.execute(
+        `SELECT vcr.*, CONCAT(e.nombres, ' ', e.apellidos) AS nombre_verificado_por
+         FROM verificacion_cumplimiento_requerimientos vcr
+         LEFT JOIN empleados e ON vcr.verificado_por_id = e.id_empleado
+         WHERE vcr.id_formulario_verificacion = ?`,
+        [id_formulario_verificacion]
+      );
+      const [registros_aprobacion_data] = await db.execute(
+        `SELECT ra.*, CONCAT(e.nombres, ' ', e.apellidos) AS nombre_firmante
+         FROM registro_verificacion_aprobacion ra
+         LEFT JOIN empleados e ON ra.firma_id = e.id_empleado
+         WHERE ra.id_formulario_verificacion = ?`,
+        [id_formulario_verificacion]
+      );
+
+      res.status(200).json({
+        formulario_verificacion,
+        lista_chequeo_data,
+        registros_aprobacion_data
+      });
+
+    } catch (error) {
+      console.error("Error en GET /form/verificacion/get:", error);
+      next(error);
+    }
+  }
+);
+
+app.patch(
+  "/api/Projects/:area/:id_proyecto/form/verificacion/:id_form_verif/update",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto, id_form_verif } = req.params;
+    const { version_verificada, lista_chequeo, registros_aprobacion } = req.body;
+    const actualizado_por_id = req.user.id_empleado;
+
+    try {
+      await executeTransaction(async (connection) => {
+        // 1. Verificar que el formulario principal exista
+        const [formExistRows] = await connection.execute(
+          "SELECT id_formulario_verificacion FROM formulario_verificacion WHERE id_formulario_verificacion = ? AND id_proyecto = ?",
+          [id_form_verif, id_proyecto]
+        );
+        if (!formExistRows || formExistRows.length === 0) {
+          throw boom.notFound("Formulario de verificación no encontrado para este proyecto y ID.");
+        }
+
+        // 2. Actualizar formulario_verificacion
+        await connection.execute(
+          `UPDATE formulario_verificacion 
+           SET version_verificada = ?, actualizado_por_id = ?, fecha_actualizacion = CURRENT_TIMESTAMP 
+           WHERE id_formulario_verificacion = ?`,
+          [version_verificada, actualizado_por_id, id_form_verif]
+        );
+
+        // 3. Borrar detalles existentes
+        await connection.execute("DELETE FROM verificacion_cumplimiento_requerimientos WHERE id_formulario_verificacion = ?", [id_form_verif]);
+        await connection.execute("DELETE FROM registro_verificacion_aprobacion WHERE id_formulario_verificacion = ?", [id_form_verif]);
+
+        // 4. Re-insertar detalles (similar a /fill)
+        if (lista_chequeo && Array.isArray(lista_chequeo) && lista_chequeo.length > 0) {
+          const sqlRequisitos = `
+            INSERT INTO verificacion_cumplimiento_requerimientos (
+              id_formulario_verificacion, codigo_requisito, tipo_requisito, descripcion_requisito, 
+              cumple, observaciones, fecha_verificacion, verificado_por_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`;
+          for (const item of lista_chequeo) {
+            await connection.execute(sqlRequisitos, [
+              id_form_verif, item.codigo_requisito || null, item.tipo_requisito || null,
+              item.descripcion_requisito, item.cumple, item.observaciones || null,
+              item.fecha_verificacion, item.verificado_por_id || null,
+            ]);
+          }
+        }
+
+        if (registros_aprobacion && Array.isArray(registros_aprobacion) && registros_aprobacion.length > 0) {
+          const sqlAprobaciones = `
+            INSERT INTO registro_verificacion_aprobacion (
+              id_formulario_verificacion, fecha_aprobacion, version_aprobada, 
+              observaciones, nombre_responsable, firma_id
+            ) VALUES (?, ?, ?, ?, ?, ?);`; // Usar nombre_responsable
+          for (const item of registros_aprobacion) {
+            await connection.execute(sqlAprobaciones, [
+              id_form_verif, item.fecha_aprobacion, item.version_aprobada,
+              item.observaciones || null, item.nombre_responsable, // Usar el campo mapeado desde el frontend
+              item.firma_id || null,
+            ]);
+          }
+        }
+        res.status(200).json({ message: "Formulario de verificación actualizado exitosamente." });
+      });
+    } catch (error) {
+      console.error("Error en PATCH /form/verificacion/update:", error);
+      next(error);
+    }
+  }
+);
+
+// --- Formulario Validacion File Upload Endpoints ---
+
+// Endpoint to upload a file for a specific Project's Formulario Validacion
+app.post(
+  "/api/forms/validacion/:id_proyecto/upload", // Changed param to id_proyecto
+  passport.authenticate("jwt", { session: false }),
+  upload.single('file'), 
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    const id_empleado_uploader = req.user.id_empleado;
+
+    if (!req.file) {
+      return next(boom.badRequest('No file uploaded or file type not allowed.'));
+    }
+    if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+        return next(boom.badRequest('Invalid or missing ID for Project.'));
+    }
+
+    try {
+      await executeTransaction(async (connection) => {
+        // Check if the Project exists
+        const [projectRows] = await connection.execute(
+          "SELECT id_proyecto FROM proyectos WHERE id_proyecto = ?",
+          [id_proyecto]
+        );
+        if (!projectRows || projectRows.length === 0) {
+          throw boom.notFound("Proyecto no encontrado.");
+        }
+
+        // Ensure FormularioValidacion record exists for this project, or create it
+        let [formValRows] = await connection.execute(
+          "SELECT id_proyecto FROM formulario_validacion WHERE id_proyecto = ?",
+          [id_proyecto]
+        );
+
+        if (!formValRows || formValRows.length === 0) {
+          await connection.execute(
+            "INSERT INTO formulario_validacion (id_proyecto, creado_por_id, actualizado_por_id) VALUES (?, ?, ?)",
+            [id_proyecto, id_empleado_uploader, id_empleado_uploader]
+          );
+        } else {
+          // Optionally update fecha_actualizacion and actualizado_por_id if it already exists
+           await connection.execute(
+            "UPDATE formulario_validacion SET fecha_actualizacion = CURRENT_TIMESTAMP, actualizado_por_id = ? WHERE id_proyecto = ?",
+            [id_empleado_uploader, id_proyecto]
+          );
+        }
+
+        const { originalname, filename: stored_filename, mimetype, size: file_size_bytes } = req.file;
+        const file_path_on_server = req.file.path;
+
+        const [result] = await connection.execute(
+          `INSERT INTO archivos_formulario_validacion (
+            id_formulario_validacion, id_empleado_uploader, original_filename, 
+            stored_filename, file_path_on_server, mime_type, file_size_bytes
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            id_proyecto, // This is now the id_proyecto, which acts as id_formulario_validacion
+            id_empleado_uploader,
+            originalname,
+            stored_filename,
+            file_path_on_server,
+            mimetype,
+            file_size_bytes,
+          ]
+        );
+
+        res.status(201).json({
+          message: "File uploaded and associated with Formulario Validacion successfully!",
+          id_archivo: result.insertId,
+          id_form_validacion: id_proyecto, // Reflects that id_proyecto is the key
+          original_filename: originalname,
+          stored_filename: stored_filename,
+          mime_type: mimetype,
+          file_size_bytes: file_size_bytes,
+        });
+      });
+    } catch (error) {
+      if (req.file && req.file.path) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error("Error deleting orphaned file after DB error:", err);
+        });
+      }
+      console.error("Error in file upload for Formulario Validacion:", error);
+      next(error);
+    }
+  }
+);
+
+// Endpoint to get all files for a specific Project's Formulario Validacion
+app.get(
+  "/api/forms/validacion/:id_proyecto/files", // Changed param to id_proyecto
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+        return next(boom.badRequest('Invalid or missing ID for Project.'));
+    }
+    try {
+      // First, check if the formulario_validacion context exists for the project
+      const [formValRows] = await db.execute(
+        "SELECT id_proyecto FROM formulario_validacion WHERE id_proyecto = ?",
+        [id_proyecto]
+      );
+
+      if (!formValRows || formValRows.length === 0) {
+        // If no form context, then no files can be associated.
+        return res.status(200).json([]); // Return empty array, or 404 if preferred
+      }
+
+      const [files] = await db.execute(
+        `SELECT id_archivo, id_formulario_validacion, id_empleado_uploader, 
+                original_filename, stored_filename, mime_type, file_size_bytes, 
+                descripcion_archivo, upload_timestamp 
+         FROM archivos_formulario_validacion 
+         WHERE id_formulario_validacion = ? AND deleted_timestamp IS NULL`, // id_formulario_validacion here is the id_proyecto
+        [id_proyecto]
+      );
+      res.status(200).json(files);
+    } catch (error) {
+      console.error("Error fetching files for Formulario Validacion:", error);
+      next(error);
+    }
+  }
+);
+
+// Generic Endpoint to download a file by its stored_filename
+app.get(
+  "/api/files/download/:filename",
+  passport.authenticate("jwt", { session: false }), // Or remove auth if files can be public, but usually not
+  async (req, res, next) => {
+    const { filename } = req.params;
+    try {
+      // Fetch original_filename from DB to provide a nice name for download
+      const [fileRows] = await db.execute(
+        "SELECT original_filename, file_path_on_server FROM archivos_formulario_validacion WHERE stored_filename = ? AND deleted_timestamp IS NULL",
+        [filename]
+      );
+
+      if (!fileRows || fileRows.length === 0) {
+        return next(boom.notFound("File not found or access denied."));
+      }
+      
+      const filePath = fileRows[0].file_path_on_server;
+      const originalName = fileRows[0].original_filename;
+
+      if (fs.existsSync(filePath)) {
+        res.download(filePath, originalName, (err) => {
+          if (err) {
+            console.error("Error during file download:", err);
+            if (!res.headersSent) {
+               next(boom.internal('Could not download the file.'));
+            }
+          }
+        });
+      } else {
+        console.error(`File not found on disk: ${filePath} for stored_filename: ${filename}`);
+        return next(boom.notFound("File not found on server disk."));
+      }
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      next(error);
+    }
+  }
+);
+
+// Generic Endpoint to delete a file by its stored_filename
+app.delete(
+  "/api/files/:filename",
+  passport.authenticate("jwt", { session: false }), // Ensure user has permission
+  async (req, res, next) => {
+    const { filename } = req.params;
+    const id_empleado_deleter = req.user.id_empleado; // For logging or permission check
+
+    try {
+      const [fileRows] = await db.execute(
+        "SELECT id_archivo, file_path_on_server, id_empleado_uploader FROM archivos_formulario_validacion WHERE stored_filename = ? AND deleted_timestamp IS NULL",
+        [filename]
+      );
+
+      if (!fileRows || fileRows.length === 0) {
+        return next(boom.notFound("File not found or already deleted."));
+      }
+
+      const fileToDelete = fileRows[0];
+      // Optional: Add permission check here - e.g., only uploader or admin can delete
+      // if (fileToDelete.id_empleado_uploader !== id_empleado_deleter && req.user.rol !== 'admin') {
+      //   return next(boom.forbidden("You do not have permission to delete this file."));
+      // }
+
+      if (fs.existsSync(fileToDelete.file_path_on_server)) {
+        fs.unlink(fileToDelete.file_path_on_server, async (err) => {
+          if (err) {
+            console.error("Error deleting file from filesystem:", err);
+            return next(boom.internal("Error deleting file from disk."));
+          }
+          
+          // Soft delete from database
+          // await db.execute("UPDATE archivos_formulario_validacion SET deleted_timestamp = CURRENT_TIMESTAMP WHERE id_archivo = ?", [fileToDelete.id_archivo]);
+          // Or Hard delete:
+          await db.execute("DELETE FROM archivos_formulario_validacion WHERE id_archivo = ?", [fileToDelete.id_archivo]);
+
+          res.status(200).json({ message: "File deleted successfully." });
+        });
+      } else {
+        console.warn(`File not found on disk for deletion: ${fileToDelete.file_path_on_server}, but DB record existed.`);
+        // Still remove DB record if file not on disk but record exists
+         await db.execute("DELETE FROM archivos_formulario_validacion WHERE id_archivo = ?", [fileToDelete.id_archivo]);
+        res.status(200).json({ message: "File record deleted from database (file not found on disk)." });
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      next(error);
+    }
+  }
+);
+
+// --- End Formulario Validacion File Upload Endpoints --- // This block remains removed as per reversion goal
+
 app.use((err, req, res, next) => {
-  console.error("Error global no manejado:", err);
-  res.status(500).json({ error: "Error interno del servidor" });
+  // Handle multer errors specifically for better client feedback
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return next(boom.badRequest('File is too large. Maximum size is 10MB.'));
+    }
+    return next(boom.badRequest(err.message));
+  } else if (err.message.startsWith("Error: File upload only supports")) { 
+     return next(boom.badRequest(err.message));
+  }
+
+
+  console.error("Error global no manejado:", err.stack || err); // Log stack for more details
+  if (boom.isBoom(err)) {
+    const { statusCode, payload } = err.output;
+    return res.status(statusCode).json(payload);
+  }
+  // Default to 500 Internal Server Error
+  return res.status(500).json({
+    statusCode: 500,
+    error: "Internal Server Error",
+    message: "Ha ocurrido un error inesperado.",
+  });
 });

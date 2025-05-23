@@ -1,12 +1,13 @@
-.mainContent{
+.mainContent {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  flex-grow: 1; /* Changed from width: 100% */
   height: 100%;
   padding: 0 10%;
+  transition: margin-left 0.4s ease-in-out; /* Smoother animation */
 }
-.shell{
+.shell {
   display: flex;
   /* height: 100dvh; */
   background-color: var(--background-color);

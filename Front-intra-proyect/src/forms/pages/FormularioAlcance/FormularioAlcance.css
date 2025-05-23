@@ -1,7 +1,7 @@
 /* Estilos modernos y elegantes para el formulario de planeación de proyectos */
 /* Contenedor principal */
 .project-planning-container {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 2rem auto;
   padding: 2rem;
   background-color: #ffffff;
@@ -11,7 +11,7 @@
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   width: 90%;
 }
 
@@ -314,7 +314,8 @@
 
 .form-textarea {
   resize: vertical;
-  min-height: 120px;
+  min-height: 150px; /* Increased min-height */
+  padding-right: 40px; /* Added padding to avoid text overlapping icon */
 }
 
 .form-textarea.small {
@@ -845,7 +846,7 @@
 
 .info-icon {
   position: absolute;
-  right: 12%;
+  right: 15px; /* Adjusted position for better spacing with padding */
   top: 50%;
   transform: translateY(-50%);
   color: #4361ee;

@@ -192,11 +192,8 @@ const wizardValidationSchemas = [
   }),
   // PASO 3: Gestión Documental
   Yup.object().shape({
-    ruta_proyecto_desarrollo: Yup.string()
-      .nullable()
-      .url("URL inválida")
-      .max(500),
-    ruta_cotizacion: Yup.string().nullable().url("URL inválida").max(500),
+    ruta_proyecto_desarrollo: Yup.string().nullable().max(500),
+    ruta_cotizacion: Yup.string().nullable().max(500),
     aplica_doc_ideas_iniciales: Yup.boolean(),
     aplica_doc_especificaciones: Yup.boolean(),
     aplica_doc_casos_uso: Yup.boolean(),
@@ -324,6 +321,83 @@ const alcanceWizardValidation = [
   }),
 ];
 
+const presupuestoValidationSchema = Yup.object().shape({
+  recursos_humanos: Yup.array().of(
+    Yup.object().shape({
+      nombre_recurso: Yup.string().required("Nombre del recurso es requerido"), // Alineado con BD/Frontend
+      salario_mensual: Yup.number()
+        .typeError("Salario debe ser un número")
+        .min(0, "Salario debe ser positivo")
+        .required("Salario mensual es requerido"),
+      cantidad_dias: Yup.number()
+        .typeError("Cantidad de días debe ser un número")
+        .min(0, "Cantidad de días debe ser positiva")
+        .required("Cantidad de días es requerida"),
+      // Campos calculados como salario_mensual_parafiscales, costo_dia, valor_total_linea
+      // no necesitan validación aquí si son puramente calculados y no input del usuario.
+      // id_empleado_asignado es opcional y no requiere validación estricta aquí a menos que sea mandatorio.
+    })
+  ),
+  suministros: Yup.array().of(
+    Yup.object().shape({
+      nombre_proveedor: Yup.string().required("Proveedor es requerido"), // Alineado
+      nombre_item: Yup.string().required("Nombre del item es requerido"), // Alineado
+      cantidad_suministro: Yup.number()
+        .typeError("Cantidad debe ser un número")
+        .min(0, "Cantidad debe ser positiva")
+        .required("Cantidad es requerida"),
+      unidad_de_medida: Yup.string().required("Unidad de medida es requerida"), // Alineado
+      valor_unitario_suministro: Yup.number()
+        .typeError("Valor unitario debe ser un número")
+        .min(0, "Valor unitario debe ser positivo")
+        .required("Valor unitario es requerido"),
+    })
+  ),
+  servicios: Yup.array().of(
+    Yup.object().shape({
+      nombre_proveedor: Yup.string().required("Proveedor es requerido"), // Alineado
+      nombre_servicio: Yup.string().required("Nombre del servicio es requerido"), // Alineado
+      cantidad_servicio: Yup.number()
+        .typeError("Cantidad debe ser un número")
+        .min(0, "Cantidad debe ser positiva")
+        .required("Cantidad es requerida"),
+      unidad_de_medida: Yup.string().required("Unidad de medida es requerida"), // Alineado
+      valor_unitario: Yup.number() // Alineado
+        .typeError("Valor unitario debe ser un número")
+        .min(0, "Valor unitario debe ser positivo")
+        .required("Valor unitario es requerido"),
+    })
+  ),
+  // No es necesario validar los subtotales generales (total_rh_calculado, etc.) aquí
+  // ya que son calculados en el frontend antes del envío y no son inputs directos del usuario.
+});
+
 // Exportar el array principal
 export { alcanceWizardValidation };
 export { wizardValidationSchemas };
+export { presupuestoValidationSchema };
+
+// --- Esquema para Formulario de Verificación ---
+export const verificacionValidationSchema = Yup.object().shape({
+  version_verificada: Yup.string().required("La versión verificada es requerida.").max(100, "Máximo 100 caracteres."),
+  lista_chequeo: Yup.array().of(
+    Yup.object().shape({
+      codigo_requisito: Yup.string().nullable().max(50, "Máximo 50 caracteres."),
+      tipo_requisito: Yup.string().nullable().max(100, "Máximo 100 caracteres."),
+      descripcion_requisito: Yup.string().required("La descripción del requisito es requerida.").min(5, "Mínimo 5 caracteres.").typeError("Descripción inválida"),
+      cumple: Yup.boolean().typeError("Debe seleccionar si cumple o no."), // .required("Debe indicar si cumple o no.") // Checkbox no suele necesitar .required()
+      observaciones: Yup.string().nullable(),
+      fecha_verificacion: Yup.date().required("La fecha de verificación es requerida.").typeError("Fecha inválida."),
+      verificado_por_id: Yup.string().nullable().max(150, "Máximo 150 caracteres."), // Asumiendo que podría ser nombre o ID
+    })
+  ).min(1, "Debe agregar al menos un requisito a la lista de chequeo."),
+  registros_aprobacion: Yup.array().of(
+    Yup.object().shape({
+      fecha_aprobacion: Yup.date().required("La fecha de aprobación es requerida.").typeError("Fecha inválida."),
+      version_aprobada: Yup.string().required("La versión aprobada es requerida.").max(100, "Máximo 100 caracteres."),
+      observaciones: Yup.string().nullable(),
+      rol_responsable: Yup.string().required("El rol del responsable es requerido.").max(150, "Máximo 150 caracteres."),
+      firma_id: Yup.string().required("La firma es requerida.").max(150, "Máximo 150 caracteres."), // Asumiendo que podría ser nombre o ID
+    })
+  ).min(1, "Debe agregar al menos un registro de aprobación."),
+});

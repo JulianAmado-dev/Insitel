@@ -11,16 +11,21 @@ function DashboardDeploy() {
   const location = useLocation();
 
   console.log(auth);
-  if(auth.loading === true){
-    return <div>cargando...</div>
+  if (auth.loading === true) {
+    return <div>cargando...</div>;
   }
   if (auth.isAuthenticated === false) {
-    return <Navigate to="/unauthorized" state={{ from: location }} replace={true} />;
+    return (
+      <Navigate to="/unauthorized" state={{ from: location }} replace={true} />
+    );
   }
   return (
     <div className="shell">
       <DashboardSidebar isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
-      <div className="mainContent">
+      <div
+        className="mainContent"
+        style={{ marginLeft: isExpanded ? "18rem" : "5rem" }}
+      >
         <DashboardHeader />
         <Outlet />
       </div>

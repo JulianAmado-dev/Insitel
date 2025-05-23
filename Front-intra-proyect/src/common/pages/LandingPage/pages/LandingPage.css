@@ -1,26 +1,3 @@
-:root {
-  --primary-color: #3b82f6;
-  --primary-light: #93c5fd;
-  --primary-dark: #1d4ed8;
-  --secondary-color: #10b981;
-  --secondary-light: #6ee7b7;
-  --secondary-dark: #059669;
-  --accent-color: #f59e0b;
-  --accent-light: #fcd34d;
-  --accent-dark: #d97706;
-  --text-color: #1f2937;
-  --text-light: #6b7280;
-  --text-lighter: #9ca3af;
-  --background-color: #f9fafb;
-  --card-background: #ffffff;
-  --border-color: #e5e7eb;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --transition: all 0.3s ease;
-  --radius: 0.5rem;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -388,4 +365,3 @@ body {
     justify-content: center;
   }
 }
-

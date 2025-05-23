@@ -1,0 +1,287 @@
+/* --- Contenedor Principal --- */
+.form-container-verificacion {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+}
+
+/* --- Encabezado del Formulario --- */
+.form-header-verificacion {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.form-header-verificacion h1 {
+  font-size: 1.8rem;
+  color: #333;
+  font-weight: 600;
+}
+
+/* --- Secciones del Formulario --- */
+.form-section-verificacion {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  border: 1px solid #e7e7e7;
+  border-radius: 6px;
+  background-color: #fcfcfc;
+}
+
+.form-section-verificacion h2 {
+  font-size: 1.5rem;
+  color: #444;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+
+.form-section-verificacion h2 svg {
+  margin-right: 0.75rem;
+  color: #007bff; /* Color de íconos de sección */
+}
+
+/* --- Grupos de Campos y Etiquetas --- */
+.form-group { 
+  margin-bottom: 1.25rem;
+}
+
+.form-group-full-width {
+  grid-column: 1 / -1; 
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.required-verificacion {
+  color: #dc3545;
+  margin-left: 0.25rem;
+}
+
+/* --- Inputs y Textareas --- */
+.form-input-verificacion,
+.form-input-verificacion.table-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #495057;
+  background-color: #fff;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  box-sizing: border-box; 
+}
+
+.form-input-verificacion:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-input-verificacion.disabled-field {
+  background-color: #e9ecef;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+textarea.form-input-verificacion {
+  min-height: 60px; 
+  resize: vertical;
+}
+
+/* --- Checkbox --- */
+.form-checkbox-verificacion {
+  margin-top: 0.5rem;
+  transform: scale(1.2); 
+}
+
+
+/* --- Mensajes de Error --- */
+.error-message-verificacion {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.3rem;
+}
+
+/* --- Tablas dentro de Secciones --- */
+.table-responsive-verificacion {
+  overflow-x: auto; 
+  margin-bottom: 1rem; 
+}
+
+.table-verificacion {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem; 
+}
+
+.table-verificacion th,
+.table-verificacion td {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top; 
+  font-size: 0.9rem;
+}
+
+.table-verificacion th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.table-verificacion td .form-input-verificacion.table-input {
+  margin-bottom: 0; 
+}
+
+/* Anchos de columna (ejemplos, ajustar según necesidad) */
+/* Lista de Chequeo */
+.table-verificacion.lista-chequeo-table th:nth-child(1), 
+.table-verificacion.lista-chequeo-table td:nth-child(1) { width: 10%; } /* Código */
+.table-verificacion.lista-chequeo-table th:nth-child(2), 
+.table-verificacion.lista-chequeo-table td:nth-child(2) { width: 20%; } /* Tipo - Ancho aumentado */
+.table-verificacion.lista-chequeo-table th:nth-child(3), 
+.table-verificacion.lista-chequeo-table td:nth-child(3) { width: 25%; } /* Descripción */
+.table-verificacion.lista-chequeo-table th:nth-child(4), 
+.table-verificacion.lista-chequeo-table td:nth-child(4) { width: 8%; text-align: center; }  /* Cumple */
+.table-verificacion.lista-chequeo-table th:nth-child(5), 
+.table-verificacion.lista-chequeo-table td:nth-child(5) { width: 15%; } /* Observaciones */
+.table-verificacion.lista-chequeo-table th:nth-child(6), 
+.table-verificacion.lista-chequeo-table td:nth-child(6) { width: 12%; } /* Fecha Verif. */
+.table-verificacion.lista-chequeo-table th:nth-child(7), 
+.table-verificacion.lista-chequeo-table td:nth-child(7) { width: 15%; } /* Verificado Por */
+.table-verificacion.lista-chequeo-table th:last-child, 
+.table-verificacion.lista-chequeo-table td:last-child { width: 5%; text-align: center;} /* Acción */
+
+/* Registro Aprobación */
+.table-verificacion.registros-aprobacion-table th:nth-child(1), 
+.table-verificacion.registros-aprobacion-table td:nth-child(1) { width: 12%; } /* Fecha Aprob. */
+.table-verificacion.registros-aprobacion-table th:nth-child(2), 
+.table-verificacion.registros-aprobacion-table td:nth-child(2) { width: 15%; } /* Versión Aprob. */
+.table-verificacion.registros-aprobacion-table th:nth-child(3), 
+.table-verificacion.registros-aprobacion-table td:nth-child(3) { width: 30%; } /* Observaciones */
+.table-verificacion.registros-aprobacion-table th:nth-child(4), 
+.table-verificacion.registros-aprobacion-table td:nth-child(4) { width: 20%; } /* Responsable (Rol) */
+.table-verificacion.registros-aprobacion-table th:nth-child(5), 
+.table-verificacion.registros-aprobacion-table td:nth-child(5) { width: 18%; } /* Firma (ID/Nombre) */
+.table-verificacion.registros-aprobacion-table th:last-child, 
+.table-verificacion.registros-aprobacion-table td:last-child { width: 5%; text-align: center;} /* Acción */
+
+
+/* --- Botones --- */
+.btn-add-verificacion,
+.btn-remove-verificacion,
+.btn-submit-verificacion {
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; 
+}
+
+.btn-add-verificacion {
+  background-color: #28a745;
+  color: white;
+  margin-top: 0.5rem; 
+}
+
+.btn-add-verificacion:hover {
+  background-color: #218838;
+}
+
+.btn-remove-verificacion {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.5rem 0.8rem; 
+}
+
+.btn-remove-verificacion:hover {
+  background-color: #c82333;
+}
+
+.btn-submit-verificacion {
+  background-color: #007bff;
+  color: white;
+  font-weight: 500;
+  min-width: 150px;
+}
+
+.btn-submit-verificacion:hover {
+  background-color: #0056b3;
+}
+
+.btn-submit-verificacion:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-add-verificacion:active,
+.btn-remove-verificacion:active,
+.btn-submit-verificacion:active {
+    transform: translateY(1px);
+}
+
+/* --- Acciones del Formulario (Contenedor del botón de guardar) --- */
+.form-actions-verificacion {
+  margin-top: 2rem;
+  text-align: right; 
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* --- Tooltip --- */
+.tooltip-verificacion {
+  position: relative;
+  display: inline-block;
+  margin-left: 5px; 
+}
+
+.tooltip-verificacion .tooltip-text-verificacion {
+  visibility: hidden;
+  width: 220px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; 
+  left: 50%;
+  margin-left: -110px; 
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+.tooltip-verificacion .tooltip-text-verificacion::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip-verificacion:hover .tooltip-text-verificacion {
+  visibility: visible;
+  opacity: 1;
+}

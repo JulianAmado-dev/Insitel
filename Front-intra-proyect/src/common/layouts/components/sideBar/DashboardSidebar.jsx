@@ -3,11 +3,12 @@ import logo_insitel from "@assets/logo-insitel.png";
 import logo_sigar from "@assets/logo-sigar.jpg";
 import insitelDefault from "@assets/logo-insitel-default-nofondo.png";
 import { useEffect, useState } from "react";
-import { ChevronRight, Moon, Settings, Sun } from "lucide-react";
+import { ChevronRight, Menu, Moon, Settings, Sun, UserPlus } from "lucide-react"; // Added Menu and UserPlus
 import { useTheme } from "@contexts/ThemeProvider/ThemeProvider";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "@api/AxiosInstance";
 import { useAuth } from "@contexts/AuthContext";
+import PropTypes from "prop-types";
 
 /* const departments = [
   {
@@ -126,7 +127,7 @@ function DashboardSidebar({ isExpanded, setIsExpanded }) {
             setIsExpanded(!isExpanded);
           }}
         >
-          <ChevronRight
+          <Menu // Changed from ChevronRight
             className={`sidebar__toggle-icon ${
               isExpanded ? "sidebar__toggle-icon--rotated" : ""
             }`}
@@ -181,7 +182,7 @@ function DashboardSidebar({ isExpanded, setIsExpanded }) {
                     className="sidebar__project-button"
                     onClick={(event) => {
                       event.preventDefault();
-                      navigate(`${department.nombre_area}`);
+                      navigate(`${department.nombre_area}/Home`);
                     }}
                   >
                     {/* Add null check to prevent potential errors */}
@@ -374,16 +375,23 @@ function DashboardSidebar({ isExpanded, setIsExpanded }) {
           {isExpanded && <span>Ajustes</span>}
         </button>
         <button
+          className="sidebar__add-user-button" // Added class for styling
           onClick={(e) => {
             e.preventDefault();
             navigate("create-employees");
           }}
         >
-          +
+          <UserPlus className="sidebar__icon" /> {/* Replaced + with UserPlus icon */}
+          {isExpanded && <span>Crear Usuario</span>}
         </button>
       </div>
     </div>
   );
 }
+
+DashboardSidebar.propTypes = {
+  isExpanded: PropTypes.bool.isRequired,
+  setIsExpanded: PropTypes.func.isRequired,
+};
 
 export { DashboardSidebar };

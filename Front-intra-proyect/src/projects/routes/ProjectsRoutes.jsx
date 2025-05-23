@@ -5,9 +5,10 @@ import { FormsRoutes } from "../../forms/routes/FormsRoutes";
 
 export const ProjectsRoutes = () => (
   <Routes>
-    <Route path="/:area" element={<Projects />}>
+    <Route path="/Home" element={<Projects />} />
+    <Route path="/Proyectos" element={<Projects />}>
       <Route path=":id_proyecto/*" element={<FormsRoutes />} />
     </Route>
-    <Route path="/:area/create" element={<CreateProyects />} />
+    <Route path="/create/project" element={<CreateProyects />} />
   </Routes>
 );

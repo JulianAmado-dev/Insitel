@@ -1,0 +1,326 @@
+/* --- Contenedor Principal --- */
+.form-header {
+  max-height: 20%;
+  height: 20%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3.8rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  position: relative;
+}
+
+.form-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4361ee;
+  margin: 0;
+  position: relative;
+}
+
+.form-header h1::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #4361ee 0%, #7209b7 100%);
+  border-radius: 2px;
+}
+
+.form-code {
+  left: 44%;
+  position: relative;
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-code::before {
+  content: "#";
+  color: #4361ee;
+  font-weight: 700;
+}
+
+.presupuesto-form-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  font-family: "Poppins", sans-serif;
+}
+
+.presupuesto-form-container h1 {
+  text-align: center;
+  color: var(--color-secondary, #30397a);
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* --- Secciones del Formulario --- */
+.form-section-presupuesto {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--ui-border, #e0e0e0);
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.form-section-presupuesto h2 {
+  font-size: 1.5rem;
+  color: var(--color-primary, #ee7d30);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-primary-light, #f9a26c);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- Tablas de Presupuesto --- */
+.presupuesto-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.presupuesto-table th,
+.presupuesto-table td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.presupuesto-table th {
+  background-color: var(--color-secondary-light, #4a54b3);
+  color: white;
+  font-weight: 600;
+}
+
+.presupuesto-table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.presupuesto-table tbody tr:hover {
+  background-color: var(--ui-hover, #f1f1f1);
+}
+
+.presupuesto-table tfoot tr {
+  background-color: #e9ecef;
+  font-weight: bold;
+}
+.presupuesto-table tfoot td {
+  color: var(--text-dark, #333);
+}
+
+/* --- Inputs dentro de la tabla --- */
+.form-input-presupuesto.table-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.form-input-presupuesto.table-input:focus {
+  border-color: var(--color-primary, #ee7d30);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(238, 125, 48, 0.2);
+}
+
+.form-input-presupuesto.table-input.disabled-field {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* --- Botones --- */
+.btn-add-presupuesto,
+.btn-remove-presupuesto,
+.btn-submit-presupuesto {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-add-presupuesto {
+  background-color: var(--status-success, #28a745);
+  color: white;
+  margin-top: 0.5rem;
+}
+.btn-add-presupuesto:hover {
+  background-color: #218838;
+}
+
+.btn-remove-presupuesto {
+  background-color: var(--status-error, #dc3545);
+  color: white;
+  padding: 0.4rem 0.6rem; /* Smaller for table use */
+}
+.btn-remove-presupuesto:hover {
+  background-color: #c82333;
+}
+
+.btn-submit-presupuesto {
+  background-color: var(--color-primary, #ee7d30);
+  color: white;
+  font-size: 1.1rem;
+  padding: 0.8rem 1.5rem;
+  display: block;
+  width: fit-content;
+  margin: 2rem auto 0;
+}
+.btn-submit-presupuesto:hover {
+  background-color: #d66a1c;
+}
+.btn-submit-presupuesto:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* --- Sección de Resumen --- */
+.summary-section-presupuesto {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #e9f7fd; /* Light blue background */
+  border: 1px solid var(--status-info, #17a2b8);
+  border-radius: 8px;
+}
+.summary-section-presupuesto h2 {
+  color: var(--status-info, #17a2b8);
+  border-bottom-color: var(--status-info-light, #66d9ef);
+}
+
+.summary-table-presupuesto {
+  width: 100%;
+  max-width: 500px; /* Limit width for better readability */
+  margin: 0 auto;
+  border-collapse: collapse;
+}
+
+.summary-table-presupuesto td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #d1e9f3;
+}
+.summary-table-presupuesto tr:last-child td {
+  border-bottom: none;
+}
+
+.summary-table-presupuesto td:first-child {
+  font-weight: 600;
+  color: var(--text-medium, #555);
+}
+.summary-table-presupuesto td:last-child {
+  text-align: right;
+  font-weight: 500;
+  color: var(--text-dark, #333);
+}
+
+.grand-total-presupuesto td {
+  font-size: 1.2rem;
+  color: var(--color-secondary, #30397a);
+  border-top: 2px solid var(--status-info, #17a2b8);
+  padding-top: 1rem;
+}
+
+/* --- Mensajes de Error y Tooltips --- */
+.error-message-presupuesto {
+  color: var(--status-error, #dc3545);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.required-presupuesto {
+  color: var(--status-error, #dc3545);
+  margin-left: 0.25rem;
+}
+
+.tooltip-presupuesto {
+  position: relative;
+  display: inline-block;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+.tooltip-presupuesto .tooltip-text-presupuesto {
+  visibility: hidden;
+  width: 220px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position above the icon */
+  left: 50%;
+  margin-left: -110px; /* Center the tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
+.tooltip-presupuesto .tooltip-text-presupuesto::after {
+  content: "";
+  position: absolute;
+  top: 100%; /* At the bottom of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip-presupuesto:hover .tooltip-text-presupuesto {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* --- Estilos generales para inputs y labels si no están en tabla --- */
+.form-group-presupuesto {
+  margin-bottom: 1rem;
+}
+.form-group-presupuesto label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-medium, #495057);
+}
+.form-input-presupuesto {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--ui-border, #ced4da);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.form-input-presupuesto:focus {
+  border-color: var(--color-primary, #ee7d30);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(238, 125, 48, 0.25);
+}

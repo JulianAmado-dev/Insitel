@@ -1,9 +1,10 @@
 "use client";
 
 import Swal from "sweetalert2";
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import PropTypes from "prop-types"; // Import PropTypes
 import { axiosInstance } from "@api/AxiosInstance";
 
 // Importa los esquemas Yup desde el archivo separado
@@ -28,6 +29,7 @@ import {
 } from "react-icons/fa6";
 import { BiInfoCircle } from "react-icons/bi";
 import "./FormularioAlcance.css";
+import { isEqual } from "lodash";
 
 // Componente de Tooltip personalizado
 const Tooltip = ({ text, children }) => (
@@ -36,6 +38,11 @@ const Tooltip = ({ text, children }) => (
     <span className="tooltip-text">{text}</span>
   </div>
 );
+
+Tooltip.propTypes = {
+  text: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 // Componente de campo con etiqueta e información adicional
 const FormField = ({
@@ -62,15 +69,35 @@ const FormField = ({
   </div>
 );
 
+FormField.propTypes = {
+  label: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  required: PropTypes.bool,
+  tooltip: PropTypes.string,
+  description: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  className: PropTypes.string,
+};
+
+const createModeDefaultDataAlcance = {
+  problema_necesidad: "",
+  entorno_actores: "",
+  procedimiento_actual: "",
+  comportamiento_esperado: "",
+  descripcion_cuantitativa: "",
+  limitaciones: "",
+  otros_temas_relevantes: "",
+};
+
 // --- Componente Principal ---
 const FormularioAlcance = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const [animateSection, setAnimateSection] = useState(true);
-  const { id_proyecto } = useParams();
-  const { area } = useParams();
+  const [initialData, setInitialData] = useState(createModeDefaultDataAlcance);
+  const [formRecordId, setFormRecordId] = useState(null); // Will store id_proyecto for keying if record exists
+  const { id_proyecto, area } = useParams();
   const totalSteps = alcanceWizardValidation.length - 1;
-  /* const navigate = useNavigate(); */
 
   const Toast = Swal.mixin({
     toast: true,
@@ -84,51 +111,122 @@ const FormularioAlcance = () => {
     },
   });
 
-  const registrarDatos = (sendedData, id_proyecto, area) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        axiosInstance
-          .post(
-            `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/fill`,
-            sendedData
-          )
-          .then(({ data }) => {
-            Toast.fire({
-              icon: "success",
-              title: "Datos enviados",
-            });
-            resolve(data);
-          })
-          .catch(({ response }) => {
-            console.log("hola, soy response", response);
-            Toast.fire({
-              icon: "warning",
-              timer: 5000,
-              title: response.data.error,
-            });
-            reject(response);
-            throw response;
-          });
-      }, 2000);
+  const obtenerFormulario = useCallback(async () => {
+    try {
+      console.log(`Fetching Alcance Form data for project ID: ${id_proyecto}, area: ${area}`);
+      const { data } = await axiosInstance.get(
+        `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/get`
+      );
+      console.log("Fetched Alcance form data (raw API response):", data);
+
+      const alcanceDataArray = data.formulario_alcance;
+
+      if (alcanceDataArray && alcanceDataArray.length > 0 && alcanceDataArray[0]) {
+        const alcanceDataFromServer = alcanceDataArray[0];
+        console.log("EDIT MODE: Record found for id_proyecto", id_proyecto, "in formulario_alcance. Data:", alcanceDataFromServer);
+        
+        setFormRecordId(id_proyecto); // Use id_proyecto from URL for Formik key
+        
+        const processedData = {
+          ...createModeDefaultDataAlcance,
+          ...alcanceDataFromServer,
+        };
+        setInitialData(processedData);
+        console.log("Set initialData for EDIT mode (Alcance). formRecordId (now id_proyecto):", id_proyecto, "Processed initialData:", processedData);
+      } else {
+        console.log("CREATE MODE: No existing Alcance form data found for id_proyecto", id_proyecto, ". Setting defaults. data.formulario_alcance:", alcanceDataArray);
+        setFormRecordId(null);
+        setInitialData(createModeDefaultDataAlcance);
+      }
+    } catch (error) {
+      console.error("Failed to fetch Alcance form data:", error);
+      if (error.response && error.response.status === 404) {
+        console.log("CREATE MODE (404) (Alcance): Form for id_proyecto", id_proyecto, "does not exist. Setting defaults.");
+      } else {
+        console.error("CREATE MODE (Error) (Alcance): Unexpected error fetching for id_proyecto", id_proyecto, ". Setting defaults.", error);
+      }
+      setFormRecordId(null);
+      setInitialData(createModeDefaultDataAlcance);
+    }
+  }, [id_proyecto, area]);
+
+  useEffect(() => {
+    obtenerFormulario();
+  }, [obtenerFormulario]);
+
+  const guardarSeccion = async (sendedData, sectionIndex) => {
+    const camposCambiados = {};
+    const camposPorSeccion = {
+      0: ["problema_necesidad"],
+      1: ["entorno_actores"],
+      2: ["procedimiento_actual"],
+      3: ["comportamiento_esperado"],
+      4: ["descripcion_cuantitativa"],
+      5: ["limitaciones"],
+      6: ["otros_temas_relevantes"],
+    };
+
+    const currentSectionFields = camposPorSeccion[sectionIndex];
+    if (!currentSectionFields) {
+      console.warn(`No field definition found for Alcance section index: ${sectionIndex}`);
+      return;
+    }
+
+    currentSectionFields.forEach((campo) => {
+      const formValue = sendedData[campo];
+      const initialValue = Object.prototype.hasOwnProperty.call(initialData, campo) ? initialData[campo] : undefined;
+      if (!isEqual(formValue, initialValue)) {
+        camposCambiados[campo] = formValue;
+      }
     });
+
+    console.log("Campos cambiados en sección (Alcance)", sectionIndex, "a enviar:", camposCambiados);
+
+    if (Object.keys(camposCambiados).length > 0) {
+      setInitialData((prev) => ({ ...prev, ...camposCambiados }));
+
+      if (formRecordId) { // formRecordId is id_proyecto here
+        try {
+          await axiosInstance.patch(
+            `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/update`,
+            camposCambiados
+          );
+          Toast.fire({
+            icon: "success",
+            title: `Sección ${sectionIndex + 1} (Alcance) guardada.`,
+          });
+        } catch (error) {
+          console.error("Error updating Alcance section:", error);
+          Toast.fire({
+            icon: "error",
+            title: "Error al actualizar la sección de Alcance.",
+          });
+        }
+      } else {
+        console.log(`Sección ${sectionIndex + 1} (Alcance - nuevo formulario) actualizada localmente.`);
+      }
+    } else {
+      console.log(`No changes to save in Alcance section ${sectionIndex + 1}.`);
+      Toast.fire({
+        icon: "info",
+        title: `No hay cambios para guardar en la sección ${sectionIndex + 1} (Alcance).`,
+      });
+    }
   };
 
-  const initialValues = {
-    // Paso 1
-    problema_necesidad: "",
-    // Paso 2
-    entorno_actores: "",
-    // Paso 3
-    procedimiento_actual: "",
-    // Paso 4
-    comportamiento_esperado: "",
-    // Paso 5
-    descripcion_cuantitativa: "",
-    // Paso 6
-    limitaciones: "",
-    // Paso 7
-    otros_temas_relevantes: "",
-  };
+  const initialValues = useMemo(() => {
+    console.log("useMemo (Alcance): Recalculating initialValues based on initialData:", initialData);
+    return {
+      problema_necesidad: initialData?.problema_necesidad || "",
+      entorno_actores: initialData?.entorno_actores || "",
+      procedimiento_actual: initialData?.procedimiento_actual || "",
+      comportamiento_esperado: initialData?.comportamiento_esperado || "",
+      descripcion_cuantitativa: initialData?.descripcion_cuantitativa || "",
+      limitaciones: initialData?.limitaciones || "",
+      otros_temas_relevantes: initialData?.otros_temas_relevantes || "",
+    };
+  }, [initialData]);
+
   // Efecto para animar la transición entre pasos
   useEffect(() => {
     setAnimateSection(false);
@@ -197,26 +295,70 @@ const FormularioAlcance = () => {
   };
 
   // Función para manejar el envío del formulario
-  const handleSubmit = (values, { setSubmitting }) => {
-    console.log(
-      "Enviando formulario completo:",
-      JSON.stringify(values, null, 2)
-    );
-    // Aquí iría la lógica para enviar los datos al servidor
-    setTimeout(() => {
-      registrarDatos(values, id_proyecto, area);
-      alert("Formulario Enviado (Simulación)");
-      setSubmitting(false);
-      // Opcional: resetForm();
-    }, 1500);
-  };
+  const handleSubmit = async (values, { setSubmitting }) => {
+    setSubmitting(true);
+    // Ensure the last section's changes are saved locally via initialData
+    // This is important because handleSubmit might be called without prior step navigation
+    await guardarSeccion(values, currentStep); 
 
-  // Función para validar el paso actual
+    const isExistingRecord = !!formRecordId; // formRecordId is id_proyecto if editing
+    let response;
+    
+    try {
+      if (!isExistingRecord) { 
+        const payloadForCreation = { ...values }; 
+        console.log("Final payload to POST to /fill (Alcance):", payloadForCreation);
+        response = await axiosInstance.post(
+          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/fill`,
+          payloadForCreation
+        );
+        Toast.fire({ icon: "success", title: "Formulario de Alcance creado con éxito." });
+        await obtenerFormulario(); // Re-fetch to get new record ID and update states
+      } else { 
+        const changedFields = {};
+        Object.keys(values).forEach(key => {
+          const initialValue = Object.prototype.hasOwnProperty.call(initialData, key) ? initialData[key] : undefined;
+          if (!isEqual(values[key], initialValue)) {
+            changedFields[key] = values[key];
+          }
+        });
+        
+        if (Object.keys(changedFields).length === 0) {
+          Toast.fire({ icon: "info", title: "No hay nuevos cambios para guardar (Alcance)." });
+          setSubmitting(false);
+          return;
+        }
+        console.log("Final payload to PATCH to /update (Alcance):", changedFields);
+        response = await axiosInstance.patch(
+          `http://localhost:3001/api/Projects/${area}/${id_proyecto}/form/alcance/update`,
+          changedFields
+        );
+        Toast.fire({ icon: "success", title: "Formulario de Alcance actualizado con éxito." });
+        const responseData = response.data?.formulario_alcance?.[0] || response.data?.data || response.data || {};
+        setInitialData(prev => ({ ...prev, ...values, ...responseData })); // Update with current values and response
+      }
+    } catch (error) {
+      console.error("Error submitting final Alcance form:", error);
+      const action = isExistingRecord ? "actualizar" : "crear";
+      Toast.fire({ icon: "error", title: `Error al ${action} el formulario de alcance.` });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Navegación del Wizard
   const handleNavigation = async (direction, formikBag) => {
     setShowErrors(false);
-    const { validateForm, setTouched /* , submitForm, values  */ } = formikBag;
+    const { validateForm, setTouched, /*  submitForm, */ values } = formikBag;
+
+    // 0. Validar hacia donde quiere ir el usuario
+
+    if (direction === "prev") {
+      if (currentStep > 0) {
+        setCurrentStep((prev) => prev - 1);
+        return window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
 
     // 1. Validar formulario completo (usará el schema del paso actual)
     const errors = await validateForm();
@@ -255,6 +397,7 @@ const FormularioAlcance = () => {
           /*esto es la longitud de pasos, es decir, cuantas secciones hay*/
           alcanceWizardValidation.length - 1
         ) {
+          await guardarSeccion(values, currentStep);
           setCurrentStep((prev) => prev + 1);
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
@@ -307,7 +450,7 @@ const FormularioAlcance = () => {
 
   // Renderizado del paso actual
   const renderStepContent = (formikProps) => {
-    const { values, errors, touched, isSubmitting } = formikProps;
+    const { values, errors, touched } = formikProps; // Removed isSubmitting
 
     switch (currentStep) {
       case 0:
@@ -337,6 +480,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
       <div>
         <FormField
@@ -358,11 +502,7 @@ const FormularioAlcance = () => {
                   : ""
               }`}
             />
-            {errors.problema_necesidad && touched.problema_necesidad ? (
-              <div className="input_error_message">
-                {errors.problema_necesidad}
-              </div>
-            ) : null}
+            {/* Manual error display removed, FormField handles it */}
             <FaBuilding className="info-icon" />
           </div>
         </FormField>
@@ -394,6 +534,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
       <FormField
         label="Entorno y Actores"
@@ -414,9 +555,7 @@ const FormularioAlcance = () => {
                 : ""
             }`}
           />
-          {errors.entorno_actores && touched.entorno_actores ? (
-            <div className="input_error_message">{errors.entorno_actores}</div>
-          ) : null}
+          {/* Manual error display removed */}
           <FaBuilding className="info-icon" />
         </div>
       </FormField>
@@ -429,6 +568,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
 
       <div>
@@ -451,11 +591,7 @@ const FormularioAlcance = () => {
                   : ""
               }`}
             />
-            {errors.procedimiento_actual && touched.procedimiento_actual ? (
-              <div className="input_error_message">
-                {errors.procedimiento_actual}
-              </div>
-            ) : null}
+            {/* Manual error display removed */}
             <FaBuilding className="info-icon" />
           </div>
         </FormField>
@@ -469,6 +605,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
 
       <div>
@@ -492,12 +629,7 @@ const FormularioAlcance = () => {
                   : ""
               }`}
             />
-            {errors.comportamiento_esperado &&
-            touched.comportamiento_esperado ? (
-              <div className="input_error_message">
-                {errors.comportamiento_esperado}
-              </div>
-            ) : null}
+            {/* Manual error display removed */}
             <FaBuilding className="info-icon" />
           </div>
         </FormField>
@@ -510,6 +642,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
 
       <div>
@@ -525,7 +658,7 @@ const FormularioAlcance = () => {
               as="textarea"
               id="descripcion_cuantitativa"
               name="descripcion_cuantitativa"
-              placeholder="Describa el Problema o necesidad"
+              placeholder="Describa cuantitativamente los parámetros"
               className={`form-input ${
                 touched.descripcion_cuantitativa &&
                 errors.descripcion_cuantitativa
@@ -533,12 +666,7 @@ const FormularioAlcance = () => {
                   : ""
               }`}
             />
-            {errors.descripcion_cuantitativa &&
-            touched.descripcion_cuantitativa ? (
-              <div className="input_error_message">
-                {errors.descripcion_cuantitativa}
-              </div>
-            ) : null}
+            {/* Manual error display removed */}
             <FaBuilding className="info-icon" />
           </div>
         </FormField>
@@ -551,6 +679,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
 
       <div>
@@ -571,9 +700,7 @@ const FormularioAlcance = () => {
                 touched.limitaciones && errors.limitaciones ? "input-error" : ""
               }`}
             />
-            {errors.limitaciones && touched.limitaciones ? (
-              <div className="input_error_message">{errors.limitaciones}</div>
-            ) : null}
+            {/* Manual error display removed */}
             <FaBuilding className="info-icon" />
           </div>
         </FormField>
@@ -586,6 +713,7 @@ const FormularioAlcance = () => {
       <div className="section-header">
         {getStepIcon(currentStep)}
         <h2>{getStepTitle(currentStep)}</h2>
+        {/* Edit button removed */}
       </div>
 
       <div>
@@ -608,11 +736,7 @@ const FormularioAlcance = () => {
                   : ""
               }`}
             />
-            {errors.otros_temas_relevantes && touched.otros_temas_relevantes ? (
-              <div className="input_error_message">
-                {errors.otros_temas_relevantes}
-              </div>
-            ) : null}
+            {/* Manual error display removed */}
             <FaBuilding className="info-icon" />
           </div>
         </FormField>
@@ -652,13 +776,16 @@ const FormularioAlcance = () => {
       </div>
 
       <Formik
+        key={formRecordId || 'new-alcance-form-key'} // Force re-mount
         initialValues={initialValues}
         validationSchema={alcanceWizardValidation[currentStep]}
         onSubmit={handleSubmit}
+        enableReinitialize // Good practice, though key prop is primary for remount
         validateOnChange={false}
         validateOnBlur={false}
       >
         {(formikProps) => {
+          console.log("Formik initialValues in render (Alcance):", formikProps.initialValues);
           return (
             <Form className="project-planning-form">
               {/* Mostrar resumen de errores si hay errores y se ha intentado avanzar */}
@@ -693,7 +820,7 @@ const FormularioAlcance = () => {
                   <button
                     type="button"
                     className="btn-prev"
-                    onClick={() => handleNavigation("prev", formikProps)}
+                    onClick={() => handlePreviousStep(formikProps)}
                   >
                     <FaChevronLeft className="icon-left" /> Anterior
                   </button>
@@ -703,7 +830,7 @@ const FormularioAlcance = () => {
                   // Llama a handleNavigation para validar y avanzar
                   <button
                     type="button"
-                    onClick={() => handleNavigation("next", formikProps)}
+                    onClick={() => handleNextStepClick(formikProps)}
                     className="btn-next"
                   >
                     Siguiente <FaChevronRight className="icon-right" />
