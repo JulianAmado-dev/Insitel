@@ -1,11 +1,11 @@
 .formulario-validacion-container {
-  font-family: "Poppins", sans-serif; /* Using Poppins from brand styles */
+  font-family: "Poppins", sans-serif;
   padding: 20px;
-  border: 1px solid var(--ui-border, #ccc); /* Using brand variable */
-  border-radius: var(--radius-lg, 8px); /* Using brand variable */
+  border: 1px solid var(--ui-border, #ccc);
+  border-radius: var(--radius-lg, 8px);
   max-width: 800px;
   margin: 20px auto;
-  background-color: var(--ui-background, #f9f9f9); /* Using brand variable */
+  background-color: var(--ui-background, #f9f9f9);
   position: relative;
   box-shadow: var(--shadow-md);
 }
@@ -26,18 +26,16 @@
   color: var(--text-medium, #4d4d4d);
 }
 
-
 .dropzone {
-  border: 2px dashed var(--color-primary-light, #f9a26c); /* Lighter primary for border */
+  border: 2px dashed var(--color-primary-light, #f9a26c);
   border-radius: var(--radius-md, 5px);
   padding: var(--space-xl, 32px);
   text-align: center;
-  /* Subtle gradient with primary brand color, very light */
   background: linear-gradient(135deg, rgba(238, 125, 48, 0.03) 0%, rgba(249, 162, 108, 0.05) 100%);
   color: var(--text-medium, #4d4d4d);
   margin-bottom: var(--space-lg, 20px);
   transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
-  min-height: 200px; /* Ensure a minimum height */
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,12 +48,11 @@
 }
 
 .dropzone.has-files {
-  padding: var(--space-md, 16px); /* Less padding when files are present */
+  padding: var(--space-md, 16px);
   background: linear-gradient(135deg, rgba(238, 125, 48, 0.02) 0%, rgba(249, 162, 108, 0.02) 100%);
   border-style: solid;
   border-color: rgba(238, 125, 48, 0.1);
 }
-
 
 .dropzone.drag-reject {
   border-color: var(--status-error, #e74c3c);
@@ -98,7 +95,6 @@
   color: var(--text-muted-dark, #6c757d); 
 }
 
-
 .select-files-button {
   background-color: var(--color-primary, #ee7d30);
   color: var(--text-light, #ffffff);
@@ -121,7 +117,6 @@
   transform: translateY(1px);
 }
 
-
 .dropzone-feedback-text {
   font-size: 1.5rem;
   font-weight: 500;
@@ -130,14 +125,13 @@
   color: var(--status-error, #e74c3c); 
 }
 
-
 .file-previews-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Base: 3 columns */
+  grid-template-columns: repeat(3, 1fr); /* Base: 3 columns for large screens */
   gap: var(--space-md, 16px);
   width: 100%;
   margin-top: var(--space-md, 16px);
-  align-items: start; 
+  align-items: stretch; 
 }
 
 .preview-item {
@@ -155,17 +149,17 @@
 
 .preview-item-image {
   grid-column: span 1;
-  min-height: 220px; 
+  min-height: 380px; 
 }
 
 .preview-item-pdf {
-  grid-column: span 2; /* PDF takes 2 columns by default */
-  min-height: 350px; /* PDFs are taller */
+  grid-column: span 2; 
+  min-height: 400px; 
 }
 
 .preview-image {
   width: 100%;
-  height: 180px; 
+  height: 340px; 
   object-fit: cover;
   border-radius: var(--radius-xs, 2px);
   margin-bottom: var(--space-sm, 8px);
@@ -173,29 +167,19 @@
 
 .preview-pdf-container {
   width: 100%;
-  flex-grow: 1;
+  flex-grow: 1; 
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; 
-  margin-bottom: var(--space-sm, 8px);
   background-color: #f0f0f0; 
   border-radius: var(--radius-xs, 2px);
   overflow: hidden; 
 }
 
-.preview-item-pdf .preview-pdf-container {
-  height: calc(100% - 30px); /* Fill available height in .preview-item-pdf, leave space for filename */
-}
-
 .preview-iframe {
   width: 100%;
-  height: 100%; /* Iframe fills its container */
+  flex-grow: 1; 
   border: none;
-}
-
-.preview-item-pdf .preview-iframe {
-   min-height: 300px; /* Ensure PDF iframe is substantially tall */
+  min-height: 350px; 
 }
 
 .preview-filename-pdf {
@@ -211,6 +195,7 @@
   box-sizing: border-box;
   line-height: 1.2;
   max-height: 30px; 
+  flex-shrink: 0; 
 }
 
 .preview-filename {
@@ -224,26 +209,27 @@
   margin-top: auto; 
   padding-top: var(--space-xs, 4px);
   line-height: 1.2;
+  flex-shrink: 0;
 }
 
-/* Responsive adjustments for the grid */
-@media (max-width: 850px) { 
+/* Responsive adjustments */
+@media (max-width: 960px) { 
   .file-previews-grid {
     grid-template-columns: repeat(2, 1fr); /* 2 columns */
   }
   .preview-item-pdf {
     grid-column: span 2; /* PDF takes full width (2 of 2 columns) */
-    min-height: 320px;
-  }
-  .preview-item-image {
-    grid-column: span 1; 
-    min-height: 200px;
-  }
-  .preview-item-image .preview-image {
-    height: 160px;
+    min-height: 450px;
   }
   .preview-item-pdf .preview-iframe {
-    min-height: 270px;
+    min-height: 400px;
+  }
+  .preview-item-image {
+    grid-column: span 1; /* Image takes 1 of 2 columns */
+    min-height: 280px; /* Increased height for better visibility */
+  }
+  .preview-item-image .preview-image {
+    height: 240px; /* Adjusted to fill new min-height */
   }
 }
 
@@ -253,35 +239,35 @@
   }
   .preview-item-pdf,
   .preview-item-image {
-    grid-column: span 1; /* All items take full width */
+    grid-column: span 1; 
   }
   .preview-item-pdf {
-    min-height: 400px; 
-  }
-  .preview-item-image {
-    min-height: 250px; 
-  }
-  .preview-item-image .preview-image {
-    height: 220px;
+    min-height: 500px; 
   }
    .preview-item-pdf .preview-iframe {
-    min-height: 350px;
+    min-height: 450px;
+  }
+  .preview-item-image {
+    min-height: 300px; 
+  }
+  .preview-item-image .preview-image {
+    height: 260px;
   }
 }
 
 .remove-file-button {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 5px; 
+  right: 5px; 
   background-color: rgba(220, 53, 69, 0.8); 
   color: white;
   border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  font-size: 1rem;
+  width: 28px; 
+  height: 28px; 
+  font-size: 1.1rem; 
   font-weight: bold;
-  line-height: 22px; 
+  line-height: 26px; 
   text-align: center;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -292,7 +278,6 @@
 .remove-file-button:hover {
   background-color: var(--status-error, #dc3545);
 }
-
 
 .action-buttons-container {
   display: flex;
@@ -342,140 +327,26 @@
   transform: translateY(1px);
 }
 
-/* Kept original .file-list styles in case they are used elsewhere or for reference */
-.file-list {
-  list-style: none;
-  padding: 0;
-}
-
-.file-list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #fff;
-}
-
-.file-preview-container {
-  margin-right: 15px;
-  flex-shrink: 0; 
-}
-
-.file-preview-container img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #eee;
-}
-
-.file-preview-container .pdf-preview-wrapper {
-  width: 80px; 
-  height: 120px; 
-  border: 1px solid #ccc;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f0f0f0; 
-}
-
-.file-preview-container .pdf-preview-wrapper .react-pdf__Page__canvas {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain; 
-}
-
-.file-info {
-  flex-grow: 1;
-  overflow: hidden; 
-}
-
-.file-info p {
-  margin: 0 0 5px 0;
-  word-break: break-all; 
-}
-
-.file-info small {
-  color: #555;
-  font-size: 0.85em;
-}
-
-.file-actions button,
-.upload-all-button {
-  margin-left: 8px;
-  padding: 6px 12px;
-  font-size: 14px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.file-actions .download-button {
-  background-color: #28a745;
-  color: white;
-  border-color: #28a745;
-}
-.file-actions .download-button:hover {
-  background-color: #218838;
-  border-color: #1e7e34;
-}
-
-.file-actions .delete-button {
-  background-color: #dc3545;
-  color: white;
-  border-color: #dc3545;
-}
-.file-actions .delete-button:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
-}
-
-.upload-all-button {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-  display: block; 
-  margin-top: 10px;
-}
-.upload-all-button:hover {
-  background-color: #0056b3;
-  border-color: #0056b3;
-}
-.upload-all-button:disabled {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  cursor: not-allowed;
-}
-
-.status-message {
-  margin-top: 5px;
-  font-size: 0.9em;
-}
-.status-message.uploading {
-  color: #007bff;
-}
-.status-message.error {
-  color: #dc3545;
-}
-
-.error-message {
-  color: red;
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 4px;
-}
-
-h4 {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
-}
+/* Original .file-list styles - can be removed if not used elsewhere */
+.file-list {list-style: none; padding: 0;}
+.file-list-item {display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background-color: #fff;}
+.file-preview-container {margin-right: 15px; flex-shrink: 0;}
+.file-preview-container img {width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #eee;}
+.file-preview-container .pdf-preview-wrapper {width: 80px; height: 120px; border: 1px solid #ccc; overflow: hidden; display: flex; justify-content: center; align-items: center; background-color: #f0f0f0;}
+.file-preview-container .pdf-preview-wrapper .react-pdf__Page__canvas {max-width: 100%; max-height: 100%; object-fit: contain;}
+.file-info {flex-grow: 1; overflow: hidden;}
+.file-info p {margin: 0 0 5px 0; word-break: break-all;}
+.file-info small {color: #555; font-size: 0.85em;}
+.file-actions button, .upload-all-button {margin-left: 8px; padding: 6px 12px; font-size: 14px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease;}
+.file-actions .download-button {background-color: #28a745; color: white; border-color: #28a745;}
+.file-actions .download-button:hover {background-color: #218838; border-color: #1e7e34;}
+.file-actions .delete-button {background-color: #dc3545; color: white; border-color: #dc3545;}
+.file-actions .delete-button:hover {background-color: #c82333; border-color: #bd2130;}
+.upload-all-button {background-color: #007bff; color: white; border-color: #007bff; display: block; margin-top: 10px;}
+.upload-all-button:hover {background-color: #0056b3; border-color: #0056b3;}
+.upload-all-button:disabled {background-color: #6c757d; border-color: #6c757d; cursor: not-allowed;}
+.status-message {margin-top: 5px; font-size: 0.9em;}
+.status-message.uploading {color: #007bff;}
+.status-message.error {color: #dc3545;}
+.error-message {color: red; margin-top: 10px; padding: 10px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;}
+h4 {margin-top: 20px; margin-bottom: 10px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;}

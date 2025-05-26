@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 function FormularioValidacion() {
   const { area, id_proyecto } = useParams(); // Get params
   const [files, setFiles] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const onDropAccepted = useCallback((acceptedFiles) => {
     const newFilesWithPreviews = acceptedFiles.map((file) =>
@@ -24,8 +25,26 @@ function FormularioValidacion() {
   }, []);
 
   useEffect(() => {
-    return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
-  }, [files]);
+    // This effect now only runs on mount and cleans up when the component unmounts.
+    // A snapshot of the `files` array at the time of mount is used for cleanup.
+    // Individual file preview URLs are revoked when a file is removed via `removeFile`
+    // or when all files are cleared after a successful upload or cancellation.
+
+    // Store the current previews that exist when the component mounts
+    const initialPreviews = files.map((f) => f.preview).filter((p) => p);
+
+    return () => {
+      console.log(
+        "FormularioValidacion unmounting, revoking initial Object URLs if they haven't been revoked individually:",
+        initialPreviews
+      );
+      initialPreviews.forEach((previewUrl) => {
+        // It's possible some URLs were already revoked by removeFile or clearAll.
+        // Attempting to revoke an already revoked URL is safe (it does nothing).
+        URL.revokeObjectURL(previewUrl);
+      });
+    };
+  }, []); // Empty dependency array means this effect runs once on mount and cleanup on unmount.
 
   const onDropRejected = useCallback((rejectedFiles) => {
     Toast.fire({
@@ -85,18 +104,24 @@ function FormularioValidacion() {
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
+    // Add project and area identifiers to the form data for the backend
 
     try {
-      const response = await axiosInstance.post("api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosInstance.post(
+        `api/upload/${area}/${id_proyecto}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       console.log("File uploaded successfully:", response.data);
       Toast.fire({
         icon: "success",
         title: `${file.name} subido correctamente.`,
       });
+      traerArchivosEnServidor();
       return { success: true, fileName: file.name };
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -107,6 +132,21 @@ function FormularioValidacion() {
       return { success: false, fileName: file.name };
     }
   };
+
+  const traerArchivosEnServidor = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/files/${area}/${id_proyecto}`);
+      setUploadedFiles(res.data.files);
+    } catch (err) {
+      console.error("Error al listar archivos:", err);
+    }
+  };
+
+  useEffect(() => {
+    traerArchivosEnServidor();
+  }, [area, id_proyecto]);
+
+
 
   const handleSaveAllFiles = async () => {
     if (files.length === 0) {
@@ -252,13 +292,20 @@ function FormularioValidacion() {
         {files.length > 0 && !isDragActive && (
           <div className="file-previews-grid">
             {files.map((file) => (
-              <div key={file.id} className={`preview-item ${file.type.startsWith("image/") ? "preview-item-image" : "preview-item-pdf"}`}>
+              <div
+                key={file.id}
+                className={`preview-item ${
+                  file.type.startsWith("image/")
+                    ? "preview-item-image"
+                    : "preview-item-pdf"
+                }`}
+              >
                 {file.type.startsWith("image/") ? (
                   <img
                     src={file.preview}
                     alt={`Vista previa de ${file.name}`}
                     className="preview-image"
-                    onLoad={() => URL.revokeObjectURL(file.preview)} // Revoke after load for img
+                    // Removed onLoad prop for revoking URL, will rely on unmount or explicit removal
                   />
                 ) : (
                   <div className="preview-pdf-container">

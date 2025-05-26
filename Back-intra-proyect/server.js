@@ -8,10 +8,10 @@ import { config } from "./config/config.js";
 import boom from "@hapi/boom";
 import "./utils/auth/index.js";
 import { resetPassword } from "./utils/auth/nodeMailer/sendEmail.js";
-import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
