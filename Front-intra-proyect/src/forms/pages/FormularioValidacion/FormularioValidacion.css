@@ -1,58 +1,348 @@
 .formulario-validacion-container {
-  font-family: sans-serif;
+  font-family: "Poppins", sans-serif; /* Using Poppins from brand styles */
   padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--ui-border, #ccc); /* Using brand variable */
+  border-radius: var(--radius-lg, 8px); /* Using brand variable */
   max-width: 800px;
   margin: 20px auto;
-  background-color: #f9f9f9;
-  position: relative; /* Added position relative */
+  background-color: var(--ui-background, #f9f9f9); /* Using brand variable */
+  position: relative;
+  box-shadow: var(--shadow-md);
 }
+
+.form-header {
+  text-align: center;
+  margin-bottom: var(--space-lg, 20px);
+}
+
+.form-header h1 {
+  color: var(--color-primary, #ee7d30);
+  font-family: "Century Gothic", sans-serif;
+  margin-bottom: var(--space-xs, 4px);
+}
+
+.form-header .form-code {
+  font-size: 0.9rem;
+  color: var(--text-medium, #4d4d4d);
+}
+
 
 .dropzone {
-  border: 2px dashed #007bff;
-  /* height: 100%; */
-  border-radius: 5px;
-  padding: 20px;
+  border: 2px dashed var(--color-primary-light, #f9a26c); /* Lighter primary for border */
+  border-radius: var(--radius-md, 5px);
+  padding: var(--space-xl, 32px);
   text-align: center;
-  background-color: gray;
-  color: #007bff;
-  margin-bottom: 20px;
-  transition: background-color 0.2s ease-in-out;
+  /* Subtle gradient with primary brand color, very light */
+  background: linear-gradient(135deg, rgba(238, 125, 48, 0.03) 0%, rgba(249, 162, 108, 0.05) 100%);
+  color: var(--text-medium, #4d4d4d);
+  margin-bottom: var(--space-lg, 20px);
+  transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+  min-height: 200px; /* Ensure a minimum height */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
+.dropzone:hover {
+  border-color: var(--color-primary, #ee7d30);
+  background: linear-gradient(135deg, rgba(238, 125, 48, 0.07) 0%, rgba(249, 162, 108, 0.07) 100%);
+}
+
+.dropzone.has-files {
+  padding: var(--space-md, 16px); /* Less padding when files are present */
+  background: linear-gradient(135deg, rgba(238, 125, 48, 0.02) 0%, rgba(249, 162, 108, 0.02) 100%);
+  border-style: solid;
+  border-color: rgba(238, 125, 48, 0.1);
+}
+
+
 .dropzone.drag-reject {
-  border-color: #e74c3c;
-  background: rgba(255, 0, 0, 0.1);
+  border-color: var(--status-error, #e74c3c);
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.15) 100%);
+  color: var(--status-error, #e74c3c);
 }
 
 .dropzone.drag-active {
-  height: 100%;
-  display: flex;
-  font-weight: 500;
-  font-size: 28px;
-  line-height: 30px;
-  color: #33333b;
-  min-height: 100%;
-  position: absolute;
-  z-index: 9999;
-  width: 100%;
+  position: fixed; 
   top: 0;
   left: 0;
-  background-color: #000;
-  opacity: 0.8;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(48, 57, 122, 0.9); 
+  color: var(--text-light, #fff);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  border: 2px dashed var(--color-accent, #ffc107); 
+}
+
+.dropzone-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone-empty-content p {
+  margin-top: var(--space-sm, 8px);
+  margin-bottom: var(--space-xs, 4px);
+  font-size: 1rem;
+  color: var(--text-medium);
+}
+.dropzone-empty-content small {
+  font-size: 0.85rem;
+  color: var(--text-muted-dark, #6c757d); 
+}
+
+
+.select-files-button {
+  background-color: var(--color-primary, #ee7d30);
+  color: var(--text-light, #ffffff);
+  border: none;
+  padding: var(--space-md, 16px) var(--space-lg, 24px);
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: "Century Gothic", sans-serif;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.select-files-button:hover {
+  background-color: #d66a1c; 
+  box-shadow: var(--shadow-md);
+}
+.select-files-button:active {
+  transform: translateY(1px);
+}
+
+
+.dropzone-feedback-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+.dropzone-feedback-text.drag-reject-text {
+  color: var(--status-error, #e74c3c); 
+}
+
+
+.file-previews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Base: 3 columns */
+  gap: var(--space-md, 16px);
+  width: 100%;
+  margin-top: var(--space-md, 16px);
+  align-items: start; 
+}
+
+.preview-item {
+  position: relative;
+  border: 1px solid var(--ui-border, #e0e0e0);
+  border-radius: var(--radius-sm, 4px);
+  padding: var(--space-sm, 8px);
+  background-color: var(--ui-card, #fff);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.preview-item-image {
+  grid-column: span 1;
+  min-height: 220px; 
+}
+
+.preview-item-pdf {
+  grid-column: span 2; /* PDF takes 2 columns by default */
+  min-height: 350px; /* PDFs are taller */
+}
+
+.preview-image {
+  width: 100%;
+  height: 180px; 
+  object-fit: cover;
+  border-radius: var(--radius-xs, 2px);
+  margin-bottom: var(--space-sm, 8px);
+}
+
+.preview-pdf-container {
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; 
+  margin-bottom: var(--space-sm, 8px);
+  background-color: #f0f0f0; 
+  border-radius: var(--radius-xs, 2px);
+  overflow: hidden; 
+}
+
+.preview-item-pdf .preview-pdf-container {
+  height: calc(100% - 30px); /* Fill available height in .preview-item-pdf, leave space for filename */
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%; /* Iframe fills its container */
+  border: none;
+}
+
+.preview-item-pdf .preview-iframe {
+   min-height: 300px; /* Ensure PDF iframe is substantially tall */
+}
+
+.preview-filename-pdf {
+  font-size: 0.75rem;
+  color: var(--text-dark);
   text-align: center;
-  color: #fff;
-  padding: 230px;
+  padding: var(--space-xs, 4px);
+  width: 100%;
+  background-color: rgba(255,255,255,0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  line-height: 1.2;
+  max-height: 30px; 
+}
+
+.preview-filename {
+  font-size: 0.8rem;
+  color: var(--text-medium, #4d4d4d);
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: auto; 
+  padding-top: var(--space-xs, 4px);
+  line-height: 1.2;
+}
+
+/* Responsive adjustments for the grid */
+@media (max-width: 850px) { 
+  .file-previews-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  }
+  .preview-item-pdf {
+    grid-column: span 2; /* PDF takes full width (2 of 2 columns) */
+    min-height: 320px;
+  }
+  .preview-item-image {
+    grid-column: span 1; 
+    min-height: 200px;
+  }
+  .preview-item-image .preview-image {
+    height: 160px;
+  }
+  .preview-item-pdf .preview-iframe {
+    min-height: 270px;
+  }
+}
+
+@media (max-width: 600px) { 
+  .file-previews-grid {
+    grid-template-columns: 1fr; /* 1 column */
+  }
+  .preview-item-pdf,
+  .preview-item-image {
+    grid-column: span 1; /* All items take full width */
+  }
+  .preview-item-pdf {
+    min-height: 400px; 
+  }
+  .preview-item-image {
+    min-height: 250px; 
+  }
+  .preview-item-image .preview-image {
+    height: 220px;
+  }
+   .preview-item-pdf .preview-iframe {
+    min-height: 350px;
+  }
+}
+
+.remove-file-button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: rgba(220, 53, 69, 0.8); 
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 22px; 
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0;
+  z-index: 10; 
+}
+
+.remove-file-button:hover {
+  background-color: var(--status-error, #dc3545);
 }
 
 
-
-.dropzone p {
-  margin: 0;
-  font-size: 16px;
+.action-buttons-container {
+  display: flex;
+  justify-content: flex-end; 
+  gap: var(--space-md, 16px); 
+  margin-top: var(--space-lg, 20px);
+  padding-top: var(--space-lg, 20px);
+  border-top: 1px solid var(--ui-border, #e0e0e0);
 }
 
+.save-button,
+.cancel-button {
+  padding: var(--space-sm, 10px) var(--space-lg, 20px);
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: "Century Gothic", sans-serif;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  border: 1px solid transparent;
+}
+
+.save-button {
+  background-color: var(--status-success, #28a745); 
+  color: var(--text-light, #ffffff);
+  border-color: var(--status-success, #28a745);
+}
+
+.save-button:hover {
+  background-color: #1f7a34; 
+  border-color: #1f7a34;
+}
+
+.cancel-button {
+  background-color: var(--text-muted-dark, #6c757d); 
+  color: var(--text-light, #ffffff);
+  border-color: var(--text-muted-dark, #6c757d);
+}
+
+.cancel-button:hover {
+  background-color: #5a6268; 
+  border-color: #545b62;
+}
+
+.save-button:active,
+.cancel-button:active {
+  transform: translateY(1px);
+}
+
+/* Kept original .file-list styles in case they are used elsewhere or for reference */
 .file-list {
   list-style: none;
   padding: 0;
@@ -71,7 +361,7 @@
 
 .file-preview-container {
   margin-right: 15px;
-  flex-shrink: 0; /* Prevent shrinking if filename is long */
+  flex-shrink: 0; 
 }
 
 .file-preview-container img {
@@ -83,30 +373,30 @@
 }
 
 .file-preview-container .pdf-preview-wrapper {
-  width: 80px; /* Fixed width for PDF preview */
-  height: 120px; /* Fixed height for PDF preview */
+  width: 80px; 
+  height: 120px; 
   border: 1px solid #ccc;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f0f0f0; /* Fallback background */
+  background-color: #f0f0f0; 
 }
 
 .file-preview-container .pdf-preview-wrapper .react-pdf__Page__canvas {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain; /* Ensure the PDF page fits within the bounds */
+  object-fit: contain; 
 }
 
 .file-info {
   flex-grow: 1;
-  overflow: hidden; /* For long filenames */
+  overflow: hidden; 
 }
 
 .file-info p {
   margin: 0 0 5px 0;
-  word-break: break-all; /* Break long filenames */
+  word-break: break-all; 
 }
 
 .file-info small {
@@ -149,7 +439,7 @@
   background-color: #007bff;
   color: white;
   border-color: #007bff;
-  display: block; /* Make it a block to center or manage width */
+  display: block; 
   margin-top: 10px;
 }
 .upload-all-button:hover {
