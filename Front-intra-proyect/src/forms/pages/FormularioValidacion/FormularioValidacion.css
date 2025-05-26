@@ -11,20 +11,42 @@
 
 .dropzone {
   border: 2px dashed #007bff;
+  /* height: 100%; */
   border-radius: 5px;
   padding: 20px;
   text-align: center;
-  cursor: pointer;
-  background-color: #fff;
+  background-color: gray;
   color: #007bff;
   margin-bottom: 20px;
   transition: background-color 0.2s ease-in-out;
 }
 
-.dropzone.active {
-  background-color: #e9ecef;
-  border-color: #0056b3;
+.dropzone.drag-reject {
+  border-color: #e74c3c;
+  background: rgba(255, 0, 0, 0.1);
 }
+
+.dropzone.drag-active {
+  height: 100%;
+  display: flex;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 30px;
+  color: #33333b;
+  min-height: 100%;
+  position: absolute;
+  z-index: 9999;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-color: #000;
+  opacity: 0.8;
+  text-align: center;
+  color: #fff;
+  padding: 230px;
+}
+
+
 
 .dropzone p {
   margin: 0;
@@ -76,7 +98,6 @@
   max-height: 100%;
   object-fit: contain; /* Ensure the PDF page fits within the bounds */
 }
-
 
 .file-info {
   flex-grow: 1;

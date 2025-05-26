@@ -1,9 +1,10 @@
 .mainContent {
   position: relative;
   display: flex;
+  z-index: 1;
   flex-direction: column;
   flex-grow: 1; /* Changed from width: 100% */
-  height: 100%;
+  height: 100dvh;
   padding: 0 10%;
   transition: margin-left 0.4s ease-in-out; /* Smoother animation */
 }

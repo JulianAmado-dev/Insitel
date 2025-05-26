@@ -98,7 +98,6 @@ FormField.propTypes = {
   formGroupClassName: PropTypes.string,
 };
 
-
 // Alineado con nombres de BD o mapeo claro
 const createModeDefaultDataPresupuesto = {
   // Campos para la tabla formulario_presupuesto (se añadirán en handleSubmit)
@@ -174,36 +173,38 @@ const FormularioPresupuesto = () => {
       // Mapear campos de formulario_presupuesto si es necesario
       // ...apiData.formulario_presupuesto,
 
-      recursos_humanos: apiData.recursos_humanos_data?.map(rh => ({
-        id_fila_rh: rh.id_fila_rh, // Mantener ID para actualizaciones
-        id_empleado_asignado: rh.id_empleado_asignado,
-        nombre_recurso: rh.nombre_recurso,
-        salario_mensual: rh.salario_mensual,
-        cantidad_dias: rh.cantidad_dias,
-        // Los campos calculados se regeneran en el frontend para visualización
-        // y se reenvían calculados al backend.
-      })) || createModeDefaultDataPresupuesto.recursos_humanos,
+      recursos_humanos:
+        apiData.recursos_humanos_data?.map((rh) => ({
+          id_fila_rh: rh.id_fila_rh, // Mantener ID para actualizaciones
+          id_empleado_asignado: rh.id_empleado_asignado,
+          nombre_recurso: rh.nombre_recurso,
+          salario_mensual: rh.salario_mensual,
+          cantidad_dias: rh.cantidad_dias,
+          // Los campos calculados se regeneran en el frontend para visualización
+          // y se reenvían calculados al backend.
+        })) || createModeDefaultDataPresupuesto.recursos_humanos,
 
-      suministros: apiData.suministros_data?.map(s => ({
-        id_fila_suministro: s.id_fila_suministro,
-        nombre_proveedor: s.nombre_proveedor,
-        nombre_item: s.nombre_item,
-        cantidad_suministro: s.cantidad_suministro,
-        unidad_de_medida: s.unidad_de_medida,
-        valor_unitario_suministro: s.valor_unitario_suministro,
-      })) || createModeDefaultDataPresupuesto.suministros,
+      suministros:
+        apiData.suministros_data?.map((s) => ({
+          id_fila_suministro: s.id_fila_suministro,
+          nombre_proveedor: s.nombre_proveedor,
+          nombre_item: s.nombre_item,
+          cantidad_suministro: s.cantidad_suministro,
+          unidad_de_medida: s.unidad_de_medida,
+          valor_unitario_suministro: s.valor_unitario_suministro,
+        })) || createModeDefaultDataPresupuesto.suministros,
 
-      servicios: apiData.servicios_data?.map(serv => ({
-        id_fila_servicio: serv.id_fila_servicio,
-        nombre_proveedor: serv.nombre_proveedor,
-        nombre_servicio: serv.nombre_servicio,
-        cantidad_servicio: serv.cantidad_servicio,
-        unidad_de_medida: serv.unidad_de_medida,
-        valor_unitario: serv.valor_unitario, // BD usa valor_unitario
-      })) || createModeDefaultDataPresupuesto.servicios,
+      servicios:
+        apiData.servicios_data?.map((serv) => ({
+          id_fila_servicio: serv.id_fila_servicio,
+          nombre_proveedor: serv.nombre_proveedor,
+          nombre_servicio: serv.nombre_servicio,
+          cantidad_servicio: serv.cantidad_servicio,
+          unidad_de_medida: serv.unidad_de_medida,
+          valor_unitario: serv.valor_unitario, // BD usa valor_unitario
+        })) || createModeDefaultDataPresupuesto.servicios,
     };
   };
-
 
   const obtenerFormularioPresupuesto = useCallback(async () => {
     if (!id_proyecto || !area) {
@@ -221,7 +222,10 @@ const FormularioPresupuesto = () => {
         // Usar la función de mapeo para transformar los datos de la API
         const frontendData = mapToFrontendData(data);
         setInitialData(frontendData);
-        console.log("Set initialData for EDIT mode (Presupuesto) after mapping:", frontendData);
+        console.log(
+          "Set initialData for EDIT mode (Presupuesto) after mapping:",
+          frontendData
+        );
       } else {
         setFormRecordId(null);
         setInitialData(createModeDefaultDataPresupuesto);
@@ -244,7 +248,8 @@ const FormularioPresupuesto = () => {
     const recursosHumanosPayload = values.recursos_humanos.map((recurso) => {
       const salarioMensual = parseFloat(recurso.salario_mensual || 0);
       const cantidadDias = parseFloat(recurso.cantidad_dias || 0);
-      const salarioConParafiscales = salarioMensual * (1 + PARAFISCALES_PERCENTAGE);
+      const salarioConParafiscales =
+        salarioMensual * (1 + PARAFISCALES_PERCENTAGE);
       const costoDia = salarioConParafiscales / 30;
       const valorTotalLinea = costoDia * cantidadDias;
       return {
@@ -261,7 +266,9 @@ const FormularioPresupuesto = () => {
 
     const suministrosPayload = values.suministros.map((suministro) => {
       const cantidad = parseFloat(suministro.cantidad_suministro || 0);
-      const valorUnitario = parseFloat(suministro.valor_unitario_suministro || 0);
+      const valorUnitario = parseFloat(
+        suministro.valor_unitario_suministro || 0
+      );
       const valorTotalLinea = cantidad * valorUnitario;
       return {
         id_fila_suministro: suministro.id_fila_suministro || null,
@@ -289,9 +296,18 @@ const FormularioPresupuesto = () => {
       };
     });
 
-    const totalRhCalculado = recursosHumanosPayload.reduce((acc, curr) => acc + curr.valor_total_linea, 0);
-    const totalSuministrosCalculado = suministrosPayload.reduce((acc, curr) => acc + curr.valor_total_linea, 0);
-    const totalServiciosCalculado = serviciosPayload.reduce((acc, curr) => acc + curr.valor_total_linea, 0);
+    const totalRhCalculado = recursosHumanosPayload.reduce(
+      (acc, curr) => acc + curr.valor_total_linea,
+      0
+    );
+    const totalSuministrosCalculado = suministrosPayload.reduce(
+      (acc, curr) => acc + curr.valor_total_linea,
+      0
+    );
+    const totalServiciosCalculado = serviciosPayload.reduce(
+      (acc, curr) => acc + curr.valor_total_linea,
+      0
+    );
 
     const payload = {
       // Campos para formulario_presupuesto
@@ -320,10 +336,15 @@ const FormularioPresupuesto = () => {
       });
       await obtenerFormularioPresupuesto(); // Refetch data to get latest state including IDs
     } catch (error) {
-      console.error("Error submitting presupuesto:", error.response?.data || error.message);
+      console.error(
+        "Error submitting presupuesto:",
+        error.response?.data || error.message
+      );
       Toast.fire({
         icon: "error",
-        title: `Error al guardar el presupuesto: ${error.response?.data?.error || error.message}`,
+        title: `Error al guardar el presupuesto: ${
+          error.response?.data?.error || error.message
+        }`,
       });
     }
     setSubmitting(false);
@@ -333,12 +354,13 @@ const FormularioPresupuesto = () => {
     return initialData;
   }, [initialData]);
 
-return (
-  <>
-    <div className="project-planning-container">
-      <BackButton area={area} id_proyecto={id_proyecto} /> {/* Added BackButton component with props */}
-      <header className="form-header">
-        <h1>Planificación del Proyecto - Presupuesto</h1>
+  return (
+    <>
+      <div className="project-planning-container">
+        <BackButton area={area} id_proyecto={id_proyecto} />{" "}
+        {/* Added BackButton component with props */}
+        <header className="form-header">
+          <h1>Planificación del Proyecto - Presupuesto</h1>
           <div className="form-code">SIGAR-2025</div>
         </header>
         <Formik
@@ -349,7 +371,8 @@ return (
           enableReinitialize // Important for re-rendering with new initialValues
         >
           {({ values, isSubmitting }) => {
-            const formatCurrency = (value, currency = "COP") => { // Default to COP
+            const formatCurrency = (value, currency = "COP") => {
+              // Default to COP
               return new Intl.NumberFormat("es-CO", {
                 style: "currency",
                 currency,
@@ -360,7 +383,8 @@ return (
               (recurso) => {
                 const salarioMensual = parseFloat(recurso.salario_mensual) || 0;
                 const cantidadDias = parseFloat(recurso.cantidad_dias) || 0;
-                const salario_mensual_parafiscales_calc = salarioMensual * (1 + PARAFISCALES_PERCENTAGE);
+                const salario_mensual_parafiscales_calc =
+                  salarioMensual * (1 + PARAFISCALES_PERCENTAGE);
                 const costo_dia_calc = salario_mensual_parafiscales_calc / 30;
                 const total_recurso_calc = costo_dia_calc * cantidadDias;
                 return {
@@ -374,8 +398,10 @@ return (
 
             const suministrosConCalculos = values.suministros.map(
               (suministro) => {
-                const cantidad = parseFloat(suministro.cantidad_suministro) || 0;
-                const valorUnitario = parseFloat(suministro.valor_unitario_suministro) || 0;
+                const cantidad =
+                  parseFloat(suministro.cantidad_suministro) || 0;
+                const valorUnitario =
+                  parseFloat(suministro.valor_unitario_suministro) || 0;
                 const valor_total_suministro_calc = cantidad * valorUnitario;
                 return {
                   ...suministro,
@@ -394,15 +420,27 @@ return (
               };
             });
 
-            const subtotalRecursosHumanos = recursosHumanosConCalculos.reduce((acc, curr) => acc + (curr.total_recurso_calc || 0), 0);
-            const subtotalSuministros = suministrosConCalculos.reduce((acc, curr) => acc + (curr.valor_total_suministro_calc || 0), 0);
-            const subtotalServicios = serviciosConCalculos.reduce((acc, curr) => acc + (curr.valor_total_servicio_calc || 0), 0);
-            const granTotal = subtotalRecursosHumanos + subtotalSuministros + subtotalServicios;
+            const subtotalRecursosHumanos = recursosHumanosConCalculos.reduce(
+              (acc, curr) => acc + (curr.total_recurso_calc || 0),
+              0
+            );
+            const subtotalSuministros = suministrosConCalculos.reduce(
+              (acc, curr) => acc + (curr.valor_total_suministro_calc || 0),
+              0
+            );
+            const subtotalServicios = serviciosConCalculos.reduce(
+              (acc, curr) => acc + (curr.valor_total_servicio_calc || 0),
+              0
+            );
+            const granTotal =
+              subtotalRecursosHumanos + subtotalSuministros + subtotalServicios;
 
             return (
               <Form className="presupuesto-form">
                 <div className="form-section-presupuesto">
-                  <h2><FaUserFriends /> Recurso Humano</h2>
+                  <h2>
+                    <FaUserFriends /> Recurso Humano
+                  </h2>
                   <FieldArray name="recursos_humanos">
                     {({ push, remove }) => (
                       <>
@@ -419,7 +457,8 @@ return (
                             </tr>
                           </thead>
                           <tbody>
-                            {recursosHumanosConCalculos.map((recurso, index) => (
+                            {recursosHumanosConCalculos.map(
+                              (recurso, index) => (
                                 <tr key={index}>
                                   <td>
                                     <Field
@@ -427,7 +466,11 @@ return (
                                       placeholder="Nombre de la persona"
                                       className="form-input-presupuesto table-input"
                                     />
-                                    <ErrorMessage name={`recursos_humanos[${index}].nombre_recurso`} component="div" className="error-message-presupuesto" />
+                                    <ErrorMessage
+                                      name={`recursos_humanos[${index}].nombre_recurso`}
+                                      component="div"
+                                      className="error-message-presupuesto"
+                                    />
                                   </td>
                                   <td>
                                     <Field
@@ -436,13 +479,31 @@ return (
                                       placeholder="0"
                                       className="form-input-presupuesto table-input"
                                     />
-                                    <ErrorMessage name={`recursos_humanos[${index}].salario_mensual`} component="div" className="error-message-presupuesto" />
+                                    <ErrorMessage
+                                      name={`recursos_humanos[${index}].salario_mensual`}
+                                      component="div"
+                                      className="error-message-presupuesto"
+                                    />
                                   </td>
                                   <td>
-                                    <input type="text" value={formatCurrency(recurso.salario_mensual_parafiscales_calc)} disabled className="form-input-presupuesto table-input disabled-field" />
+                                    <input
+                                      type="text"
+                                      value={formatCurrency(
+                                        recurso.salario_mensual_parafiscales_calc
+                                      )}
+                                      disabled
+                                      className="form-input-presupuesto table-input disabled-field"
+                                    />
                                   </td>
                                   <td>
-                                    <input type="text" value={formatCurrency(recurso.costo_dia_calc)} disabled className="form-input-presupuesto table-input disabled-field" />
+                                    <input
+                                      type="text"
+                                      value={formatCurrency(
+                                        recurso.costo_dia_calc
+                                      )}
+                                      disabled
+                                      className="form-input-presupuesto table-input disabled-field"
+                                    />
                                   </td>
                                   <td>
                                     <Field
@@ -451,13 +512,30 @@ return (
                                       placeholder="0"
                                       className="form-input-presupuesto table-input"
                                     />
-                                    <ErrorMessage name={`recursos_humanos[${index}].cantidad_dias`} component="div" className="error-message-presupuesto" />
+                                    <ErrorMessage
+                                      name={`recursos_humanos[${index}].cantidad_dias`}
+                                      component="div"
+                                      className="error-message-presupuesto"
+                                    />
                                   </td>
                                   <td>
-                                    <input type="text" value={formatCurrency(recurso.total_recurso_calc)} disabled className="form-input-presupuesto table-input disabled-field" />
+                                    <input
+                                      type="text"
+                                      value={formatCurrency(
+                                        recurso.total_recurso_calc
+                                      )}
+                                      disabled
+                                      className="form-input-presupuesto table-input disabled-field"
+                                    />
                                   </td>
                                   <td>
-                                    <button type="button" className="btn-remove-presupuesto" onClick={() => remove(index)}><FaTrash /></button>
+                                    <button
+                                      type="button"
+                                      className="btn-remove-presupuesto"
+                                      onClick={() => remove(index)}
+                                    >
+                                      <FaTrash />
+                                    </button>
                                   </td>
                                 </tr>
                               )
@@ -465,20 +543,39 @@ return (
                           </tbody>
                           <tfoot>
                             <tr>
-                              <td colSpan="5" style={{ textAlign: "right" }}><strong>Subtotal Recurso Humano:</strong></td>
-                              <td><strong>{formatCurrency(subtotalRecursosHumanos)}</strong></td>
+                              <td colSpan="5" style={{ textAlign: "right" }}>
+                                <strong>Subtotal Recurso Humano:</strong>
+                              </td>
+                              <td>
+                                <strong>
+                                  {formatCurrency(subtotalRecursosHumanos)}
+                                </strong>
+                              </td>
                               <td></td>
                             </tr>
                           </tfoot>
                         </table>
-                        <button type="button" className="btn-add-presupuesto" onClick={() => push(createModeDefaultDataPresupuesto.recursos_humanos[0])}><FaPlus /> Agregar Recurso Humano</button>
+                        <button
+                          type="button"
+                          className="btn-add-presupuesto"
+                          onClick={() =>
+                            push(
+                              createModeDefaultDataPresupuesto
+                                .recursos_humanos[0]
+                            )
+                          }
+                        >
+                          <FaPlus /> Agregar Recurso Humano
+                        </button>
                       </>
                     )}
                   </FieldArray>
                 </div>
 
                 <div className="form-section-presupuesto">
-                  <h2><FaBoxOpen /> Suministros</h2>
+                  <h2>
+                    <FaBoxOpen /> Suministros
+                  </h2>
                   <FieldArray name="suministros">
                     {({ push, remove }) => (
                       <>
@@ -498,50 +595,123 @@ return (
                             {suministrosConCalculos.map((suministro, index) => (
                               <tr key={index}>
                                 <td>
-                                  <Field name={`suministros[${index}].nombre_proveedor`} placeholder="Nombre del proveedor" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`suministros[${index}].nombre_proveedor`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`suministros[${index}].nombre_proveedor`}
+                                    placeholder="Nombre del proveedor"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`suministros[${index}].nombre_proveedor`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`suministros[${index}].nombre_item`} placeholder="Nombre del item" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`suministros[${index}].nombre_item`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`suministros[${index}].nombre_item`}
+                                    placeholder="Nombre del item"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`suministros[${index}].nombre_item`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`suministros[${index}].cantidad_suministro`} type="number" placeholder="0" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`suministros[${index}].cantidad_suministro`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`suministros[${index}].cantidad_suministro`}
+                                    type="number"
+                                    placeholder="0"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`suministros[${index}].cantidad_suministro`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`suministros[${index}].unidad_de_medida`} placeholder="Unidad, Kg, L, etc." className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`suministros[${index}].unidad_de_medida`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`suministros[${index}].unidad_de_medida`}
+                                    placeholder="Unidad, Kg, L, etc."
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`suministros[${index}].unidad_de_medida`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`suministros[${index}].valor_unitario_suministro`} type="number" placeholder="0" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`suministros[${index}].valor_unitario_suministro`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`suministros[${index}].valor_unitario_suministro`}
+                                    type="number"
+                                    placeholder="0"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`suministros[${index}].valor_unitario_suministro`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <input type="text" value={formatCurrency(suministro.valor_total_suministro_calc)} disabled className="form-input-presupuesto table-input disabled-field" />
+                                  <input
+                                    type="text"
+                                    value={formatCurrency(
+                                      suministro.valor_total_suministro_calc
+                                    )}
+                                    disabled
+                                    className="form-input-presupuesto table-input disabled-field"
+                                  />
                                 </td>
                                 <td>
-                                  <button type="button" className="btn-remove-presupuesto" onClick={() => remove(index)}><FaTrash /></button>
+                                  <button
+                                    type="button"
+                                    className="btn-remove-presupuesto"
+                                    onClick={() => remove(index)}
+                                  >
+                                    <FaTrash />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                           <tfoot>
                             <tr>
-                              <td colSpan="5" style={{ textAlign: "right" }}><strong>Subtotal Suministros:</strong></td>
-                              <td><strong>{formatCurrency(subtotalSuministros)}</strong></td>
+                              <td colSpan="5" style={{ textAlign: "right" }}>
+                                <strong>Subtotal Suministros:</strong>
+                              </td>
+                              <td>
+                                <strong>
+                                  {formatCurrency(subtotalSuministros)}
+                                </strong>
+                              </td>
                               <td></td>
                             </tr>
                           </tfoot>
                         </table>
-                        <button type="button" className="btn-add-presupuesto" onClick={() => push(createModeDefaultDataPresupuesto.suministros[0])}><FaPlus /> Agregar Suministro</button>
+                        <button
+                          type="button"
+                          className="btn-add-presupuesto"
+                          onClick={() =>
+                            push(
+                              createModeDefaultDataPresupuesto.suministros[0]
+                            )
+                          }
+                        >
+                          <FaPlus /> Agregar Suministro
+                        </button>
                       </>
                     )}
                   </FieldArray>
                 </div>
 
                 <div className="form-section-presupuesto">
-                  <h2><FaConciergeBell /> Servicios</h2>
+                  <h2>
+                    <FaConciergeBell /> Servicios
+                  </h2>
                   <FieldArray name="servicios">
                     {({ push, remove }) => (
                       <>
@@ -561,50 +731,121 @@ return (
                             {serviciosConCalculos.map((servicio, index) => (
                               <tr key={index}>
                                 <td>
-                                  <Field name={`servicios[${index}].nombre_proveedor`} placeholder="Nombre del proveedor" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`servicios[${index}].nombre_proveedor`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`servicios[${index}].nombre_proveedor`}
+                                    placeholder="Nombre del proveedor"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`servicios[${index}].nombre_proveedor`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`servicios[${index}].nombre_servicio`} placeholder="Descripción del servicio" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`servicios[${index}].nombre_servicio`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`servicios[${index}].nombre_servicio`}
+                                    placeholder="Descripción del servicio"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`servicios[${index}].nombre_servicio`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`servicios[${index}].cantidad_servicio`} type="number" placeholder="0" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`servicios[${index}].cantidad_servicio`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`servicios[${index}].cantidad_servicio`}
+                                    type="number"
+                                    placeholder="0"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`servicios[${index}].cantidad_servicio`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`servicios[${index}].unidad_de_medida`} placeholder="Unidad, Hora, etc." className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`servicios[${index}].unidad_de_medida`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`servicios[${index}].unidad_de_medida`}
+                                    placeholder="Unidad, Hora, etc."
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`servicios[${index}].unidad_de_medida`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <Field name={`servicios[${index}].valor_unitario`} type="number" placeholder="0" className="form-input-presupuesto table-input" />
-                                  <ErrorMessage name={`servicios[${index}].valor_unitario`} component="div" className="error-message-presupuesto" />
+                                  <Field
+                                    name={`servicios[${index}].valor_unitario`}
+                                    type="number"
+                                    placeholder="0"
+                                    className="form-input-presupuesto table-input"
+                                  />
+                                  <ErrorMessage
+                                    name={`servicios[${index}].valor_unitario`}
+                                    component="div"
+                                    className="error-message-presupuesto"
+                                  />
                                 </td>
                                 <td>
-                                  <input type="text" value={formatCurrency(servicio.valor_total_servicio_calc)} disabled className="form-input-presupuesto table-input disabled-field" />
+                                  <input
+                                    type="text"
+                                    value={formatCurrency(
+                                      servicio.valor_total_servicio_calc
+                                    )}
+                                    disabled
+                                    className="form-input-presupuesto table-input disabled-field"
+                                  />
                                 </td>
                                 <td>
-                                  <button type="button" className="btn-remove-presupuesto" onClick={() => remove(index)}><FaTrash /></button>
+                                  <button
+                                    type="button"
+                                    className="btn-remove-presupuesto"
+                                    onClick={() => remove(index)}
+                                  >
+                                    <FaTrash />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                           <tfoot>
                             <tr>
-                              <td colSpan="5" style={{ textAlign: "right" }}><strong>Subtotal Servicios:</strong></td>
-                              <td><strong>{formatCurrency(subtotalServicios)}</strong></td>
+                              <td colSpan="5" style={{ textAlign: "right" }}>
+                                <strong>Subtotal Servicios:</strong>
+                              </td>
+                              <td>
+                                <strong>
+                                  {formatCurrency(subtotalServicios)}
+                                </strong>
+                              </td>
                               <td></td>
                             </tr>
                           </tfoot>
                         </table>
-                        <button type="button" className="btn-add-presupuesto" onClick={() => push(createModeDefaultDataPresupuesto.servicios[0])}><FaPlus /> Agregar Servicio</button>
+                        <button
+                          type="button"
+                          className="btn-add-presupuesto"
+                          onClick={() =>
+                            push(createModeDefaultDataPresupuesto.servicios[0])
+                          }
+                        >
+                          <FaPlus /> Agregar Servicio
+                        </button>
                       </>
                     )}
                   </FieldArray>
                 </div>
 
                 <div className="form-section-presupuesto summary-section-presupuesto">
-                  <h2><FaCalculator /> Resumen</h2>
+                  <h2>
+                    <FaCalculator /> Resumen
+                  </h2>
                   <table className="summary-table-presupuesto">
                     <tbody>
                       <tr>
@@ -620,15 +861,24 @@ return (
                         <td>{formatCurrency(subtotalServicios)}</td>
                       </tr>
                       <tr className="grand-total-presupuesto">
-                        <td><strong>Total Presupuesto:</strong></td>
-                        <td><strong>{formatCurrency(granTotal)}</strong></td>
+                        <td>
+                          <strong>Total Presupuesto:</strong>
+                        </td>
+                        <td>
+                          <strong>{formatCurrency(granTotal)}</strong>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
-                <button type="submit" className="btn-submit-presupuesto" disabled={isSubmitting}>
-                  <FaSave /> {isSubmitting ? "Guardando..." : "Guardar Presupuesto"}
+                <button
+                  type="submit"
+                  className="btn-submit-presupuesto"
+                  disabled={isSubmitting}
+                >
+                  <FaSave />{" "}
+                  {isSubmitting ? "Guardando..." : "Guardar Presupuesto"}
                 </button>
               </Form>
             );
