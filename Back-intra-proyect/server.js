@@ -8,10 +8,10 @@ import { config } from "./config/config.js";
 import boom from "@hapi/boom";
 import "./utils/auth/index.js";
 import { resetPassword } from "./utils/auth/nodeMailer/sendEmail.js";
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import multer from 'multer';
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import multer from "multer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,38 +19,79 @@ const __dirname = path.dirname(__filename);
 const db = config.db;
 const app = express();
 
-// --- Multer Configuration for File Uploads ---
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// --- Multer Configuration as per Guide ---
+
+// Middleware to create carpetas de destino si no existen
+function ensureDirExists(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created directory: ${dir}`);
+  }
 }
 
+// Configuración de almacenamiento de Multer
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
+  // La función *destination* define la ruta basada en params
+  destination: (req, file, cb) => {
+    // Obtener área y proyecto desde la URL (ej: /upload/:area/:id_proyecto)
+    const area = req.params.area;
+    const project = req.params.id_proyecto; // Using id_proyecto as per frontend
+    if (!area || !project) {
+      return cb(
+        new Error("Area or project ID is missing in URL parameters."),
+        ""
+      );
+    }
+    // Carpeta base 'uploads', luego por área/proyecto
+    const dest = path.join(__dirname, "uploads", area, project);
+    ensureDirExists(dest);
+    cb(null, dest); // ruta final de guardado
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const originalName = file.originalname.replace(/\s+/g, '_'); // Replace spaces
-    cb(null, uniqueSuffix + '-' + originalName);
-  }
+  // La función *filename* define el nombre de archivo
+  filename: (req, file, cb) => {
+    // Para mantener nombre original y evitar colisiones, podemos anteponer timestamp
+    const timestamp = Date.now();
+    // Ejemplo: "1631531200000-mifoto.jpg"
+    // Replace spaces in originalname to avoid issues, though multer handles many special chars.
+    const safeOriginalName = file.originalname.replace(/\s+/g, "_");
+    const finalName = `${timestamp}-${safeOriginalName}`;
+    cb(null, finalName);
+  },
 });
 
-const allowedFileTypes = /jpeg|jpg|png|gif|webp|pdf/; // General filter, can be overridden per route if needed
+// Filtro de tipos permitidos: solo imágenes y PDF
 const fileFilter = (req, file, cb) => {
-  const mimetype = allowedFileTypes.test(file.mimetype);
-  const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
-
-  if (mimetype && extname) {
-    return cb(null, true);
+  // Aceptamos solo tipos JPEG, PNG, GIF o PDF
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "application/pdf",
+  ];
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    // Log the rejected file type for easier debugging
+    console.log(
+      `Rejected file type: ${file.mimetype} for file ${file.originalname}`
+    );
+    cb(
+      new Error(
+        "Tipo de archivo no permitido. Solo se aceptan imágenes (JPEG, PNG, GIF) y PDF."
+      ),
+      false
+    );
   }
-  cb(new Error("Error: File upload only supports the following filetypes - " + allowedFileTypes));
 };
 
+// Límite de tamaño (5MB as per guide)
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+// Crear instancia de Multer con configuración
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit (general limit)
-  fileFilter: fileFilter // General file filter
+  fileFilter: fileFilter,
+  limits: { fileSize: MAX_SIZE },
 });
 // --- End Multer Configuration ---
 
@@ -61,8 +102,14 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Added for simple forms, good practice
 app.use(cookieParser());
 app.use(passport.initialize());
+
+// Serve static files from the 'uploads' directory
+// This makes files in 'uploads/<area>/<id_proyecto>/<filename>'
+// accessible via 'http://localhost:PORT/files/<area>/<id_proyecto>/<filename>'
+app.use("/files", express.static(path.join(__dirname, "uploads")));
 
 const ACCESS_TOKEN_EXPIRY = "2h";
 const REFRESH_TOKEN_EXPIRY = "5d";
@@ -633,12 +680,10 @@ app.post(
             ]);
           }
         }
-        res
-          .status(201)
-          .json({
-            message: "Formulario general registrado exitosamente.",
-            id_proyecto,
-          });
+        res.status(201).json({
+          message: "Formulario general registrado exitosamente.",
+          id_proyecto,
+        });
       });
     } catch (error) {
       console.error("Error en POST /form/general/fill:", error);
@@ -785,12 +830,10 @@ app.post(
           ", "
         )}) VALUES (?, ${placeholders})`;
         await connection.execute(sql, [id_proyecto, ...values]);
-        res
-          .status(201)
-          .json({
-            message: "Formulario de alcance registrado exitosamente.",
-            id_proyecto,
-          });
+        res.status(201).json({
+          message: "Formulario de alcance registrado exitosamente.",
+          id_proyecto,
+        });
       });
     } catch (error) {
       console.error("Error en POST /form/alcance/fill:", error);
@@ -1202,7 +1245,8 @@ app.post(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
-    const { version_verificada, lista_chequeo, registros_aprobacion } = req.body;
+    const { version_verificada, lista_chequeo, registros_aprobacion } =
+      req.body;
     const creado_por_id = req.user.id_empleado;
 
     try {
@@ -1220,11 +1264,17 @@ app.post(
         const id_formulario_verificacion = mainFormResult.insertId;
 
         if (!id_formulario_verificacion) {
-          throw boom.internal("No se pudo crear el formulario de verificación principal.");
+          throw boom.internal(
+            "No se pudo crear el formulario de verificación principal."
+          );
         }
 
         // 2. Insertar en verificacion_cumplimiento_requerimientos
-        if (lista_chequeo && Array.isArray(lista_chequeo) && lista_chequeo.length > 0) {
+        if (
+          lista_chequeo &&
+          Array.isArray(lista_chequeo) &&
+          lista_chequeo.length > 0
+        ) {
           const sqlRequisitos = `
             INSERT INTO verificacion_cumplimiento_requerimientos (
               id_formulario_verificacion, codigo_requisito, tipo_requisito, descripcion_requisito, 
@@ -1236,16 +1286,20 @@ app.post(
               item.codigo_requisito || null,
               item.tipo_requisito || null,
               item.descripcion_requisito,
-              item.cumple, 
+              item.cumple,
               item.observaciones || null,
-              item.fecha_verificacion, 
-              item.verificado_por_id || null, 
+              item.fecha_verificacion,
+              item.verificado_por_id || null,
             ]);
           }
         }
 
         // 3. Insertar en registro_verificacion_aprobacion
-        if (registros_aprobacion && Array.isArray(registros_aprobacion) && registros_aprobacion.length > 0) {
+        if (
+          registros_aprobacion &&
+          Array.isArray(registros_aprobacion) &&
+          registros_aprobacion.length > 0
+        ) {
           const sqlAprobaciones = `
             INSERT INTO registro_verificacion_aprobacion (
               id_formulario_verificacion, fecha_aprobacion, version_aprobada, 
@@ -1254,17 +1308,18 @@ app.post(
           for (const item of registros_aprobacion) {
             await connection.execute(sqlAprobaciones, [
               id_formulario_verificacion,
-              item.fecha_aprobacion, 
+              item.fecha_aprobacion,
               item.version_aprobada,
               item.observaciones || null,
               item.nombre_responsable, // Usar el campo mapeado desde el frontend (originalmente rol_responsable)
-              item.firma_id || null, 
+              item.firma_id || null,
             ]);
           }
         }
-        res.status(201).json({ 
-          message: "Formulario de verificación y sus detalles registrados exitosamente.",
-          id_formulario_verificacion: id_formulario_verificacion 
+        res.status(201).json({
+          message:
+            "Formulario de verificación y sus detalles registrados exitosamente.",
+          id_formulario_verificacion: id_formulario_verificacion,
         });
       });
     } catch (error) {
@@ -1280,7 +1335,7 @@ app.get(
   async (req, res, next) => {
     const { id_proyecto } = req.params;
     // Opcionalmente, podrías aceptar un id_formulario_verificacion específico aquí
-    // const { id_formulario_verificacion_especifico } = req.query; 
+    // const { id_formulario_verificacion_especifico } = req.query;
     try {
       const [mainFormRows] = await db.execute(
         `SELECT * FROM formulario_verificacion 
@@ -1290,10 +1345,16 @@ app.get(
       );
 
       if (!mainFormRows || mainFormRows.length === 0) {
-        return res.status(404).json({ message: "Formulario de verificación no encontrado para este proyecto." });
+        return res
+          .status(404)
+          .json({
+            message:
+              "Formulario de verificación no encontrado para este proyecto.",
+          });
       }
       const formulario_verificacion = mainFormRows[0];
-      const id_formulario_verificacion = formulario_verificacion.id_formulario_verificacion;
+      const id_formulario_verificacion =
+        formulario_verificacion.id_formulario_verificacion;
 
       const [lista_chequeo_data] = await db.execute(
         `SELECT vcr.*, CONCAT(e.nombres, ' ', e.apellidos) AS nombre_verificado_por
@@ -1313,9 +1374,8 @@ app.get(
       res.status(200).json({
         formulario_verificacion,
         lista_chequeo_data,
-        registros_aprobacion_data
+        registros_aprobacion_data,
       });
-
     } catch (error) {
       console.error("Error en GET /form/verificacion/get:", error);
       next(error);
@@ -1328,7 +1388,8 @@ app.patch(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto, id_form_verif } = req.params;
-    const { version_verificada, lista_chequeo, registros_aprobacion } = req.body;
+    const { version_verificada, lista_chequeo, registros_aprobacion } =
+      req.body;
     const actualizado_por_id = req.user.id_empleado;
 
     try {
@@ -1339,7 +1400,9 @@ app.patch(
           [id_form_verif, id_proyecto]
         );
         if (!formExistRows || formExistRows.length === 0) {
-          throw boom.notFound("Formulario de verificación no encontrado para este proyecto y ID.");
+          throw boom.notFound(
+            "Formulario de verificación no encontrado para este proyecto y ID."
+          );
         }
 
         // 2. Actualizar formulario_verificacion
@@ -1351,11 +1414,21 @@ app.patch(
         );
 
         // 3. Borrar detalles existentes
-        await connection.execute("DELETE FROM verificacion_cumplimiento_requerimientos WHERE id_formulario_verificacion = ?", [id_form_verif]);
-        await connection.execute("DELETE FROM registro_verificacion_aprobacion WHERE id_formulario_verificacion = ?", [id_form_verif]);
+        await connection.execute(
+          "DELETE FROM verificacion_cumplimiento_requerimientos WHERE id_formulario_verificacion = ?",
+          [id_form_verif]
+        );
+        await connection.execute(
+          "DELETE FROM registro_verificacion_aprobacion WHERE id_formulario_verificacion = ?",
+          [id_form_verif]
+        );
 
         // 4. Re-insertar detalles (similar a /fill)
-        if (lista_chequeo && Array.isArray(lista_chequeo) && lista_chequeo.length > 0) {
+        if (
+          lista_chequeo &&
+          Array.isArray(lista_chequeo) &&
+          lista_chequeo.length > 0
+        ) {
           const sqlRequisitos = `
             INSERT INTO verificacion_cumplimiento_requerimientos (
               id_formulario_verificacion, codigo_requisito, tipo_requisito, descripcion_requisito, 
@@ -1363,14 +1436,23 @@ app.patch(
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`;
           for (const item of lista_chequeo) {
             await connection.execute(sqlRequisitos, [
-              id_form_verif, item.codigo_requisito || null, item.tipo_requisito || null,
-              item.descripcion_requisito, item.cumple, item.observaciones || null,
-              item.fecha_verificacion, item.verificado_por_id || null,
+              id_form_verif,
+              item.codigo_requisito || null,
+              item.tipo_requisito || null,
+              item.descripcion_requisito,
+              item.cumple,
+              item.observaciones || null,
+              item.fecha_verificacion,
+              item.verificado_por_id || null,
             ]);
           }
         }
 
-        if (registros_aprobacion && Array.isArray(registros_aprobacion) && registros_aprobacion.length > 0) {
+        if (
+          registros_aprobacion &&
+          Array.isArray(registros_aprobacion) &&
+          registros_aprobacion.length > 0
+        ) {
           const sqlAprobaciones = `
             INSERT INTO registro_verificacion_aprobacion (
               id_formulario_verificacion, fecha_aprobacion, version_aprobada, 
@@ -1378,13 +1460,20 @@ app.patch(
             ) VALUES (?, ?, ?, ?, ?, ?);`; // Usar nombre_responsable
           for (const item of registros_aprobacion) {
             await connection.execute(sqlAprobaciones, [
-              id_form_verif, item.fecha_aprobacion, item.version_aprobada,
-              item.observaciones || null, item.nombre_responsable, // Usar el campo mapeado desde el frontend
+              id_form_verif,
+              item.fecha_aprobacion,
+              item.version_aprobada,
+              item.observaciones || null,
+              item.nombre_responsable, // Usar el campo mapeado desde el frontend
               item.firma_id || null,
             ]);
           }
         }
-        res.status(200).json({ message: "Formulario de verificación actualizado exitosamente." });
+        res
+          .status(200)
+          .json({
+            message: "Formulario de verificación actualizado exitosamente.",
+          });
       });
     } catch (error) {
       console.error("Error en PATCH /form/verificacion/update:", error);
@@ -1393,13 +1482,96 @@ app.patch(
   }
 );
 
-// --- Formulario Validacion File Upload Endpoints ---
+// --- New File Upload Endpoints as per Guide ---
 
+// Ruta para subir archivo: POST /api/upload/:area/:id_proyecto
+// Using 'file' as the field name to match frontend FormularioValidacion.jsx
+app.post(
+  "/api/upload/:area/:id_proyecto",
+  passport.authenticate("jwt", { session: false }),
+  upload.single("file"),
+  (req, res, next) => {
+    // Check if area and id_proyecto were validated by multer's destination function
+    if (!req.params.area || !req.params.id_proyecto) {
+      // This case should ideally be caught by multer's destination if it returns an error
+      return next(
+        boom.badRequest("Area or project ID is missing in URL parameters.")
+      );
+    }
+
+    // Si todo va bien, Multer habrá almacenado el archivo y puesto info en req.file
+    if (!req.file) {
+      // This might happen if fileFilter rejected the file but didn't throw an error that stops middleware chain,
+      // or if no file was sent. Multer errors are usually handled by the error middleware.
+      return next(
+        boom.badRequest(
+          "No se recibió ningún archivo o el tipo de archivo no es permitido."
+        )
+      );
+    }
+
+    // Devolver respuesta de éxito con detalles del archivo
+    console.log(
+      `File uploaded: ${req.file.filename} to path: ${req.file.destination}`
+    );
+    res.status(201).json({
+      // 201 Created is more appropriate for successful resource creation
+      message: "Archivo subido con éxito",
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      // Path for client to access the file via the static route
+      path: `/files/${req.params.area}/${req.params.id_proyecto}/${req.file.filename}`,
+    });
+  }
+);
+
+// Ruta para listar archivos en /uploads/:area/:id_proyecto
+app.get(
+  "/api/files/:area/:id_proyecto",
+  passport.authenticate("jwt", { session: false }),
+  (req, res, next) => {
+    const { area, id_proyecto } = req.params;
+    if (!area || !id_proyecto) {
+      return next(
+        boom.badRequest("Area or project ID is missing in URL parameters.")
+      );
+    }
+    const dirPath = path.join(__dirname, "uploads", area, id_proyecto);
+
+    fs.readdir(dirPath, (err, files) => {
+      if (err) {
+        if (err.code === "ENOENT") {
+          // Directory does not exist
+          console.log(`Directory not found for listing: ${dirPath}`);
+          return res
+            .status(404)
+            .json({
+              error: "Carpeta no encontrada o sin archivos.",
+              files: [],
+            });
+        }
+        console.error(`Error reading directory ${dirPath}:`, err);
+        return next(boom.internal("Error al leer la carpeta de archivos."));
+      }
+      // Devolver array de nombres de archivo existentes
+      // Optionally, filter out system files like .DS_Store if necessary
+      const filteredFiles = files.filter((file) => !file.startsWith("."));
+      res.json({ files: filteredFiles });
+    });
+  }
+);
+
+// --- End New File Upload Endpoints ---
+
+// --- Commenting out Old Formulario Validacion File Upload Endpoints ---
+/*
 // Endpoint to upload a file for a specific Project's Formulario Validacion
 app.post(
   "/api/forms/validacion/:id_proyecto/upload", // Changed param to id_proyecto
   passport.authenticate("jwt", { session: false }),
-  upload.single('file'), 
+  upload.single('file'),  // This 'upload' would be the OLD multer instance
   async (req, res, next) => {
     const { id_proyecto } = req.params;
     const id_empleado_uploader = req.user.id_empleado;
@@ -1413,7 +1585,6 @@ app.post(
 
     try {
       await executeTransaction(async (connection) => {
-        // Check if the Project exists
         const [projectRows] = await connection.execute(
           "SELECT id_proyecto FROM proyectos WHERE id_proyecto = ?",
           [id_proyecto]
@@ -1421,36 +1592,30 @@ app.post(
         if (!projectRows || projectRows.length === 0) {
           throw boom.notFound("Proyecto no encontrado.");
         }
-
-        // Ensure FormularioValidacion record exists for this project, or create it
         let [formValRows] = await connection.execute(
           "SELECT id_proyecto FROM formulario_validacion WHERE id_proyecto = ?",
           [id_proyecto]
         );
-
         if (!formValRows || formValRows.length === 0) {
           await connection.execute(
             "INSERT INTO formulario_validacion (id_proyecto, creado_por_id, actualizado_por_id) VALUES (?, ?, ?)",
             [id_proyecto, id_empleado_uploader, id_empleado_uploader]
           );
         } else {
-          // Optionally update fecha_actualizacion and actualizado_por_id if it already exists
            await connection.execute(
             "UPDATE formulario_validacion SET fecha_actualizacion = CURRENT_TIMESTAMP, actualizado_por_id = ? WHERE id_proyecto = ?",
             [id_empleado_uploader, id_proyecto]
           );
         }
-
         const { originalname, filename: stored_filename, mimetype, size: file_size_bytes } = req.file;
         const file_path_on_server = req.file.path;
-
         const [result] = await connection.execute(
           `INSERT INTO archivos_formulario_validacion (
             id_formulario_validacion, id_empleado_uploader, original_filename, 
             stored_filename, file_path_on_server, mime_type, file_size_bytes
           ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
-            id_proyecto, // This is now the id_proyecto, which acts as id_formulario_validacion
+            id_proyecto, 
             id_empleado_uploader,
             originalname,
             stored_filename,
@@ -1459,11 +1624,10 @@ app.post(
             file_size_bytes,
           ]
         );
-
         res.status(201).json({
           message: "File uploaded and associated with Formulario Validacion successfully!",
           id_archivo: result.insertId,
-          id_form_validacion: id_proyecto, // Reflects that id_proyecto is the key
+          id_form_validacion: id_proyecto, 
           original_filename: originalname,
           stored_filename: stored_filename,
           mime_type: mimetype,
@@ -1472,8 +1636,8 @@ app.post(
       });
     } catch (error) {
       if (req.file && req.file.path) {
-        fs.unlink(req.file.path, (err) => {
-          if (err) console.error("Error deleting orphaned file after DB error:", err);
+        fs.unlink(req.file.path, (errUnlink) => { // Renamed err to errUnlink
+          if (errUnlink) console.error("Error deleting orphaned file after DB error:", errUnlink);
         });
       }
       console.error("Error in file upload for Formulario Validacion:", error);
@@ -1482,9 +1646,8 @@ app.post(
   }
 );
 
-// Endpoint to get all files for a specific Project's Formulario Validacion
 app.get(
-  "/api/forms/validacion/:id_proyecto/files", // Changed param to id_proyecto
+  "/api/forms/validacion/:id_proyecto/files", 
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const { id_proyecto } = req.params;
@@ -1492,23 +1655,19 @@ app.get(
         return next(boom.badRequest('Invalid or missing ID for Project.'));
     }
     try {
-      // First, check if the formulario_validacion context exists for the project
       const [formValRows] = await db.execute(
         "SELECT id_proyecto FROM formulario_validacion WHERE id_proyecto = ?",
         [id_proyecto]
       );
-
       if (!formValRows || formValRows.length === 0) {
-        // If no form context, then no files can be associated.
-        return res.status(200).json([]); // Return empty array, or 404 if preferred
+        return res.status(200).json([]); 
       }
-
       const [files] = await db.execute(
         `SELECT id_archivo, id_formulario_validacion, id_empleado_uploader, 
                 original_filename, stored_filename, mime_type, file_size_bytes, 
                 descripcion_archivo, upload_timestamp 
          FROM archivos_formulario_validacion 
-         WHERE id_formulario_validacion = ? AND deleted_timestamp IS NULL`, // id_formulario_validacion here is the id_proyecto
+         WHERE id_formulario_validacion = ? AND deleted_timestamp IS NULL`, 
         [id_proyecto]
       );
       res.status(200).json(files);
@@ -1519,30 +1678,25 @@ app.get(
   }
 );
 
-// Generic Endpoint to download a file by its stored_filename
 app.get(
   "/api/files/download/:filename",
-  passport.authenticate("jwt", { session: false }), // Or remove auth if files can be public, but usually not
+  passport.authenticate("jwt", { session: false }), 
   async (req, res, next) => {
     const { filename } = req.params;
     try {
-      // Fetch original_filename from DB to provide a nice name for download
       const [fileRows] = await db.execute(
         "SELECT original_filename, file_path_on_server FROM archivos_formulario_validacion WHERE stored_filename = ? AND deleted_timestamp IS NULL",
         [filename]
       );
-
       if (!fileRows || fileRows.length === 0) {
         return next(boom.notFound("File not found or access denied."));
       }
-      
       const filePath = fileRows[0].file_path_on_server;
       const originalName = fileRows[0].original_filename;
-
       if (fs.existsSync(filePath)) {
-        res.download(filePath, originalName, (err) => {
-          if (err) {
-            console.error("Error during file download:", err);
+        res.download(filePath, originalName, (errDownload) => { // Renamed err to errDownload
+          if (errDownload) {
+            console.error("Error during file download:", errDownload);
             if (!res.headersSent) {
                next(boom.internal('Could not download the file.'));
             }
@@ -1559,48 +1713,33 @@ app.get(
   }
 );
 
-// Generic Endpoint to delete a file by its stored_filename
 app.delete(
   "/api/files/:filename",
-  passport.authenticate("jwt", { session: false }), // Ensure user has permission
+  passport.authenticate("jwt", { session: false }), 
   async (req, res, next) => {
     const { filename } = req.params;
-    const id_empleado_deleter = req.user.id_empleado; // For logging or permission check
-
+    // const id_empleado_deleter = req.user.id_empleado; 
     try {
       const [fileRows] = await db.execute(
         "SELECT id_archivo, file_path_on_server, id_empleado_uploader FROM archivos_formulario_validacion WHERE stored_filename = ? AND deleted_timestamp IS NULL",
         [filename]
       );
-
       if (!fileRows || fileRows.length === 0) {
         return next(boom.notFound("File not found or already deleted."));
       }
-
       const fileToDelete = fileRows[0];
-      // Optional: Add permission check here - e.g., only uploader or admin can delete
-      // if (fileToDelete.id_empleado_uploader !== id_empleado_deleter && req.user.rol !== 'admin') {
-      //   return next(boom.forbidden("You do not have permission to delete this file."));
-      // }
-
       if (fs.existsSync(fileToDelete.file_path_on_server)) {
-        fs.unlink(fileToDelete.file_path_on_server, async (err) => {
-          if (err) {
-            console.error("Error deleting file from filesystem:", err);
+        fs.unlink(fileToDelete.file_path_on_server, async (errUnlink) => { // Renamed err to errUnlink
+          if (errUnlink) {
+            console.error("Error deleting file from filesystem:", errUnlink);
             return next(boom.internal("Error deleting file from disk."));
           }
-          
-          // Soft delete from database
-          // await db.execute("UPDATE archivos_formulario_validacion SET deleted_timestamp = CURRENT_TIMESTAMP WHERE id_archivo = ?", [fileToDelete.id_archivo]);
-          // Or Hard delete:
           await db.execute("DELETE FROM archivos_formulario_validacion WHERE id_archivo = ?", [fileToDelete.id_archivo]);
-
           res.status(200).json({ message: "File deleted successfully." });
         });
       } else {
         console.warn(`File not found on disk for deletion: ${fileToDelete.file_path_on_server}, but DB record existed.`);
-        // Still remove DB record if file not on disk but record exists
-         await db.execute("DELETE FROM archivos_formulario_validacion WHERE id_archivo = ?", [fileToDelete.id_archivo]);
+        await db.execute("DELETE FROM archivos_formulario_validacion WHERE id_archivo = ?", [fileToDelete.id_archivo]);
         res.status(200).json({ message: "File record deleted from database (file not found on disk)." });
       }
     } catch (error) {
@@ -1609,22 +1748,33 @@ app.delete(
     }
   }
 );
-
-// --- End Formulario Validacion File Upload Endpoints --- // This block remains removed as per reversion goal
+*/
+// --- End Commenting out Old Endpoints ---
 
 app.use((err, req, res, next) => {
   // Handle multer errors specifically for better client feedback
   if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return next(boom.badRequest('File is too large. Maximum size is 10MB.'));
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return next(
+        boom.badRequest(
+          `El archivo es demasiado grande. El tamaño máximo es ${
+            MAX_SIZE / 1024 / 1024
+          }MB.`
+        )
+      ); // Use MAX_SIZE
     }
+    // For other Multer errors like 'LIMIT_UNEXPECTED_FILE', etc.
+    return next(boom.badRequest(err.message || "Error al subir el archivo."));
+  } else if (
+    err.message.includes("Tipo de archivo no permitido") ||
+    err.message.includes("Area or project ID is missing")
+  ) {
+    // Catch custom errors from fileFilter or destination callback
     return next(boom.badRequest(err.message));
-  } else if (err.message.startsWith("Error: File upload only supports")) { 
-     return next(boom.badRequest(err.message));
   }
 
-
-  console.error("Error global no manejado:", err.stack || err); // Log stack for more details
+  // Log the full error for server-side debugging, especially if it's not a Boom error
+  console.error("Error global no manejado:", err.stack || err.message || err);
   if (boom.isBoom(err)) {
     const { statusCode, payload } = err.output;
     return res.status(statusCode).json(payload);

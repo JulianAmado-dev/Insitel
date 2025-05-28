@@ -350,6 +350,45 @@ function FormularioValidacion() {
           </button>
         </div>
       )}
+
+      {/* Listado de archivos ya subidos en el servidor */}
+      {uploadedFiles && uploadedFiles.length > 0 && (
+        <div className="uploaded-files-container" style={{ marginTop: '30px' }}>
+          <h4>Archivos cargados en servidor:</h4>
+          <ul className="uploaded-files-list" style={{ listStyle: 'none', paddingLeft: '0' }}>
+            {uploadedFiles.map((fname, index) => {
+              // Construct the URL to access the file via the backend's static serving
+              const fileUrl = `${axiosInstance.defaults.baseURL}/files/${area}/${id_proyecto}/${fname}`;
+              const isImage = /\.(jpe?g|png|gif)$/i.test(fname);
+
+              return (
+                <li key={index} className="uploaded-file-item" style={{ marginBottom: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '4px', display: 'flex', alignItems: 'center' }}>
+                  {isImage ? (
+                    <img
+                      src={fileUrl}
+                      alt={`Vista previa de ${fname}`}
+                      style={{ width: '60px', height: '60px', objectFit: 'cover', marginRight: '15px', borderRadius: '4px' }}
+                      onError={(e) => { e.target.style.display='none'; /* Hide if image fails to load */ }}
+                    />
+                  ) : (
+                    <div style={{ width: '60px', height: '60px', marginRight: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0', borderRadius: '4px', fontWeight: 'bold' }}>
+                      {fname.split('.').pop().toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ flexGrow: 1 }}>
+                    <a href={fileUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--color-primary)', fontWeight: '500' }}>
+                      {fname}
+                    </a>
+                  </div>
+                  <a href={fileUrl} download={fname} className="download-button" style={{ marginLeft: '15px', padding: '5px 10px', backgroundColor: 'var(--color-secondary)', color: 'white', textDecoration: 'none', borderRadius: '4px', fontSize: '0.9em' }}>
+                    Descargar
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
