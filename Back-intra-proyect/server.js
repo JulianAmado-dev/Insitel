@@ -1345,12 +1345,10 @@ app.get(
       );
 
       if (!mainFormRows || mainFormRows.length === 0) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "Formulario de verificación no encontrado para este proyecto.",
-          });
+        return res.status(404).json({
+          message:
+            "Formulario de verificación no encontrado para este proyecto.",
+        });
       }
       const formulario_verificacion = mainFormRows[0];
       const id_formulario_verificacion =
@@ -1469,11 +1467,9 @@ app.patch(
             ]);
           }
         }
-        res
-          .status(200)
-          .json({
-            message: "Formulario de verificación actualizado exitosamente.",
-          });
+        res.status(200).json({
+          message: "Formulario de verificación actualizado exitosamente.",
+        });
       });
     } catch (error) {
       console.error("Error en PATCH /form/verificacion/update:", error);
@@ -1481,6 +1477,230 @@ app.patch(
     }
   }
 );
+
+// --- Endpoint para listado simple de proyectos ---
+app.get(
+  "/api/proyectos/listado-simple", // Eliminado :area de la ruta
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    try {
+      // const { area } = req.params; // 'area' ya no se usa aquí
+      const [proyectos] = await db.execute(
+        "SELECT id_proyecto, nombre_proyecto FROM proyectos ORDER BY nombre_proyecto ASC" // Eliminado WHERE area = ?
+      );
+      res.status(200).json(proyectos);
+    } catch (error) {
+      console.error("Error en GET /api/proyectos/listado-simple:", error); // Log actualizado
+      next(error);
+    }
+  }
+);
+// --- Fin Endpoint listado simple de proyectos ---
+
+// --- Endpoints para Lecciones Aprendidas ---
+
+// GET todas las lecciones aprendidas
+app.get(
+  "/api/lecciones-aprendidas", // Eliminado :area de la ruta
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    try {
+      // const { area } = req.params; // 'area' ya no se usa aquí
+      const [lecciones] = await db.execute(
+        `
+        SELECT 
+          la.*, 
+          p.nombre_proyecto,
+          CONCAT(e.nombres, ' ', e.apellidos) AS nombre_creador
+        FROM lecciones_aprendidas la
+        LEFT JOIN proyectos p ON la.id_proyecto = p.id_proyecto
+        LEFT JOIN empleados e ON la.creado_por_id = e.id_empleado
+        ORDER BY la.fecha DESC 
+      ` // Eliminado WHERE la.area = ?
+      );
+      res.status(200).json(lecciones);
+    } catch (error) {
+      console.error("Error en GET /api/lecciones-aprendidas:", error); // Log sin :area
+      next(error);
+    }
+  }
+);
+
+// POST para crear una nueva lección aprendida
+app.post(
+  "/api/lecciones-aprendidas",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    try {
+      const {
+        id_proyecto,
+        titulo,
+        area_categoria,
+        fecha,
+        descripcion_situacion,
+        descripcion_impacto,
+        acciones_correctivas,
+        leccion_aprendida_recomendaciones,
+        reportado_por,
+        tipo_leccion,
+      } = req.body;
+      const creado_por_id = req.user.id_empleado;
+
+      if (
+        !id_proyecto ||
+        !titulo ||
+        !fecha ||
+        !descripcion_situacion ||
+        !descripcion_impacto ||
+        !acciones_correctivas ||
+        !leccion_aprendida_recomendaciones ||
+        !tipo_leccion
+      ) {
+        throw boom.badRequest(
+          "Faltan campos requeridos para crear la lección aprendida."
+        );
+      }
+
+      const [result] = await db.execute(
+        `INSERT INTO lecciones_aprendidas (
+          id_proyecto, creado_por_id, titulo, area_categoria, fecha, 
+          descripcion_situacion, descripcion_impacto, acciones_correctivas, 
+          leccion_aprendida_recomendaciones, reportado_por, tipo_leccion
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id_proyecto,
+          creado_por_id,
+          titulo,
+          area_categoria || null,
+          fecha,
+          descripcion_situacion,
+          descripcion_impacto,
+          acciones_correctivas,
+          leccion_aprendida_recomendaciones,
+          reportado_por || null,
+          tipo_leccion,
+        ]
+      );
+      const id_leccion_aprendida = result.insertId;
+      res.status(201).json({
+        id_leccion_aprendida,
+        message: "Lección aprendida creada exitosamente.",
+      });
+    } catch (error) {
+      console.error("Error en POST /api/lecciones-aprendidas:", error);
+      next(error);
+    }
+  }
+);
+
+// GET una lección aprendida específica por ID
+app.get(
+  "/api/lecciones-aprendidas/:id_leccion",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    try {
+      const { id_leccion } = req.params;
+      const [leccion] = await db.execute(
+        `SELECT 
+           la.*, 
+           p.nombre_proyecto,
+           CONCAT(e.nombres, ' ', e.apellidos) AS nombre_creador
+         FROM lecciones_aprendidas la
+         LEFT JOIN proyectos p ON la.id_proyecto = p.id_proyecto
+         LEFT JOIN empleados e ON la.creado_por_id = e.id_empleado
+         WHERE la.id_leccion_aprendida = ?`,
+        [id_leccion]
+      );
+      if (leccion.length === 0) {
+        throw boom.notFound("Lección aprendida no encontrada.");
+      }
+      res.status(200).json(leccion[0]);
+    } catch (error) {
+      console.error(
+        "Error en GET /api/lecciones-aprendidas/:id_leccion:",
+        error
+      );
+      next(error);
+    }
+  }
+);
+
+// PUT para actualizar una lección aprendida
+app.put(
+  "/api/lecciones-aprendidas/:id_leccion",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    try {
+      const { id_leccion } = req.params;
+      const {
+        id_proyecto,
+        titulo,
+        area_categoria,
+        fecha,
+        descripcion_situacion,
+        descripcion_impacto,
+        acciones_correctivas,
+        leccion_aprendida_recomendaciones,
+        reportado_por,
+        tipo_leccion,
+      } = req.body;
+      // const actualizado_por_id = req.user.id_empleado; // Podría usarse si se quiere registrar quién actualizó
+
+      if (
+        !id_proyecto ||
+        !titulo ||
+        !fecha ||
+        !descripcion_situacion ||
+        !descripcion_impacto ||
+        !acciones_correctivas ||
+        !leccion_aprendida_recomendaciones ||
+        !tipo_leccion
+      ) {
+        throw boom.badRequest(
+          "Faltan campos requeridos para actualizar la lección aprendida."
+        );
+      }
+
+      const [result] = await db.execute(
+        `UPDATE lecciones_aprendidas SET
+          id_proyecto = ?, titulo = ?, area_categoria = ?, fecha = ?, 
+          descripcion_situacion = ?, descripcion_impacto = ?, acciones_correctivas = ?, 
+          leccion_aprendida_recomendaciones = ?, reportado_por = ?, tipo_leccion = ?
+        WHERE id_leccion_aprendida = ?`,
+        [
+          id_proyecto,
+          titulo,
+          area_categoria || null,
+          fecha,
+          descripcion_situacion,
+          descripcion_impacto,
+          acciones_correctivas,
+          leccion_aprendida_recomendaciones,
+          reportado_por || null,
+          tipo_leccion,
+          id_leccion,
+        ]
+      );
+
+      if (result.affectedRows === 0) {
+        throw boom.notFound(
+          "Lección aprendida no encontrada o sin cambios para actualizar."
+        );
+      }
+      res
+        .status(200)
+        .json({ message: "Lección aprendida actualizada exitosamente." });
+    } catch (error) {
+      console.error(
+        "Error en PUT /api/lecciones-aprendidas/:id_leccion:",
+        error
+      );
+      next(error);
+    }
+  }
+);
+
+// --- Fin Endpoints Lecciones Aprendidas ---
 
 // --- New File Upload Endpoints as per Guide ---
 
@@ -1545,12 +1765,10 @@ app.get(
         if (err.code === "ENOENT") {
           // Directory does not exist
           console.log(`Directory not found for listing: ${dirPath}`);
-          return res
-            .status(404)
-            .json({
-              error: "Carpeta no encontrada o sin archivos.",
-              files: [],
-            });
+          return res.status(404).json({
+            error: "Carpeta no encontrada o sin archivos.",
+            files: [],
+          });
         }
         console.error(`Error reading directory ${dirPath}:`, err);
         return next(boom.internal("Error al leer la carpeta de archivos."));

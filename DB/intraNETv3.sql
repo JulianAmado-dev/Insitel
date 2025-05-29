@@ -459,6 +459,26 @@ CREATE TABLE `intraNet_DB`.`registro_verificacion_aprobacion` (
     FOREIGN KEY (`firma_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Registro de firmas y aprobaciones para una verificación';
 
+
+CREATE TABLE `intraNet_DB`.`lecciones_aprendidas`(
+	`id_leccion_aprendida` INT NOT NULL AUTO_INCREMENT,
+    `id_proyecto` INT NOT NULL,
+    `creado_por_id`INT NOT NULL,
+    `titulo` varchar(500) NOT NULL,
+    `area_categoria` varchar(200),
+    `fecha` DATETIME NOT NULL,
+    `descripcion_situacion` TEXT NOT NULL,
+    `descripcion_impacto` TEXT NOT NULL,
+    `acciones_correctivas` TEXT NOT NULL,
+    `leccion_aprendida_recomendaciones` TEXT NOT NULL,
+    `reportado_por` varchar(200),
+    `tipo_leccion` ENUM('Oportunidad', 'Amenaza') NULL,
+	
+    PRIMARY KEY(`id_leccion_aprendida`),
+    
+    FOREIGN KEY(`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
+    FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
+);
 -- ======================================================================
 -- INSERTS INICIALES (Catálogos) - EJEMPLO
 -- ======================================================================

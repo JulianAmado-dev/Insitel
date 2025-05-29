@@ -1,0 +1,527 @@
+/* Estilos para el componente LeccionesAprendidas */
+
+.lecciones-aprendidas-container {
+  padding: 20px 30px; /* Más padding horizontal */
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa; /* Un fondo ligeramente diferente */
+  min-height: 100vh;
+}
+
+/* Nuevo Título de Página Estilo Dirección IDi */
+.titulo-pagina-contenedor {
+  margin-bottom: 20px;
+}
+
+.logo-area-header {
+  display: flex;
+  align-items: center;
+  font-size: 1.4em; /* Tamaño de "Dirección IDi" */
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.logo-placeholder-header {
+  display: inline-block;
+  background-color: #ff6f00; /* Naranja similar a la referencia */
+  color: white;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-right: 12px;
+  font-weight: bold;
+  font-size: 0.9em; /* Tamaño de "DI" */
+}
+
+.linea-separadora-header {
+  border: 0;
+  height: 2px; /* Grosor de la línea */
+  background-color: #007bff; /* Azul similar a la referencia */
+  margin-bottom: 20px; /* Espacio después de la línea */
+}
+
+
+/* Cabecera de la Página (Debajo del título Dirección IDi) */
+.pagina-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  /* border-bottom: 1px solid #dee2e6; /* Borde sutil - Se puede quitar si la línea azul ya separa suficiente */
+}
+
+.pagina-cabecera h1 {
+  color: #212529; /* Negro más suave */
+  font-size: 1.8em; /* Ajustar según referencia */
+  font-weight: 600;
+  margin: 0;
+  border-bottom: none; /* Quitar borde inferior previo */
+  padding-bottom: 0;
+  display: flex; /* Para alinear el icono de estrella */
+  align-items: center;
+}
+
+.pagina-cabecera .acciones-cabecera button {
+  margin-left: 10px;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-nueva-leccion {
+  background-color: #28a745; /* Verde similar a referencia */
+  color: white;
+  border: none;
+  font-weight: 500;
+  display: flex; /* Para alinear icono y texto */
+  align-items: center;
+  gap: 5px; /* Espacio entre icono y texto */
+}
+.btn-nueva-leccion:hover {
+  background-color: #218838;
+}
+
+/* Contenedor de Filtros y Vistas */
+.filtros-y-vistas-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.filtros-principales {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Espacio entre búsqueda y selectores */
+}
+
+.filtro-busqueda-principal {
+  padding: 10px 15px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  font-size: 0.95em;
+  width: 350px; /* Ancho similar a referencia */
+  background-color: #fff; /* Fondo blanco */
+}
+.filtro-busqueda-principal::placeholder {
+  color: #6c757d;
+}
+
+.filtros-selectores {
+  display: flex;
+  gap: 10px;
+}
+
+.selector-filtro {
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  background-color: #fff;
+  font-size: 0.9em;
+  color: #495057;
+  min-width: 180px; /* Ancho mínimo para selectores */
+}
+
+.controles-vista button {
+  padding: 8px 15px;
+  margin-left: 8px;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  color: #495057;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.controles-vista button.activo {
+  background-color: #007bff; /* Azul para activo, similar a referencia */
+  color: white;
+  border-color: #007bff;
+}
+.controles-vista button:not(.activo):hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+
+/* Estilos de la tabla (heredados y ajustados) */
+.tabla-responsive-container {
+  overflow-x: auto;
+  background-color: #ffffff;
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  padding: 0; /* Quitar padding si la tabla ocupa todo */
+}
+
+.tabla-lecciones {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-lecciones th,
+.tabla-lecciones td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 0.9em; /* Ligeramente más pequeño para más densidad */
+}
+
+.tabla-lecciones th {
+  background-color: #f8f9fa; /* Fondo muy ligero para cabeceras */
+  color: #495057; /* Color de texto más oscuro para cabeceras */
+  font-weight: 600; /* Un poco más de peso */
+  white-space: nowrap;
+  border-top: 1px solid #dfe6e9; /* Línea superior para cabeceras */
+}
+.tabla-lecciones th:first-child {
+  border-top-left-radius: 7px; /* Redondear esquina si es la primera cabecera */
+}
+.tabla-lecciones th:last-child {
+  border-top-right-radius: 7px; /* Redondear esquina si es la última cabecera */
+}
+
+
+.tabla-lecciones .sortable-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex; /* Para alinear icono de ordenamiento */
+  align-items: center;
+}
+.tabla-lecciones .sortable-header:hover {
+  background-color: #e9ecef;
+}
+.tabla-lecciones .sortable-header svg { /* Estilo para iconos de ordenamiento */
+  margin-left: 5px;
+  opacity: 0.7;
+}
+
+
+.tabla-lecciones tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.tabla-lecciones td span[role="button"] {
+  color: #007bff;
+  text-decoration: none; /* Quitar subrayado por defecto, añadir en hover si se desea */
+  cursor: pointer;
+  font-weight: 500;
+}
+.tabla-lecciones td span[role="button"]:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+.mensaje-no-datos {
+  text-align: center;
+  padding: 30px; /* Más padding */
+  color: #6c757d;
+  font-style: italic;
+  background-color: #fff;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.paginacion-controles {
+  display: flex;
+  justify-content: flex-end; /* Alineado a la derecha como en la referencia */
+  align-items: center;
+  padding: 15px 0;
+  margin-top: 20px;
+}
+
+.paginacion-controles button,
+.paginacion-controles select {
+  padding: 8px 12px;
+  margin: 0 3px; /* Menos margen */
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.paginacion-controles button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.paginacion-controles span {
+  margin: 0 10px;
+  font-size: 0.9em;
+  color: #495057;
+}
+
+/* Vista de Tarjetas */
+.vista-tarjetas-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Ajustar minmax para tarjetas */
+  gap: 20px;
+  padding-top: 10px;
+}
+
+.leccion-card {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.2s ease-in-out;
+}
+.leccion-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
+.leccion-card .card-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.leccion-card .tag-tipo,
+.leccion-card .tag-area {
+  font-size: 0.8em;
+  padding: 4px 8px;
+  border-radius: 12px; /* Tags más redondeados */
+  font-weight: 500;
+}
+
+.leccion-card .tag-tipo.oportunidad {
+  background-color: #d4edda; /* Verde claro */
+  color: #155724;
+}
+.leccion-card .tag-tipo.amenaza {
+  background-color: #f8d7da; /* Rojo claro */
+  color: #721c24;
+}
+
+.leccion-card .tag-area {
+  background-color: #e2e3e5;
+  color: #495057;
+}
+
+.leccion-card h3 {
+  font-size: 1.2em;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.leccion-card .card-proyecto {
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.leccion-card .card-descripcion-corta {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  flex-grow: 1; /* Para que ocupe espacio disponible */
+}
+
+.leccion-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85em;
+  color: #777;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 10px;
+  margin-top: auto; /* Empuja el footer hacia abajo */
+}
+
+.leccion-card .btn-ver-detalles {
+  background-color: transparent;
+  color: #007bff;
+  border: none;
+  padding: 5px 0; /* Solo padding vertical si es un enlace de texto */
+  cursor: pointer;
+  font-weight: bold;
+}
+.leccion-card .btn-ver-detalles:hover {
+  text-decoration: underline;
+}
+
+
+/* Estilos para Modales (heredados y ajustados) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  width: 900px; /* Ancho del modal aumentado */
+  max-width: 95%; 
+  background-color: white;
+  border: 1px solid #bdc3c7;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  padding: 30px;
+  z-index: 1000;
+  border-radius: 8px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.8em;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group.horizontal-group { /* Para agrupar campos en la misma línea */
+  display: flex;
+  gap: 20px; /* Espacio entre los divs hijos */
+}
+.form-group.horizontal-group > div { /* Cada campo en el grupo horizontal */
+  flex: 1; /* Distribuye el espacio equitativamente por defecto para dos columnas */
+}
+
+.form-group.horizontal-group.three-cols > div {
+  flex-basis: calc(33.333% - 13.33px); /* (gap * (n-1)) / n  => (20px * 2) / 3 = 13.33px */
+}
+
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #34495e;
+  font-size: 0.95em;
+}
+
+.form-group select,
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 1em;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.form-group select:focus,
+.form-group input[type="text"]:focus,
+.form-group input[type="date"]:focus,
+.form-group textarea:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  margin-left: 10px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-buttons .btn-guardar {
+  background-color: #27ae60;
+  color: white;
+}
+.modal-buttons .btn-guardar:hover {
+  background-color: #229954;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.modal-buttons .btn-guardar:disabled {
+  background-color: #a0e0b8;
+  cursor: not-allowed;
+}
+
+.modal-buttons .btn-cancelar {
+  background-color: #e74c3c;
+  color: white;
+}
+.modal-buttons .btn-cancelar:hover {
+  background-color: #c0392b;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilos para secciones del modal (inspirado en referencia) */
+.modal-section {
+  border: 1px solid #e0e0e0;
+  border-left-width: 4px; /* Borde de color a la izquierda */
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background-color: #fff; /* Fondo blanco para la sección */
+}
+
+.modal-section-title {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+.modal-section-title .icon-placeholder,
+.modal-section-title svg { /* Aplicar a la clase y directamente a svg si se usa react-icons */
+  margin-right: 10px;
+  font-size: 1.3em; /* Ajustar tamaño del icono */
+  vertical-align: middle; 
+}
+
+/* Colores de borde para secciones (ejemplos) */
+.modal-section.info-basica { border-left-color: #3498db; /* Azul */ }
+.modal-section.descripcion-situacion { border-left-color: #f39c12; /* Naranja */ }
+.modal-section.impacto-proyecto { border-left-color: #e74c3c; /* Rojo */ }
+.modal-section.acciones-implementadas { border-left-color: #9b59b6; /* Morado */ }
+.modal-section.leccion-final { border-left-color: #2ecc71; /* Verde */ }
+
+.icon-placeholder svg { 
+  vertical-align: middle;
+}

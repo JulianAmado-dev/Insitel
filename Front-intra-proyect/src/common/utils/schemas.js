@@ -377,6 +377,41 @@ export { alcanceWizardValidation };
 export { wizardValidationSchemas };
 export { presupuestoValidationSchema };
 
+// --- Esquema para Lecciones Aprendidas ---
+export const leccionAprendidaValidationSchema = Yup.object().shape({
+  titulo: Yup.string()
+    .required("El título es requerido.")
+    .max(500, "El título no puede exceder los 500 caracteres."),
+  area_categoria: Yup.string()
+    .nullable()
+    .max(200, "El área/categoría no puede exceder los 200 caracteres."),
+  fecha: Yup.date()
+    .required("La fecha es requerida.")
+    .typeError("Por favor, ingrese una fecha válida."),
+  descripcion_situacion: Yup.string()
+    .required("La descripción de la situación es requerida.")
+    .min(10, "La descripción de la situación debe tener al menos 10 caracteres."),
+  descripcion_impacto: Yup.string()
+    .required("La descripción del impacto es requerida.")
+    .min(10, "La descripción del impacto debe tener al menos 10 caracteres."),
+  acciones_correctivas: Yup.string()
+    .required("Las acciones correctivas/preventivas son requeridas.")
+    .min(10, "Las acciones correctivas/preventivas deben tener al menos 10 caracteres."),
+  leccion_aprendida_recomendaciones: Yup.string()
+    .required("La lección aprendida/recomendaciones son requeridas.")
+    .min(10, "La lección aprendida/recomendaciones deben tener al menos 10 caracteres."),
+  reportado_por: Yup.string()
+    .nullable()
+    .max(200, "El campo 'reportado por' no puede exceder los 200 caracteres."),
+  tipo_leccion: Yup.string()
+    .required("El tipo de lección es requerido.")
+    .oneOf(['Oportunidad', 'Amenaza'], "Seleccione un tipo de lección válido."),
+  id_proyecto: Yup.number()
+    .required("El proyecto es requerido.")
+    .positive("ID de proyecto inválido")
+    .integer("ID de proyecto inválido"),
+});
+
 // --- Esquema para Formulario de Verificación ---
 export const verificacionValidationSchema = Yup.object().shape({
   version_verificada: Yup.string().required("La versión verificada es requerida.").max(100, "Máximo 100 caracteres."),
