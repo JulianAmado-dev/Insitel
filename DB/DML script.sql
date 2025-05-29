@@ -338,3 +338,128 @@ INSERT INTO `intraNet_DB`.`registro_verificacion_aprobacion` (
 ) VALUES
 (1, '2023-10-20', 'v1.0.0', 'Aprobado con observaciones menores', 'Gerente de Proyecto', 1),
 (1, '2023-10-21', 'v1.0.1', 'Correcciones realizadas y verificadas', 'Arquitecto Técnico', 2);
+-- Ejemplo 1: Lección tipo "Oportunidad" con creador 1
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  3, 1, 
+  'Optimización de recursos en proyecto A', 
+  'Gestión de Proyectos', 
+  '2023-05-15 10:30:00', 
+  'Falta de coordinación entre equipos causó retrasos.', 
+  'Impacto en cronograma de entrega.', 
+  'Implementar reuniones diarias de seguimiento.', 
+  'Documentar procesos para futuros proyectos.', 
+  'Ana López', 
+  'Oportunidad'
+);
+
+-- Ejemplo 2: Lección tipo "Amenaza" con creador 2
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  7, 2, 
+  'Fallo técnico en sistema crítico', 
+  'Tecnología', 
+  '2023-08-22 14:45:00', 
+  'Error en servidor causó interrupción de servicios.', 
+  'Pérdida temporal de acceso a datos.', 
+  'Migrar a infraestructura redundante.', 
+  'Realizar auditorías técnicas periódicas.', 
+  'Carlos Pérez', 
+  'Amenaza'
+);
+
+-- Ejemplo 3: Lección tipo "Oportunidad" con creador 2
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  2, 2, 
+  'Mejora en comunicación interna', 
+  'Recursos Humanos', 
+  '2024-01-10 09:15:00', 
+  'Barreras de comunicación entre departamentos.', 
+  'Reducción de eficiencia operativa.', 
+  'Adoptar herramientas colaborativas (ej: Slack).', 
+  'Capacitar al equipo en comunicación efectiva.', 
+  'Laura Gómez', 
+  'Oportunidad'
+);
+
+-- Ejemplo 4: Lección tipo "Amenaza" con creador 1
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  5, 1, 
+  'Automatización de procesos manuales', 
+  'Innovación', 
+  '2024-03-05 16:20:00', 
+  'Procedimientos repetitivos generaron errores humanos.', 
+  'Costos elevados por corrección de errores.', 
+  'Implementar scripts automatizados.', 
+  'Evaluar ROI de herramientas de automatización.', 
+  'Miguel Torres', 
+  'Amenaza'
+);
+
+-- Ejemplo 5: Lección tipo "Oportunidad" con creador 2
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  9, 2, 
+  'Brecha de seguridad en base de datos', 
+  'Seguridad IT', 
+  '2024-06-18 11:50:00', 
+  'Acceso no autorizado a datos sensibles.', 
+  'Riesgo legal y reputacional.', 
+  'Actualizar políticas de contraseñas y auditoría.', 
+  'Contratar consultoría especializada en ciberseguridad.', 
+  'Elena Fernández', 
+  'Oportunidad'
+);
+
+-- Ejemplo 6: Lección tipo "Amenaza" con creador 1
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  1, 1, 
+  'Falta de documentación técnica', 
+  'Gestión de Conocimiento', 
+  '2024-09-30 08:40:00', 
+  'Ausencia de manuales actualizados para nuevos empleados.', 
+  'Demora en capacitación y onboarding.', 
+  'Crear repositorio centralizado de documentación.', 
+  'Establecer proceso de revisión semestral.', 
+  'Javier Ruiz', 
+  'Amenaza'
+);
+
+-- Ejemplo 7: Lección tipo "Oportunidad" con creador 2
+INSERT INTO `intraNet_DB`.`lecciones_aprendidas` (
+  `id_proyecto`, `creado_por_id`, `titulo`, `area_categoria`, `fecha`, 
+  `descripcion_situacion`, `descripcion_impacto`, `acciones_correctivas`, 
+  `leccion_aprendida_recomendaciones`, `reportado_por`, `tipo_leccion`
+) VALUES (
+  4, 2, 
+  'Sobrecarga de personal en proyecto crítico', 
+  'Gestión de Recursos', 
+  '2025-02-14 13:25:00', 
+  'Asignación excesiva de tareas a empleados clave.', 
+  'Riesgo de burnout y disminución de productividad.', 
+  'Reasignar tareas y contratar soporte temporal.', 
+  'Implementar herramientas de gestión de carga laboral.', 
+  'Javier Ruiz', 
+  'Oportunidad'
+);

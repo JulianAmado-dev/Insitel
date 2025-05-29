@@ -463,7 +463,7 @@ CREATE TABLE `intraNet_DB`.`registro_verificacion_aprobacion` (
 CREATE TABLE `intraNet_DB`.`lecciones_aprendidas`(
 	`id_leccion_aprendida` INT NOT NULL AUTO_INCREMENT,
     `id_proyecto` INT NOT NULL,
-    `creado_por_id`INT NOT NULL,
+    `creado_por_id`INT NULL,
     `titulo` varchar(500) NOT NULL,
     `area_categoria` varchar(200),
     `fecha` DATETIME NOT NULL,

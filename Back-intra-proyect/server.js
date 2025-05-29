@@ -1504,23 +1504,36 @@ app.get(
   "/api/lecciones-aprendidas", // Eliminado :area de la ruta
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
+    console.log("GET /api/lecciones-aprendidas: User from JWT ->", req.user); // Log user
     try {
       // const { area } = req.params; // 'area' ya no se usa aquí
-      const [lecciones] = await db.execute(
-        `
+      const query = `
         SELECT 
-          la.*, 
+          la.id_leccion_aprendida,
+          la.id_proyecto,
+          la.creado_por_id,
+          la.titulo,
+          la.area_categoria,
+          la.fecha,
+          la.descripcion_situacion,
+          la.descripcion_impacto,
+          la.acciones_correctivas,
+          la.leccion_aprendida_recomendaciones,
+          la.reportado_por,
+          la.tipo_leccion,
           p.nombre_proyecto,
-          CONCAT(e.nombres, ' ', e.apellidos) AS nombre_creador
+          CONCAT(e.nombres, ' ', e.apellidos) AS creado_por_nombre 
         FROM lecciones_aprendidas la
         LEFT JOIN proyectos p ON la.id_proyecto = p.id_proyecto
         LEFT JOIN empleados e ON la.creado_por_id = e.id_empleado
-        ORDER BY la.fecha DESC 
-      ` // Eliminado WHERE la.area = ?
-      );
+        ORDER BY la.fecha DESC;
+      `;
+      console.log("Executing query for /api/lecciones-aprendidas:", query);
+      const [lecciones] = await db.execute(query);
+      console.log("GET /api/lecciones-aprendidas: Query successful, number of lessons:", lecciones.length);
       res.status(200).json(lecciones);
     } catch (error) {
-      console.error("Error en GET /api/lecciones-aprendidas:", error); // Log sin :area
+      console.error("Error in GET /api/lecciones-aprendidas:", error.message, error.stack); // Log sin :area
       next(error);
     }
   }
