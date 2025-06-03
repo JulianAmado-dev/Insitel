@@ -23,6 +23,8 @@
 
 .logo-placeholder-header {
   display: inline-block;
+  width: 46px;
+  height: 46px;
   background-color: #ff6f00; /* Naranja similar a la referencia */
   color: white;
   padding: 8px 10px;
@@ -38,7 +40,6 @@
   background-color: #007bff; /* Azul similar a la referencia */
   margin-bottom: 20px; /* Espacio después de la línea */
 }
-
 
 /* Cabecera de la Página (Debajo del título Dirección IDi) */
 .pagina-cabecera {
@@ -92,7 +93,7 @@
   padding: 15px;
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .filtros-principales {
@@ -107,6 +108,7 @@
   border-radius: 5px;
   font-size: 0.95em;
   width: 350px; /* Ancho similar a referencia */
+  max-width: 350px;
   background-color: #fff; /* Fondo blanco */
 }
 .filtro-busqueda-principal::placeholder {
@@ -137,7 +139,8 @@
   border-radius: 5px;
   cursor: pointer;
   font-size: 0.9em;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .controles-vista button.activo {
@@ -150,14 +153,13 @@
   border-color: #adb5bd;
 }
 
-
 /* Estilos de la tabla (heredados y ajustados) */
 .tabla-responsive-container {
   overflow-x: auto;
   background-color: #ffffff;
   border: 1px solid #dfe6e9;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   padding: 0; /* Quitar padding si la tabla ocupa todo */
 }
 
@@ -188,7 +190,6 @@
   border-top-right-radius: 7px; /* Redondear esquina si es la última cabecera */
 }
 
-
 .tabla-lecciones .sortable-header {
   cursor: pointer;
   user-select: none;
@@ -198,11 +199,11 @@
 .tabla-lecciones .sortable-header:hover {
   background-color: #e9ecef;
 }
-.tabla-lecciones .sortable-header svg { /* Estilo para iconos de ordenamiento */
+.tabla-lecciones .sortable-header svg {
+  /* Estilo para iconos de ordenamiento */
   margin-left: 5px;
   opacity: 0.7;
 }
-
 
 .tabla-lecciones tbody tr:hover {
   background-color: #f1f3f5;
@@ -260,7 +261,10 @@
 /* Vista de Tarjetas */
 .vista-tarjetas-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Ajustar minmax para tarjetas */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(320px, 1fr)
+  ); /* Ajustar minmax para tarjetas */
   gap: 20px;
   padding-top: 10px;
 }
@@ -270,16 +274,15 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   transition: box-shadow 0.2s ease-in-out;
 }
 .leccion-card:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 
 .leccion-card .card-cabecera {
   display: flex;
@@ -354,7 +357,6 @@
   text-decoration: underline;
 }
 
-
 /* Estilos para Modales (heredados y ajustados) */
 .modal-overlay {
   position: fixed;
@@ -362,7 +364,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   z-index: 999;
   display: flex;
   align-items: center;
@@ -372,10 +374,10 @@
 
 .modal-content {
   width: 900px; /* Ancho del modal aumentado */
-  max-width: 95%; 
+  max-width: 95%;
   background-color: white;
   border: 1px solid #bdc3c7;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   padding: 30px;
   z-index: 1000;
   border-radius: 8px;
@@ -395,18 +397,21 @@
 .form-group {
   margin-bottom: 20px;
 }
-.form-group.horizontal-group { /* Para agrupar campos en la misma línea */
+.form-group.horizontal-group {
+  /* Para agrupar campos en la misma línea */
   display: flex;
   gap: 20px; /* Espacio entre los divs hijos */
 }
-.form-group.horizontal-group > div { /* Cada campo en el grupo horizontal */
+.form-group.horizontal-group > div {
+  /* Cada campo en el grupo horizontal */
   flex: 1; /* Distribuye el espacio equitativamente por defecto para dos columnas */
 }
 
 .form-group.horizontal-group.three-cols > div {
-  flex-basis: calc(33.333% - 13.33px); /* (gap * (n-1)) / n  => (20px * 2) / 3 = 13.33px */
+  flex-basis: calc(
+    33.333% - 13.33px
+  ); /* (gap * (n-1)) / n  => (20px * 2) / 3 = 13.33px */
 }
-
 
 .form-group label {
   display: block;
@@ -474,7 +479,7 @@
 }
 .modal-buttons .btn-guardar:hover {
   background-color: #229954;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .modal-buttons .btn-guardar:disabled {
   background-color: #a0e0b8;
@@ -487,7 +492,7 @@
 }
 .modal-buttons .btn-cancelar:hover {
   background-color: #c0392b;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Estilos para secciones del modal (inspirado en referencia) */
@@ -509,18 +514,29 @@
   align-items: center;
 }
 .modal-section-title .icon-placeholder,
-.modal-section-title svg { /* Aplicar a la clase y directamente a svg si se usa react-icons */
+.modal-section-title svg {
+  /* Aplicar a la clase y directamente a svg si se usa react-icons */
   margin-right: 10px;
   font-size: 1.3em; /* Ajustar tamaño del icono */
-  vertical-align: middle; 
+  vertical-align: middle;
 }
 
 /* Colores de borde para secciones (ejemplos) */
-.modal-section.info-basica { border-left-color: #3498db !important; /* Azul */ }
-.modal-section.descripcion-situacion { border-left-color: #f39c12 !important; /* Naranja */ }
-.modal-section.impacto-proyecto { border-left-color: #e74c3c !important; /* Rojo */ }
-.modal-section.acciones-implementadas { border-left-color: #9b59b6 !important; /* Morado */ }
-.modal-section.leccion-final { border-left-color: #2ecc71 !important; /* Verde */ }
+.modal-section.info-basica {
+  border-left-color: #3498db !important; /* Azul */
+}
+.modal-section.descripcion-situacion {
+  border-left-color: #f39c12 !important; /* Naranja */
+}
+.modal-section.impacto-proyecto {
+  border-left-color: #e74c3c !important; /* Rojo */
+}
+.modal-section.acciones-implementadas {
+  border-left-color: #9b59b6 !important; /* Morado */
+}
+.modal-section.leccion-final {
+  border-left-color: #2ecc71 !important; /* Verde */
+}
 
 .icon-placeholder svg {
   vertical-align: middle;
@@ -558,7 +574,7 @@
 .modal-content.modal-v2 {
   padding: 0; /* Remove old padding, new sections will handle it */
   border: none; /* Remove old border */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Softer, larger shadow */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Softer, larger shadow */
   border-radius: 12px; /* More rounded corners */
   overflow: hidden; /* To ensure child border-radius is respected */
   display: flex;
@@ -596,7 +612,8 @@
   gap: 15px;
 }
 
-.btn-link-v2 { /* Style for "Registro de Conocimiento" if it becomes a button */
+.btn-link-v2 {
+  /* Style for "Registro de Conocimiento" if it becomes a button */
   background: none;
   border: 1px solid #ced4da;
   color: #495057;
@@ -632,13 +649,12 @@
 
 .modal-info-icon-v2 {
   position: absolute;
-  top: 20px;
-  right: 30px;
+  top: 40px;
+  right: 50px;
   font-size: 1.5em;
   color: #007bff; /* Blue info icon */
   cursor: help; /* Indicate it's for help/info */
 }
-
 
 /* Overriding old modal section styles for V2 if needed, or use new ones */
 .modal-v2 .modal-section {
@@ -658,30 +674,40 @@
   display: flex;
   align-items: center;
 }
-.modal-v2 .modal-section-title svg { /* Icons in section titles */
+.modal-v2 .modal-section-title svg {
+  /* Icons in section titles */
   margin-right: 10px;
   font-size: 1.2em; /* Consistent icon size */
   /* color: #6c757d; */ /* Color de icono neutro/grisáceo - Se sobreescribirá abajo */
 }
 
 /* Specific icon colors for modal sections to match border - Restaurado */
-.modal-v2 .modal-section.info-basica .modal-section-title svg { color: #3498db; } /* Blue */
-.modal-v2 .modal-section.descripcion-situacion .modal-section-title svg { color: #f39c12; } /* Orange */
-.modal-v2 .modal-section.impacto-proyecto .modal-section-title svg { color: #e74c3c; } /* Red */
-.modal-v2 .modal-section.acciones-implementadas .modal-section-title svg { color: #9b59b6; } /* Purple */
-.modal-v2 .modal-section.leccion-final .modal-section-title svg { color: #2ecc71; } /* Green */
+.modal-v2 .modal-section.info-basica .modal-section-title svg {
+  color: #3498db;
+} /* Blue */
+.modal-v2 .modal-section.descripcion-situacion .modal-section-title svg {
+  color: #f39c12;
+} /* Orange */
+.modal-v2 .modal-section.impacto-proyecto .modal-section-title svg {
+  color: #e74c3c;
+} /* Red */
+.modal-v2 .modal-section.acciones-implementadas .modal-section-title svg {
+  color: #9b59b6;
+} /* Purple */
+.modal-v2 .modal-section.leccion-final .modal-section-title svg {
+  color: #2ecc71;
+} /* Green */
 
 /* Form group adjustments for V2 */
 .modal-v2 .form-group {
   margin-bottom: 18px;
 }
 /* .modal-v2 .form-group.horizontal-group { */ /* Ya no se usa para la estructura principal de Información Básica */
-  /* gap: 25px; */
+/* gap: 25px; */
 /* } */
 /* .modal-v2 .form-group.horizontal-group.two-cols > div { */ /* Ya no se usa para la estructura principal de Información Básica */
-  /* flex-basis: calc(50% - 12.5px); */
+/* flex-basis: calc(50% - 12.5px); */
 /* } */
-
 
 .modal-v2 .form-group label {
   display: flex; /* Align icon and text */
@@ -717,14 +743,13 @@
   color: #495057; /* Change color when focused or has valid date */
 }
 
-
 .modal-v2 .form-group select:focus,
 .modal-v2 .form-group input[type="text"]:focus,
 .modal-v2 .form-group input[type="date"]:focus,
 .modal-v2 .form-group textarea:focus {
   border-color: #80bdff; /* Lighter blue focus */
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Standard Bootstrap focus shadow */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Standard Bootstrap focus shadow */
 }
 
 .modal-v2 .form-group textarea {

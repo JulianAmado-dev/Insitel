@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react"; // Import React Hooks
-// import { useParams } from 'react-router-dom'; // Se usará cuando se integre el enrutamiento
+import { useParams } from "react-router-dom"; // Se usará cuando se integre el enrutamiento
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,6 +31,7 @@ import {
 } from "react-icons/fi";
 import { FaStar, FaSort } from "react-icons/fa";
 import "./LeccionesAprendidas.css";
+import { max } from "lodash";
 
 // --- API URLs ---
 const LECCIONES_API_URL = "/api/lecciones-aprendidas";
@@ -60,6 +61,7 @@ function LeccionesAprendidas() {
   const [leccionAEditar, setLeccionAEditar] = useState(null);
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
+  const { area } = useParams(); // Assuming area is passed as a URL parameter
 
   // Use the stable ToastInstance
   const Toast = ToastInstance;
@@ -328,7 +330,7 @@ function LeccionesAprendidas() {
             }}
             role="button"
             tabIndex={0}
-            onKeyPress={(e) => {
+            onKeyUp={(e) => {
               if (e.key === "Enter") handleOpenEditarModal(info.row.original);
             }}
           >
@@ -394,7 +396,8 @@ function LeccionesAprendidas() {
     <div className="lecciones-aprendidas-container">
       <div className="titulo-pagina-contenedor">
         <div className="logo-area-header">
-          <span className="logo-placeholder-header">DI</span> Dirección IDi
+          <span className="logo-placeholder-header">DI</span>{" "}
+          {`Dirección - ${area}`}
         </div>
         <hr className="linea-separadora-header" />
       </div>
@@ -412,7 +415,7 @@ function LeccionesAprendidas() {
         <div className="acciones-cabecera">
           <button onClick={handleOpenCrearModal} className="btn-nueva-leccion">
             <FiPlusCircle
-              style={{ marginRight: "5px", verticalAlign: "middle" }}
+              style={{ marginRight: "5px", verticalAlign: "middle" , width: "20px", height: "20px" }}
             />{" "}
             Nueva lección
           </button>
@@ -769,7 +772,7 @@ function LeccionesAprendidas() {
                         Información Básica
                       </h3>
                       <div className="form-group">
-                        <label htmlFor="titulo_crear">
+                        <label htmlFor="titulo_crear" style={{ display: "flex", alignItems: "left" }}>
                           <FiFileText /> Título:
                         </label>
                         <Field
@@ -777,6 +780,7 @@ function LeccionesAprendidas() {
                           name="titulo"
                           id="titulo_crear"
                           placeholder="Ingrese un título descriptivo para la lección aprendida"
+                          style={{ width: "100%", maxWidth: "600px" }}
                         />
                         <ErrorMessage
                           name="titulo"
