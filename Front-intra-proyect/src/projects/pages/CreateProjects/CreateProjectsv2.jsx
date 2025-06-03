@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback } from "react"; // Removed useContext
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import "./CreateProjectsv2.css";
-import {axiosInstance} from '@api/AxiosInstance'
-import { useParams } from "react-router-dom";
+import {axiosInstance} from '@api/AxiosInstance';
+import { useParams } from "react-router-dom"; // Removed useNavigate
+import { useFormStatus } from "@contexts/FormStatusContext"; // Import the custom hook
 
 function CreateProyects() {
   const [progressValue, setProgressValue] = useState("0%");
   const {area} =  useParams();
+  // const navigate = useNavigate(); // For redirecting after creation - currently unused
+  const { updateFormStatus } = useFormStatus(); // Use the context
+
   // Esquema de validación con Yup (sin área ni miembros)
   const validationSchema = Yup.object({
     nombre_proyecto: Yup.string()
@@ -80,16 +84,24 @@ function CreateProyects() {
               area: area,
             }}
             validationSchema={validationSchema}
-            onSubmit={(values, { setSubmitting, resetForm }) => {
-              // Simulación de envío
+            onSubmit={async (values, { setSubmitting, resetForm }) => {
+              updateFormStatus('project_creation', 'in-progress');
               console.log("Datos del proyecto:", values);
-              setTimeout(() => {
-                crearProyecto(values);
-                alert("Proyecto creado con éxito!");
+              try {
+                const response = await crearProyecto(values); // Wait for the promise
+                alert("Proyecto creado con éxito! ID: " + response.id_proyecto);
+                updateFormStatus('project_creation', 'completed');
                 resetForm();
-                setSubmitting(false);
                 setProgressValue("0%");
-              }, 2000);
+                // Optionally navigate to the new project's page or a success page
+                // navigate(`/dashboard/${area}/project/${response.id_proyecto}`); 
+              } catch (error) {
+                console.error("Error al crear proyecto:", error);
+                alert("Error al crear el proyecto. Inténtalo de nuevo.");
+                updateFormStatus('project_creation', 'error');
+              } finally {
+                setSubmitting(false);
+              }
             }}
           >
             {({

@@ -6,6 +6,7 @@ import { ProjectsRoutes } from "@projects/routes/ProjectsRoutes";
 import { DashboardContent } from "@content/pages/DashboardContent";
 import { UserRegistration } from "@employees/pages/UserRegistration";
 import { AuthProvider } from "@contexts/AuthContext";
+import { FormStatusProvider } from "./common/contexts/FormStatusContext"; // Import the new provider
 import LandingPage from "./common/pages/LandingPage/pages/LandingPage";
 import NotFoundPage from "./common/pages/NotFound/NotFound";
 import { PrivateRoute } from "./common/components/PrivateRoute";
@@ -16,9 +17,10 @@ function App() {
     <>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <FormStatusProvider> {/* Wrap Routes with FormStatusProvider */}
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="*" element={<NotFoundPage />} />
             <Route path="/auth/*" element={<AuthRoutes />} />
 
@@ -34,7 +36,8 @@ function App() {
                 }
               />
             </Route>
-          </Routes>
+            </Routes>
+          </FormStatusProvider> {/* Close FormStatusProvider */}
         </AuthProvider>
       </BrowserRouter>
     </>

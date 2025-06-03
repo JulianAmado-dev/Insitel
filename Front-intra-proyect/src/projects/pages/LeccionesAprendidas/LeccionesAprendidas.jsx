@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react"; // Import React Hooks
-import { useParams } from "react-router-dom"; // Se usará cuando se integre el enrutamiento
+import { useParams, useSearchParams } from "react-router-dom"; // Added useSearchParams
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,7 +31,7 @@ import {
 } from "react-icons/fi";
 import { FaStar, FaSort } from "react-icons/fa";
 import "./LeccionesAprendidas.css";
-import { max } from "lodash";
+// import { max } from "lodash"; // Removed unused import
 
 // --- API URLs ---
 const LECCIONES_API_URL = "/api/lecciones-aprendidas";
@@ -144,6 +144,7 @@ function LeccionesAprendidas() {
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedTipo, setSelectedTipo] = useState("");
   const [selectedProyectoId, setSelectedProyectoId] = useState("");
+  const [searchParams] = useSearchParams(); // For reading URL query parameters
 
   // Estados para paginación de tarjetas
   const [currentPageCards, setCurrentPageCards] = useState(1);
@@ -159,14 +160,21 @@ function LeccionesAprendidas() {
           fetchLeccionesData(),
           fetchProyectosListData(),
         ]);
-        // console.log("Fetched Lecciones in loadInitialData:", fetchedLecciones);
         setAllLecciones(fetchedLecciones);
-        setLecciones(fetchedLecciones);
+        // setLecciones(fetchedLecciones); // Filtering will handle this
         setProyectosLista(fetchedProyectos);
+
+        // Check for projectId from URL and set it for initial filter
+        const projectIdFromUrl = searchParams.get("proyecto");
+        if (projectIdFromUrl) {
+          setSelectedProyectoId(projectIdFromUrl);
+        } else {
+           setLecciones(fetchedLecciones); // If no project filter, show all (or apply other default filters)
+        }
+
       } catch (err) {
         const errorMessage = err.message || "Error al cargar datos iniciales.";
         setError(errorMessage);
-        // Toast is stable now, so it's safe to use here without causing re-runs from itself
         Toast.fire({
           icon: "error",
           title: `Error al cargar datos: ${errorMessage}`,
@@ -177,11 +185,11 @@ function LeccionesAprendidas() {
       }
     };
     loadInitialData();
-  }, [fetchLeccionesData, fetchProyectosListData, Toast]); // Toast is now stable
+  }, [fetchLeccionesData, fetchProyectosListData, Toast, searchParams]);
 
   // Effect for filtering based on selectedArea, selectedTipo, selectedProyectoId, globalFilter
   useEffect(() => {
-    let filteredData = [...allLecciones]; // Filter from the master list of all lecciones
+    let filteredData = [...allLecciones]; 
 
     if (selectedArea) {
       filteredData = filteredData.filter(
@@ -194,8 +202,9 @@ function LeccionesAprendidas() {
         (leccion) => leccion.tipo_leccion === selectedTipo
       );
     }
-
-    if (selectedProyectoId) {
+    
+    // This filter is now prioritized by the initial load effect if projectId is in URL
+    if (selectedProyectoId) { 
       const projectId = parseInt(selectedProyectoId, 10);
       filteredData = filteredData.filter(
         (leccion) => leccion.id_proyecto === projectId

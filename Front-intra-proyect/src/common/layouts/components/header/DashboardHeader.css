@@ -1,8 +1,10 @@
 header {
+  min-height: fit-content;
   position: relative;
   z-index: 2;
   display: flex;
   height: 10%;
+  min-height: 5rem;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   padding: 0 1.5rem;
@@ -49,8 +51,66 @@ header .company_section {
   background-color: var(--muted-color);
 }
 .info_cuenta_button{
-  height: fit-content;
-  width: fit-content;
+  height: 3rem;
+  width: 3rem;
   padding: 0;
   border-radius: 50%;
+}
+
+/* Styles for the dropdown */
+.user_section {
+  position: relative; /* Added for dropdown positioning */
+  cursor: pointer; /* Indicate it's clickable */
+}
+
+.dropdown-arrow-icon {
+  margin-left: 0.5rem;
+  font-size: 0.8em;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px); /* Position below the user section with a small gap */
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 180px; /* Adjust as needed */
+  padding: 0.5rem 0;
+  list-style: none; /* Remove default list styling if it were a ul */
+}
+
+.dropdown-item {
+  display: block;
+  padding: 0.75rem 1.25rem; /* Increased padding for better touch targets and visual separation */
+  text-decoration: none;
+  color: #333;
+  white-space: nowrap; /* Prevent items from wrapping */
+  background: none; /* Reset background for button items */
+  border: none; /* Reset border for button items */
+  width: 100%; /* Make button items take full width */
+  text-align: left; /* Align text to the left for button items */
+  cursor: pointer; /* Ensure cursor is pointer for all items */
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.logout-button { /* Specific styling for logout button if needed, inherits from dropdown-item */
+  color: var(--danger-color, #dc3545); /* Use a variable or a default danger color */
+}
+
+.logout-button:hover {
+  background-color: #f5f5f5; /* Consistent hover for all items */
+}
+
+/* Container for the user photo if it's not a button itself */
+.info_cuenta_button_container {
+  display: flex; /* Helps if you want to align items inside, though here it's just the image */
+  align-items: center;
+  height: 3rem; /* Match user_foto height */
+  width: 3rem; /* Match user_foto width */
 }

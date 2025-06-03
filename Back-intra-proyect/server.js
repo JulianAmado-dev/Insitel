@@ -1715,6 +1715,124 @@ app.put(
 
 // --- Fin Endpoints Lecciones Aprendidas ---
 
+// --- Endpoint for Home.jsx Project Details ---
+app.get(
+  "/api/proyectos/:area/:id_proyecto/home-details",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_proyecto } = req.params;
+    if (!id_proyecto || isNaN(parseInt(id_proyecto))) {
+      return next(boom.badRequest("ID del proyecto inválido o faltante."));
+    }
+
+    try {
+      const connection = await db.getConnection(); // Get a connection for multiple queries
+
+      try {
+        // 1. Project Details
+        const [projectRows] = await connection.execute(
+          "SELECT id_proyecto, nombre_proyecto, empresa_asociada, progress, status, priority, area FROM proyectos WHERE id_proyecto = ?",
+          [id_proyecto]
+        );
+        if (!projectRows || projectRows.length === 0) {
+          return next(boom.notFound("Proyecto no encontrado."));
+        }
+        const proyecto = projectRows[0];
+
+        // 2. Risk Summary
+        const [riskRows] = await connection.execute(
+          `SELECT
+            COUNT(*) as cant_riesgos,
+            SUM(CASE WHEN probabilidad * impacto >= 15 THEN 1 ELSE 0 END) as cant_riesgos_criticos,
+            SUM(CASE WHEN probabilidad * impacto >= 8 AND probabilidad * impacto < 15 THEN 1 ELSE 0 END) as cant_riesgos_moderados,
+            SUM(CASE WHEN probabilidad * impacto >= 1 AND probabilidad * impacto < 8 THEN 1 ELSE 0 END) as cant_riesgos_leves,
+            SUM(CASE WHEN probabilidad IS NULL OR impacto IS NULL OR probabilidad = 0 OR impacto = 0 THEN 1 ELSE 0 END) as cant_riesgos_nulos
+          FROM formulario_riesgos
+          WHERE id_proyecto = ?`,
+          [id_proyecto]
+        );
+        const risks = riskRows[0] || { cant_riesgos: 0, cant_riesgos_criticos: 0, cant_riesgos_moderados: 0, cant_riesgos_leves: 0, cant_riesgos_nulos: 0 };
+
+        // 3. Form Statuses & Count
+        const formStatusQueries = {
+          general: "SELECT COUNT(*) as count FROM formulario_general WHERE id_proyecto = ?",
+          alcance: "SELECT COUNT(*) as count FROM formulario_alcance WHERE id_proyecto = ?",
+          presupuesto: "SELECT COUNT(*) as count FROM formulario_presupuesto WHERE id_proyecto = ?",
+          riesgos: "SELECT COUNT(*) as count FROM formulario_riesgos WHERE id_proyecto = ?", // Status based on existence of any risk
+          verificacion: "SELECT COUNT(*) as count FROM formulario_verificacion WHERE id_proyecto = ?",
+          // 'validacion' and 'controlVersiones' are not in DB schema, will be 'Pendiente'
+        };
+
+        const formulariosStatus = {};
+        let completedFormsCount = 0;
+        const totalFormsToTrack = 6; // general, alcance, presupuesto, riesgos, verificacion, validacion (mock had controlVersiones too)
+
+        for (const formKey in formStatusQueries) {
+          const [countRows] = await connection.execute(formStatusQueries[formKey], [id_proyecto]);
+          if (countRows[0].count > 0) {
+            formulariosStatus[formKey] = "Completado";
+            completedFormsCount++;
+          } else {
+            formulariosStatus[formKey] = "Pendiente";
+          }
+        }
+        // Add forms not in DB as 'Pendiente'
+        formulariosStatus.validacion = "Pendiente"; 
+        // formulariosStatus.controlVersiones = "Pendiente"; // If tracking this one too
+
+        const formulariosCount = {
+          completed: completedFormsCount,
+          total: totalFormsToTrack, // Adjust if controlVersiones is also tracked
+        };
+        
+        // 4. Team Members
+        const [teamRows] = await connection.execute(
+          `SELECT
+            pe.id_asignacion_rh, pe.id_proyecto, pe.id_empleado,
+            e.nombres, e.apellidos, pe.rol_en_proyecto, pe.responsabilidades, e.foto_empleado
+          FROM proyecto_equipo pe
+          LEFT JOIN empleados e ON pe.id_empleado = e.id_empleado
+          WHERE pe.id_proyecto = ?`,
+          [id_proyecto]
+        );
+        const miembros = teamRows;
+
+        // 5. Lecciones Aprendidas Summary
+        const [lessonsCountRows] = await connection.execute(
+          "SELECT COUNT(*) as total_lecciones FROM lecciones_aprendidas WHERE id_proyecto = ?",
+          [id_proyecto]
+        );
+        const total_lecciones = lessonsCountRows[0]?.total_lecciones || 0;
+
+        const [recentLessonsRows] = await connection.execute(
+          "SELECT titulo, tipo_leccion, fecha FROM lecciones_aprendidas WHERE id_proyecto = ? ORDER BY fecha DESC LIMIT 2",
+          [id_proyecto]
+        );
+        const recent_lessons = recentLessonsRows;
+
+        const lessonsSummary = {
+          total_lecciones,
+          recent_lessons,
+        };
+
+        res.status(200).json({
+          proyecto,
+          risks,
+          formulariosStatus,
+          formulariosCount,
+          miembros,
+          lessonsSummary, // Added lessons summary
+        });
+      } finally {
+        if (connection) connection.release();
+      }
+    } catch (error) {
+      console.error(`Error en GET /api/proyectos/:area/:id_proyecto/home-details:`, error);
+      next(error);
+    }
+  }
+);
+
 // --- New File Upload Endpoints as per Guide ---
 
 // Ruta para subir archivo: POST /api/upload/:area/:id_proyecto

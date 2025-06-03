@@ -1,0 +1,100 @@
+.lecciones-preview-card {
+  cursor: pointer;
+  /* Inherits general .forms-card styles, add specifics below */
+}
+
+.form-header.lecciones {
+  /* Using a distinct color for Lecciones Aprendidas card header */
+  background: linear-gradient(to right, #4a90e2, #50e3c2); /* Example: Blue to Teal gradient */
+  color: white;
+}
+
+.lecciones-preview-content {
+  position: relative; /* For fade effect positioning */
+  max-height: 150px; /* Adjust as needed to show 2-3 items */
+  overflow: hidden;
+  padding-bottom: 20px; /* Space for the fade effect text if needed */
+}
+
+.lessons-summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lesson-summary-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lesson-summary-item:last-child {
+  border-bottom: none;
+}
+
+.lesson-summary-item strong {
+  font-weight: 500;
+  color: #333;
+  flex-grow: 1;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lesson-type-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+}
+
+.lesson-type-badge.oportunidad {
+  background-color: var(--color-alcance); /* Greenish */
+}
+
+.lesson-type-badge.amenaza {
+  background-color: var(--color-riesgos); /* Orangish */
+}
+
+.no-lessons-message {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+.lessons-fade-effect {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px; /* Adjust height of the fade */
+  background: linear-gradient(to bottom, transparent, white);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.5rem; /* Space for the text within the fade */
+}
+
+.lessons-fade-effect p {
+  margin: 0;
+  color: #555;
+  font-style: italic;
+}
+
+.lecciones-preview-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-primary); /* Use primary color from Home.css */
+  font-weight: 500;
+}
+
+.lecciones-preview-footer .list-icon {
+  color: var(--color-primary);
+}

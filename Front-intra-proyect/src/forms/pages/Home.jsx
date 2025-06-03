@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react"; // Removed React import
 import {
   ClipboardList,
   BarChart3,
@@ -21,101 +22,58 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./Home.css";
+import { axiosInstance } from "@api/axiosInstance"; // Assuming this is your configured axios
+import LeccionesAprendidasPreviewCard from "../components/LeccionesAprendidasPreviewCard"; // Import the new component
 
 function Home() {
   const navigate = useNavigate();
-  const { id_proyecto } = useParams();
-  console.log("ID del proyecto:", id_proyecto);
+  const { area: projectArea, id_proyecto } = useParams(); // Capture area from params as well
+  
+  const [dashboardData, setDashboardData] = useState({
+    proyecto: {},
+    risks: {},
+    formulariosStatus: {},
+    formulariosCount: { completed: 0, total: 6 }, // Default total, adjust as needed
+    miembros: [],
+    lessonsSummary: { total_lecciones: 0, recent_lessons: [] }, // Added for lessons preview
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const proyecto = {
-    nombre_proyecto: "Intranet",
-    empresa_asociada: "INSITEL S.A.S.",
-    progress: 45, // Porcentaje
-    status: "En progreso", // Debería venir de la tabla proyectos
-    priority: 3, // Ejemplo (1-5)
-    area: "I+D", // O el nombre del área si haces JOIN
-  };
-
-  const risks = {
-    total: 8,
-    cant_riesgos_criticos: 2,
-    cant_riesgos_moderados: 3,
-    cant_riesgos_leves: 3,
-    cant_riesgos_nulos: 1,
-    cant_riesgos: 17,
-  };
-
-  const formulariosStatus = {
-    general: "Completado", // O 'Pendiente', 'En Progreso'
-    alcance: "En Progreso",
-    presupuesto: "Pendiente",
-    riesgos: "Completado",
-    verificacion: "Pendiente",
-    validacion: "Pendiente",
-    controlVersiones: "En Progreso",
-  };
-
-  const miembros = [
-    {
-      id_asignacion_rh: 5, // ID único de esta asignación específica
-      id_proyecto: 1, // ID del proyecto al que pertenece
-      id_empleado: 1, // ID del empleado (de la tabla empleados)
-      nombres: "Julian", // Nombre(s) del empleado (de la tabla empleados)
-      apellidos: "Amado", // Apellido(s) del empleado (de la tabla empleados)
-      rol_en_proyecto: "Líder Técnico", // Rol específico en este proyecto (de proyecto_equipo)
-      responsabilidades:
-        "Definición de arquitectura, supervisión técnica del desarrollo backend.", // Responsabilidades en este proyecto (de proyecto_equipo)
-      fecha_asignacion: "2024-04-15T10:00:00.000Z", // Fecha/hora de asignación
-    },
-    {
-      id_asignacion_rh: 8,
-      id_proyecto: 1,
-      id_empleado: 7,
-      nombres: "Ana",
-      apellidos: "García",
-      rol_en_proyecto: "Desarrollador Frontend",
-      responsabilidades:
-        "Implementación de interfaz de usuario con React, integración con API.",
-      fecha_asignacion: "2024-04-16T09:30:00.000Z",
-    },
-    {
-      id_asignacion_rh: 12,
-      id_proyecto: 1,
-      id_empleado: 4,
-      nombres: "Carlos",
-      apellidos: "Martinez",
-      rol_en_proyecto: "Diseñador UX/UI",
-      responsabilidades:
-        "Diseño de wireframes, prototipos y mockups. Pruebas de usabilidad.",
-      fecha_asignacion: "2024-04-18T11:00:00.000Z",
-    },
-    {
-      id_asignacion_rh: 15,
-      id_proyecto: 1,
-      id_empleado: null, // Ejemplo de un recurso externo sin ID de empleado
-      nombres: "Consultor Externo", // Nombre genérico o real
-      apellidos: "S.A.S.", // O vacío
-      rol_en_proyecto: "Asesor Experto",
-      responsabilidades:
-        "Revisión de arquitectura y recomendaciones técnicas puntuales.",
-      fecha_asignacion: "2024-04-20T14:00:00.000Z",
-    },
-  ];
-
-  const formulariosCount = {
-    completed: 2,
-    total: 6,
-  };
-
-  console.log("EEEEEEEEEE", formulariosCount);
+  useEffect(() => {
+    if (id_proyecto && projectArea) {
+      const fetchDashboardData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await axiosInstance.get(
+            `/api/proyectos/${projectArea}/${id_proyecto}/home-details`
+          );
+          setDashboardData(response.data);
+        } catch (err) {
+          console.error("Error fetching dashboard data:", err);
+          setError(
+            err.response?.data?.message ||
+              "Error al cargar los datos del dashboard."
+          );
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchDashboardData();
+    } else {
+      setLoading(false);
+      setError("No se proporcionó ID de proyecto o área.");
+    }
+  }, [id_proyecto, projectArea]);
 
   const getStatusClass = (estado) => {
     if (!estado) return "";
 
-    switch (estado.toLowerCase()) {
+    switch (estado?.toLowerCase()) { // Added optional chaining
       case "completado":
         return "status-done";
-      case "en progreso":
+      case "en progreso": // This status might not come from backend yet
         return "status-in-progress";
       case "pendiente":
         return "status-pending";
@@ -125,29 +83,36 @@ function Home() {
   };
 
   const getStatusClassForCounter = (completed, total) => {
-    switch (completed) {
-      case completed === total:
-        return "status-done";
-      case completed < 3:
-        return "status-in-progress";
-      case completed >= 3:
-        return "status-pending";
-      default:
-        return "";
-    }
+    if (total === 0) return "status-pending"; // Avoid division by zero
+    if (completed === total) return "status-done";
+    if (completed === 0) return "status-pending"; // Or specific style for 0 completed
+    // Example logic, adjust as needed
+    const percentage = (completed / total) * 100;
+    if (percentage < 50) return "status-in-progress"; // Or 'status-pending' if preferred
+    return "status-in-progress"; // Or a more granular status
   };
+  
+  if (loading) {
+    return <div className="home-container"><p>Cargando datos del proyecto...</p></div>;
+  }
+
+  if (error) {
+    return <div className="home-container"><p className="error-message">{error}</p></div>;
+  }
+
+  const { proyecto, risks, formulariosStatus, formulariosCount, miembros, lessonsSummary } = dashboardData;
 
   return (
     <div className="home-container">
       <header className="project-header">
         <div className="project-name_div">
-          <h1>{proyecto.nombre_proyecto}</h1>
+          <h1>{proyecto?.nombre_proyecto || "Nombre no disponible"}</h1>
         </div>
         <div className="header-details">
-          <span className={`status-badge ${getStatusClass(proyecto.status)}`}>
-            {proyecto.status}
+          <span className={`status-badge ${getStatusClass(proyecto?.status)}`}>
+            {proyecto?.status || "N/A"}
           </span>
-          <span className="company-name">{proyecto.empresa_asociada}</span>
+          <span className="company-name">{proyecto?.empresa_asociada || "Empresa no disponible"}</span>
         </div>
       </header>
 
@@ -157,11 +122,14 @@ function Home() {
             <strong>Progreso</strong>
             <Activity className="card-icon" />
           </div>
-          <h3>{proyecto.progress}%</h3>
+          <h3>{proyecto?.progress || 0}%</h3>
           <div className="progress-container">
             <div
               className="progress-bar"
-              style={{ width: `${proyecto.progress}%` }}
+              style={{
+                width: `${proyecto?.progress || 0}%`,
+                backgroundColor: "var(--color-in-progress)", // Consider dynamic color based on progress
+              }}
             ></div>
           </div>
         </div>
@@ -176,12 +144,12 @@ function Home() {
               <span
                 key={i}
                 className={`priority-dot ${
-                  i < proyecto.priority ? "active" : ""
+                  i < (proyecto?.priority || 0) ? "active" : ""
                 }`}
               ></span>
             ))}
           </div>
-          <h3>Prioridad {proyecto.priority}/5</h3>
+          <h3>Prioridad {proyecto?.priority || "N/A"}/5</h3>
         </div>
 
         <div className="top-level-card">
@@ -189,22 +157,22 @@ function Home() {
             <strong>Riesgos identificados</strong>
             <AlertOctagon className="card-icon" />
           </div>
-          {risks.cant_riesgos === 0 ? (
+          {(risks?.cant_riesgos || 0) === 0 ? (
             <p className="no-risks">No hay riesgos en nuestro proyecto 🎉</p>
           ) : (
             <p className="risks-summary">
               <span className="risk-critical">
-                {risks.cant_riesgos_criticos} críticos
+                {risks?.cant_riesgos_criticos || 0} críticos
               </span>
               ,{" "}
               <span className="risk-moderate">
-                {risks.cant_riesgos_moderados} moderados
+                {risks?.cant_riesgos_moderados || 0} moderados
               </span>
               ,{" "}
-              <span className="risk-low">{risks.cant_riesgos_leves} leves</span>{" "}
+              <span className="risk-low">{risks?.cant_riesgos_leves || 0} leves</span>{" "}
               y{" "}
               <span className="risk-null">
-                {risks.cant_riesgos_nulos} nulos
+                {risks?.cant_riesgos_nulos || 0} nulos
               </span>
             </p>
           )}
@@ -212,15 +180,15 @@ function Home() {
 
         <div
           className={`top-level-card ${getStatusClassForCounter(
-            formulariosCount.completed,
-            formulariosCount.total
+            formulariosCount?.completed || 0,
+            formulariosCount?.total || 6 // Default to 6 if total is not available
           )}`}
         >
           <div className="card-header">
             <strong>Formularios completados</strong>
             <FileBadge className="card-icon" />
           </div>
-          {formulariosCount.completed === 0 ? (
+          {(formulariosCount?.completed || 0) === 0 ? (
             <div className="no-forms">
               <p className="risk-critical">
                 No has completado ningún formulario!
@@ -229,15 +197,16 @@ function Home() {
             </div>
           ) : (
             <>
-              <h3>{`${formulariosCount.completed}/${formulariosCount.total}`}</h3>
+              <h3>{`${formulariosCount?.completed || 0}/${formulariosCount?.total || 6}`}</h3>
               <div className="progress-container">
                 <div
                   className="progress-bar"
                   style={{
                     width: `${
-                      (formulariosCount.completed / formulariosCount.total) *
+                      ((formulariosCount?.completed || 0) / (formulariosCount?.total || 1)) * // Avoid division by zero
                       100
                     }%`,
+                    backgroundColor: "var(--color-in-progress)", // Consider dynamic color
                   }}
                 ></div>
               </div>
@@ -255,10 +224,10 @@ function Home() {
               <h2>Formulario General</h2>
               <span
                 className={`status-badge ${getStatusClass(
-                  formulariosStatus.general
+                  formulariosStatus?.general
                 )}`}
               >
-                {formulariosStatus.general}
+                {formulariosStatus?.general || "Pendiente"}
               </span>
             </div>
             <p>Información básica del proyecto</p>
@@ -282,7 +251,7 @@ function Home() {
           <footer className="form-footer">
             <button
               className="form-button"
-              onClick={() => navigate(`form/general`)}
+              onClick={() => navigate(`form/general`)} // Ensure navigate is defined if used
             >
               Acceder
             </button>
@@ -297,10 +266,10 @@ function Home() {
               <h2>Alcance</h2>
               <span
                 className={`status-badge ${getStatusClass(
-                  formulariosStatus.alcance
+                  formulariosStatus?.alcance
                 )}`}
               >
-                {formulariosStatus.alcance}
+                {formulariosStatus?.alcance || "Pendiente"}
               </span>
             </div>
             <p>Delimitación de las características del sistema</p>
@@ -339,10 +308,10 @@ function Home() {
               <h2>Presupuesto</h2>
               <span
                 className={`status-badge ${getStatusClass(
-                  formulariosStatus.presupuesto
+                  formulariosStatus?.presupuesto
                 )}`}
               >
-                {formulariosStatus.presupuesto}
+                {formulariosStatus?.presupuesto || "Pendiente"}
               </span>
             </div>
             <p>Control financiero del proyecto</p>
@@ -381,10 +350,10 @@ function Home() {
               <h2>Gestión de Riesgos</h2>
               <span
                 className={`status-badge ${getStatusClass(
-                  formulariosStatus.riesgos
+                  formulariosStatus?.riesgos
                 )}`}
               >
-                {formulariosStatus.riesgos}
+                {formulariosStatus?.riesgos || "Pendiente"}
               </span>
             </div>
             <p>Identificación y mitigación de riesgos</p>
@@ -423,10 +392,10 @@ function Home() {
               <h2>Verificación</h2>
               <span
                 className={`status-badge ${getStatusClass(
-                  formulariosStatus.verificacion
+                  formulariosStatus?.verificacion
                 )}`}
               >
-                {formulariosStatus.verificacion}
+                {formulariosStatus?.verificacion || "Pendiente"}
               </span>
             </div>
             <p>Especificación detallada de las necesidades</p>
@@ -450,9 +419,7 @@ function Home() {
           <footer className="form-footer">
             <button
               className="form-button"
-              onClick={() =>
-                navigate(`form/verificacion`)
-              }
+              onClick={() => navigate(`form/verificacion`)}
             >
               Acceder
             </button>
@@ -467,10 +434,10 @@ function Home() {
               <h2>Validación</h2>
               <span
                 className={`status-badge ${getStatusClass(
-                  formulariosStatus.validacion
+                  formulariosStatus?.validacion
                 )}`}
               >
-                {formulariosStatus.validacion}
+                {formulariosStatus?.validacion || "Pendiente"}
               </span>
             </div>
             <p>Confirmación de cumplimiento de requisitos</p>
@@ -494,9 +461,7 @@ function Home() {
           <footer className="form-footer">
             <button
               className="form-button"
-              onClick={() =>
-                navigate(`form/validacion`)
-              }
+              onClick={() => navigate(`form/validacion`)}
             >
               Acceder
             </button>
@@ -511,13 +476,13 @@ function Home() {
             </div>
           </header>
           <div className="form-content members">
-            {miembros.map((miembro) => (
-              <div key={miembro.id_empleado} className="member-line">
-                <img src={null} alt="" className="member-foto" />
+            {(miembros || []).map((miembro) => (
+              <div key={miembro.id_asignacion_rh || miembro.id_empleado} className="member-line"> {/* Use id_asignacion_rh for unique key */}
+                <img src={miembro.foto_empleado || null} alt={`${miembro.nombres} ${miembro.apellidos}`} className="member-foto" />
                 <span>
-                  {miembro.nombres + " " + miembro.apellidos}
+                  {miembro.nombres || "N/A"} {miembro.apellidos || ""}
                   <strong> | </strong>
-                  <span>{miembro.rol_en_proyecto} </span>
+                  <span>{miembro.rol_en_proyecto || "Rol no asignado"} </span>
                   <div className="member-actions">
                     <button className="action-button" title="Ver detalles">
                       <svg
@@ -566,6 +531,15 @@ function Home() {
             </div>
           </footer>
         </div>
+
+        {/* Lecciones Aprendidas Preview Card */}
+        {lessonsSummary && (
+          <LeccionesAprendidasPreviewCard
+            lessonsSummary={lessonsSummary}
+            projectId={id_proyecto}
+            projectArea={projectArea}
+          />
+        )}
       </section>
     </div>
   );
