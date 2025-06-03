@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"; // Import React
+import { useState, useEffect, useMemo, useCallback } from "react"; // Import React Hooks
 // import { useParams } from 'react-router-dom'; // Se usará cuando se integre el enrutamiento
 import {
   useReactTable,
@@ -9,6 +9,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import Swal from "sweetalert2";
+import { axiosInstance } from "@api/axiosInstance"; // Added for integrated services
 
 // import * LeccionesAprendidasModal from './LeccionesAprendidasModal'; // Ejemplo si se crea un componente modal separado
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -30,164 +31,29 @@ import {
 } from "react-icons/fi";
 import { FaStar, FaSort } from "react-icons/fa";
 import "./LeccionesAprendidas.css";
-import {
-  fetchLecciones,
-  createLeccion,
-  updateLeccion,
-} from "../../services/leccionesAprendidasService"; // Import service functions
 
-// --- Datos de Muestra (mockProyectosLista can remain for now for dropdowns if not fetched) ---
-const mockProyectosLista = [
-  { id_proyecto: 101, nombre_proyecto: "Desarrollo App Móvil X" },
-  { id_proyecto: 102, nombre_proyecto: "Implementación CRM Interno" },
-  { id_proyecto: 103, nombre_proyecto: "Migración Servidores Cloud" },
-  { id_proyecto: 104, nombre_proyecto: "Plataforma E-learning Corporativa" },
-  { id_proyecto: 105, nombre_proyecto: "Optimización SEO Web Principal" },
-];
+// --- API URLs ---
+const LECCIONES_API_URL = "/api/lecciones-aprendidas";
+const PROYECTOS_API_URL = "/api/proyectos/listado-simple";
 
-const mockLecciones = [
-  {
-    id_leccion_aprendida: 1,
-    id_proyecto: 101,
-    proyecto_nombre: "Desarrollo App Móvil X",
-    creado_por_nombre: "Ana Pérez",
-    titulo: "Retraso en la entrega del Módulo de Pagos",
-    area_categoria: "Desarrollo de Software",
-    fecha: "2024-05-15T10:00:00.000Z",
-    tipo_leccion: "Amenaza",
-    descripcion_situacion:
-      "El proveedor externo del API de pagos no cumplió con la fecha de entrega de la documentación final.",
-    descripcion_impacto:
-      "Se generó un retraso de 2 semanas en la integración del módulo de pagos, afectando el cronograma general.",
-    acciones_correctivas:
-      "Se estableció un plan de comunicación más riguroso con el proveedor y se identificó un proveedor alternativo para futuras fases.",
-    leccion_aprendida_recomendaciones:
-      "Validar la capacidad de respuesta y documentación de proveedores externos con mayor antelación. Tener siempre un plan B.",
-    reportado_por: "Jefe de Proyecto",
-    creado_por_id: 202,
+// Define Toast instance outside the component to ensure it's stable
+const ToastInstance = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
   },
-  {
-    id_leccion_aprendida: 2,
-    id_proyecto: 102,
-    proyecto_nombre: "Implementación CRM Interno",
-    creado_por_nombre: "Carlos Ruiz",
-    titulo: "Adopción exitosa de nueva metodología ágil",
-    area_categoria: "Gestión de Proyectos",
-    fecha: "2024-06-01T14:30:00.000Z",
-    tipo_leccion: "Oportunidad",
-    descripcion_situacion:
-      "Se implementó Scrum para el equipo de CRM, mejorando la comunicación y la velocidad de entrega.",
-    descripcion_impacto:
-      "Reducción del tiempo de ciclo en un 15% y mayor satisfacción del equipo.",
-    acciones_correctivas: "N/A (fue una mejora)",
-    leccion_aprendida_recomendaciones:
-      "Capacitar a otros equipos en metodologías ágiles y compartir las herramientas utilizadas.",
-    reportado_por: "Líder de Equipo CRM",
-    creado_por_id: 205,
-  },
-  {
-    id_leccion_aprendida: 3,
-    id_proyecto: 101,
-    proyecto_nombre: "Desarrollo App Móvil X",
-    creado_por_nombre: "Laura Gómez",
-    titulo: "Problemas de rendimiento en pruebas de carga",
-    area_categoria: "QA y Pruebas",
-    fecha: "2024-07-20T09:00:00.000Z",
-    tipo_leccion: "Amenaza",
-    descripcion_situacion:
-      "Durante las pruebas de carga, la aplicación mostró una degradación significativa del rendimiento con más de 500 usuarios concurrentes.",
-    descripcion_impacto:
-      "Riesgo de no cumplir con los SLAs de rendimiento y posible insatisfacción del cliente si no se resuelve antes del lanzamiento.",
-    acciones_correctivas:
-      "Se realizó un perfilamiento exhaustivo del código, se optimizaron consultas a la base de datos y se escaló la infraestructura del servidor de pruebas.",
-    leccion_aprendida_recomendaciones:
-      "Incorporar pruebas de rendimiento más tempranas en el ciclo de desarrollo. Definir perfiles de carga realistas desde el inicio.",
-    reportado_por: "Ingeniera de QA",
-    creado_por_id: 208,
-  },
-];
-
-// Función para generar más datos de muestra
-const generateMoreMockData = (baseData, count) => {
-  const moreData = [];
-  const areas = [
-    "Desarrollo de Software",
-    "Gestión de Proyectos",
-    "QA y Pruebas",
-    "Infraestructura",
-    "Diseño UX/UI",
-  ];
-  const tiposLeccion = ["Oportunidad", "Amenaza"];
-  const reportadoPorNombres = [
-    "Juan Pérez",
-    "Ana García",
-    "Luis Fernández",
-    "Sofía Martínez",
-    "Carlos Rodríguez",
-  ];
-  const creadoPorNombres = [
-    "Admin Sistema",
-    "Gerente de Área",
-    "Líder Técnico",
-  ];
-
-  for (let i = 0; i < count; i++) {
-    const baseIndex = i % baseData.length;
-    const baseEntry = baseData[baseIndex];
-    const newEntry = { ...baseEntry };
-
-    newEntry.id_leccion_aprendida = baseData.length + i + 1;
-    newEntry.titulo = `${baseEntry.titulo} (Variación ${i + 1})`;
-
-    const randomDate = new Date(
-      Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 365)
-    ); // Fecha aleatoria en el último año
-    newEntry.fecha = randomDate.toISOString();
-
-    newEntry.area_categoria = areas[Math.floor(Math.random() * areas.length)];
-    newEntry.tipo_leccion =
-      tiposLeccion[Math.floor(Math.random() * tiposLeccion.length)];
-    newEntry.reportado_por =
-      reportadoPorNombres[
-        Math.floor(Math.random() * reportadoPorNombres.length)
-      ];
-    newEntry.creado_por_nombre =
-      creadoPorNombres[Math.floor(Math.random() * creadoPorNombres.length)];
-    newEntry.id_proyecto =
-      mockProyectosLista[
-        Math.floor(Math.random() * mockProyectosLista.length)
-      ].id_proyecto;
-    newEntry.proyecto_nombre =
-      mockProyectosLista.find((p) => p.id_proyecto === newEntry.id_proyecto)
-        ?.nombre_proyecto || "Proyecto Desconocido";
-
-    newEntry.descripcion_situacion = `Situación adaptada para la lección ${
-      newEntry.id_leccion_aprendida
-    }: ${baseEntry.descripcion_situacion.substring(0, 150)}`;
-    newEntry.descripcion_impacto = `Impacto correspondiente a la lección ${
-      newEntry.id_leccion_aprendida
-    }: ${baseEntry.descripcion_impacto.substring(0, 150)}`;
-    newEntry.acciones_correctivas = `Acciones para la lección ${
-      newEntry.id_leccion_aprendida
-    }: ${baseEntry.acciones_correctivas.substring(0, 150)}`;
-    newEntry.leccion_aprendida_recomendaciones = `Recomendaciones de la lección ${
-      newEntry.id_leccion_aprendida
-    }: ${baseEntry.leccion_aprendida_recomendaciones.substring(0, 150)}`;
-
-    moreData.push(newEntry);
-  }
-  return [...baseData, ...moreData];
-};
-
-// const extendedMockLecciones = generateMoreMockData(mockLecciones, 57); // Will be replaced by API data
-// --- Fin Datos de Muestra ---
+});
 
 function LeccionesAprendidas() {
   const [lecciones, setLecciones] = useState([]);
   const [allLecciones, setAllLecciones] = useState([]); // To store all fetched lecciones before filtering
   const [proyectosLista, setProyectosLista] = useState([]); // For project dropdown in modals
   const [showCrearModal, setShowCrearModal] = useState(false);
-  const { useCallback } = React;
   const [isLoading, setIsLoading] = useState(true); // Loading state for initial fetch
   const [error, setError] = useState(null); // Error state for initial fetch
   const [showEditarModal, setShowEditarModal] = useState(false);
@@ -195,17 +61,82 @@ function LeccionesAprendidas() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
 
-  const Toast = Swal.mixin({
-    toast: true,
-    position: "top-end",
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
+  // Use the stable ToastInstance
+  const Toast = ToastInstance;
+
+  // --- In-component API call functions ---
+  const fetchLeccionesData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(LECCIONES_API_URL);
+      return response.data;
+    } catch (err) {
+      console.error(
+        "Error fetching lecciones:",
+        err.response?.data || err.message
+      );
+      throw (
+        err.response?.data ||
+        new Error("Error al obtener las lecciones aprendidas.")
+      );
+    }
+  }, []);
+
+  const createLeccionData = useCallback(async (leccionData) => {
+    try {
+      if (leccionData.id_proyecto) {
+        leccionData.id_proyecto = parseInt(leccionData.id_proyecto, 10);
+      }
+      const response = await axiosInstance.post(LECCIONES_API_URL, leccionData);
+      return response.data;
+    } catch (err) {
+      console.error(
+        "Error creating leccion:",
+        err.response?.data || err.message
+      );
+      throw (
+        err.response?.data || new Error("Error al crear la lección aprendida.")
+      );
+    }
+  }, []);
+
+  const updateLeccionData = useCallback(async (id, leccionData) => {
+    try {
+      if (leccionData.id_proyecto) {
+        leccionData.id_proyecto = parseInt(leccionData.id_proyecto, 10);
+      }
+      const response = await axiosInstance.put(
+        `${LECCIONES_API_URL}/${id}`,
+        leccionData
+      );
+      return response.data;
+    } catch (err) {
+      console.error(
+        `Error updating leccion ${id}:`,
+        err.response?.data || err.message
+      );
+      throw (
+        err.response?.data ||
+        new Error(`Error al actualizar la lección aprendida ${id}.`)
+      );
+    }
+  }, []);
+
+  const fetchProyectosListData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(PROYECTOS_API_URL);
+      return response.data;
+    } catch (err) {
+      console.error(
+        "Error fetching proyectos list:",
+        err.response?.data || err.message
+      );
+      throw (
+        err.response?.data ||
+        new Error("Error al obtener la lista de proyectos.")
+      );
+    }
+  }, []);
+  // --- End In-component API call functions ---
 
   // Nuevos estados para filtros
   const [selectedArea, setSelectedArea] = useState("");
@@ -222,19 +153,29 @@ function LeccionesAprendidas() {
       setIsLoading(true);
       setError(null);
       try {
-        const fetchedLecciones = await fetchLecciones();
-        setAllLecciones(fetchedLecciones); // Store all fetched lecciones
-        setLecciones(fetchedLecciones); // Initially display all
-        setProyectosLista(mockProyectosLista); // Continue using mock for project dropdown for now
+        const [fetchedLecciones, fetchedProyectos] = await Promise.all([
+          fetchLeccionesData(),
+          fetchProyectosListData(),
+        ]);
+        // console.log("Fetched Lecciones in loadInitialData:", fetchedLecciones);
+        setAllLecciones(fetchedLecciones);
+        setLecciones(fetchedLecciones);
+        setProyectosLista(fetchedProyectos);
       } catch (err) {
-        setError(err.message || "Error al cargar datos iniciales.");
+        const errorMessage = err.message || "Error al cargar datos iniciales.";
+        setError(errorMessage);
+        // Toast is stable now, so it's safe to use here without causing re-runs from itself
+        Toast.fire({
+          icon: "error",
+          title: `Error al cargar datos: ${errorMessage}`,
+        });
         console.error("Error loading initial data:", err);
       } finally {
         setIsLoading(false);
       }
     };
     loadInitialData();
-  }, []);
+  }, [fetchLeccionesData, fetchProyectosListData, Toast]); // Toast is now stable
 
   // Effect for filtering based on selectedArea, selectedTipo, selectedProyectoId, globalFilter
   useEffect(() => {
@@ -309,17 +250,26 @@ function LeccionesAprendidas() {
 
   const handleCrearLeccion = async (values, { setSubmitting, resetForm }) => {
     setSubmitting(true);
+    setError(null);
     try {
-      const createdLeccionData = await createLeccion(values); // API call
-      // Backend returns { id_leccion_aprendida, message }
-      // We need to re-fetch to get the fully populated lesson object for the UI
-      const fetchedLecciones = await fetchLecciones();
+      await createLeccionData(values);
+      const fetchedLecciones = await fetchLeccionesData();
+      // console.log("Fetched Lecciones after create:", fetchedLecciones);
       setAllLecciones(fetchedLecciones);
       resetForm();
       setShowCrearModal(false);
+      Toast.fire({
+        icon: "success",
+        title: "Lección creada exitosamente!",
+      });
     } catch (err) {
       console.error("Error creating leccion:", err);
-      setError(err.message || "Error al crear la lección."); // Display error to user
+      const errorMessage = err.message || "Error al crear la lección.";
+      setError(errorMessage);
+      Toast.fire({
+        icon: "error",
+        title: `Error: ${errorMessage}`,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -327,15 +277,24 @@ function LeccionesAprendidas() {
 
   const handleEditarLeccion = async (values, { setSubmitting }) => {
     setSubmitting(true);
+    setError(null);
     try {
-      await updateLeccion(values.id_leccion_aprendida, values); // API call
-      // Re-fetch to get updated list
-      const fetchedLecciones = await fetchLecciones();
+      await updateLeccionData(values.id_leccion_aprendida, values);
+      const fetchedLecciones = await fetchLeccionesData();
       setAllLecciones(fetchedLecciones);
       setShowEditarModal(false);
+      Toast.fire({
+        icon: "success",
+        title: "Lección actualizada exitosamente!",
+      });
     } catch (err) {
       console.error("Error updating leccion:", err);
-      setError(err.message || "Error al actualizar la lección."); // Display error to user
+      const errorMessage = err.message || "Error al actualizar la lección.";
+      setError(errorMessage);
+      Toast.fire({
+        icon: "error",
+        title: `Error: ${errorMessage}`,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -377,7 +336,14 @@ function LeccionesAprendidas() {
           </span>
         ),
       },
-      { accessorKey: "proyecto_nombre", header: "Nombre del Proyecto" },
+      {
+        accessorKey: "nombre_proyecto", // Corrected to match the API field name
+        header: "Nombre del Proyecto",
+        cell: (info) => {
+          // info.getValue() will correctly use the accessorKey "nombre_proyecto"
+          return info.getValue() || "N/A";
+        },
+      },
       { accessorKey: "area_categoria", header: "Área/Categoría" },
       {
         accessorKey: "fecha",
@@ -818,114 +784,87 @@ function LeccionesAprendidas() {
                           className="error-message"
                         />
                       </div>
-                      <div className="form-group horizontal-group three-cols">
-                        <div>
-                          <label htmlFor="area_categoria_crear">
-                            <FiBriefcase /> Área/Categoría:
-                          </label>
-                          <Field
-                            as="select"
-                            name="area_categoria"
-                            id="area_categoria_crear"
-                          >
-                            <option value="">Seleccionar área</option>
-                            {[
-                              ...new Set(
-                                allLecciones.map(
-                                  // Use allLecciones for dynamic options
-                                  (item) => item.area_categoria
-                                )
-                              ),
-                            ]
-                              .sort()
-                              .map((area) => (
-                                <option key={area} value={area}>
-                                  {area}
-                                </option>
-                              ))}
-                          </Field>
-                          <ErrorMessage
-                            name="area_categoria"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="tipo_leccion_crear">
-                            <FiBriefcase /> Tipo de Lección:
-                          </label>
-                          <Field
-                            as="select"
-                            name="tipo_leccion"
-                            id="tipo_leccion_crear"
-                          >
-                            <option value="">Seleccionar tipo</option>
-                            <option value="Oportunidad">Oportunidad</option>
-                            <option value="Amenaza">Amenaza</option>
-                          </Field>
-                          <ErrorMessage
-                            name="tipo_leccion"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="fecha_crear">
-                            <FiCalendar /> Fecha:
-                          </label>
-                          <Field
-                            type="date"
-                            name="fecha"
-                            id="fecha_crear"
-                            placeholder="dd/mm/aaaa"
-                          />
-                          <ErrorMessage
-                            name="fecha"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
-                      </div>
-                      <div className="form-group horizontal-group">
-                        {/* Proyecto se mueve abajo según la imagen */}
-                      </div>
-                      <div className="form-group horizontal-group two-cols">
-                        {" "}
-                        {/* Nueva agrupación para Creado y Reportado */}
-                        <div>
-                          <label htmlFor="creado_por_simulado_crear">
-                            <FiUser /> Creado por:
-                          </label>
-                          <Field
-                            type="text"
-                            name="creado_por_simulado" // Este campo es simulado, considerar si se necesita un input real
-                            id="creado_por_simulado_crear"
-                            value="Usuario Actual (Simulado)" // O un placeholder "Nombre del responsable"
-                            placeholder="Nombre del responsable"
-                            disabled // O no, si se quiere editable
-                          />
-                          {/* <ErrorMessage name="creado_por_nombre" component="div" className="error-message" /> */}
-                        </div>
-                        <div>
-                          <label htmlFor="reportado_por_crear">
-                            <FiUser /> Reportado Por:
-                          </label>
-                          <Field
-                            type="text"
-                            name="reportado_por"
-                            id="reportado_por_crear"
-                            placeholder="Nombre del reportador"
-                          />
-                          <ErrorMessage
-                            name="reportado_por"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
+                      {/* Creado por field removed from form as it's handled by backend */}
+                      <div className="form-group">
+                        <label htmlFor="area_categoria_crear">
+                          <FiBriefcase /> Área/Categoría:
+                        </label>
+                        <Field
+                          as="select"
+                          name="area_categoria"
+                          id="area_categoria_crear"
+                        >
+                          <option value="">Seleccionar área</option>
+                          {[
+                            ...new Set(
+                              allLecciones.map((item) => item.area_categoria)
+                            ),
+                          ]
+                            .sort()
+                            .map((area) => (
+                              <option key={area} value={area}>
+                                {area}
+                              </option>
+                            ))}
+                        </Field>
+                        <ErrorMessage
+                          name="area_categoria"
+                          component="div"
+                          className="error-message"
+                        />
                       </div>
                       <div className="form-group">
-                        {" "}
-                        {/* Proyecto ahora aquí */}
+                        <label htmlFor="tipo_leccion_crear">
+                          <FiBriefcase /> Tipo de Lección:
+                        </label>
+                        <Field
+                          as="select"
+                          name="tipo_leccion"
+                          id="tipo_leccion_crear"
+                        >
+                          <option value="">Seleccionar tipo</option>
+                          <option value="Oportunidad">Oportunidad</option>
+                          <option value="Amenaza">Amenaza</option>
+                        </Field>
+                        <ErrorMessage
+                          name="tipo_leccion"
+                          component="div"
+                          className="error-message"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="fecha_crear">
+                          <FiCalendar /> Fecha:
+                        </label>
+                        <Field
+                          type="date"
+                          name="fecha"
+                          id="fecha_crear"
+                          placeholder="dd/mm/aaaa"
+                        />
+                        <ErrorMessage
+                          name="fecha"
+                          component="div"
+                          className="error-message"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="reportado_por_crear">
+                          <FiUser /> Reportado Por:
+                        </label>
+                        <Field
+                          type="text"
+                          name="reportado_por"
+                          id="reportado_por_crear"
+                          placeholder="Nombre del reportador"
+                        />
+                        <ErrorMessage
+                          name="reportado_por"
+                          component="div"
+                          className="error-message"
+                        />
+                      </div>
+                      <div className="form-group">
                         <label htmlFor="id_proyecto_crear">
                           <FiBriefcase /> Proyecto:
                         </label>
@@ -948,7 +887,7 @@ function LeccionesAprendidas() {
                         />
                       </div>
                     </div>
-                    {/* Las demás secciones mantienen su estructura pero se adaptarán con CSS */}
+                    {/* Las demás secciones mantienen su estructura */}
                     <div className="modal-section descripcion-situacion">
                       <h3 className="modal-section-title">
                         <FiAlertTriangle className="icon-placeholder" />
@@ -1064,6 +1003,7 @@ function LeccionesAprendidas() {
                 </p>
               </div>
               <div className="modal-header-actions-v2">
+                {/* <button className="btn-link-v2">Registro de Conocimiento</button> */}
                 <button
                   onClick={handleCloseEditarModal}
                   className="btn-close-modal-v2"
@@ -1111,106 +1051,103 @@ function LeccionesAprendidas() {
                           className="error-message"
                         />
                       </div>
-                      <div className="form-group horizontal-group three-cols">
-                        <div>
-                          <label htmlFor="area_categoria_editar">
-                            <FiBriefcase /> Área/Categoría:
-                          </label>
-                          <Field
-                            as="select"
-                            name="area_categoria"
-                            id="area_categoria_editar"
-                          >
-                            <option value="">Seleccionar área</option>
-                            {[
-                              ...new Set(
-                                allLecciones.map(
-                                  // Use allLecciones for dynamic options
-                                  (item) => item.area_categoria
-                                )
-                              ),
-                            ]
-                              .sort()
-                              .map((area) => (
-                                <option key={area} value={area}>
-                                  {area}
-                                </option>
-                              ))}
-                          </Field>
-                          <ErrorMessage
-                            name="area_categoria"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="tipo_leccion_editar">
-                            <FiBriefcase /> Tipo de Lección:
-                          </label>
-                          <Field
-                            as="select"
-                            name="tipo_leccion"
-                            id="tipo_leccion_editar"
-                          >
-                            <option value="">Seleccionar tipo</option>
-                            <option value="Oportunidad">Oportunidad</option>
-                            <option value="Amenaza">Amenaza</option>
-                          </Field>
-                          <ErrorMessage
-                            name="tipo_leccion"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="fecha_editar">
-                            <FiCalendar /> Fecha:
-                          </label>
-                          <Field
-                            type="date"
-                            name="fecha"
-                            id="fecha_editar"
-                            placeholder="dd/mm/aaaa"
-                          />
-                          <ErrorMessage
-                            name="fecha"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
+                      <div className="form-group">
+                        <label htmlFor="area_categoria_editar">
+                          <FiBriefcase /> Área/Categoría:
+                        </label>
+                        <Field
+                          as="select"
+                          name="area_categoria"
+                          id="area_categoria_editar"
+                        >
+                          <option value="">Seleccionar área</option>
+                          {[
+                            ...new Set(
+                              allLecciones.map(
+                                // Use allLecciones for dynamic options
+                                (item) => item.area_categoria
+                              )
+                            ),
+                          ]
+                            .sort()
+                            .map((area) => (
+                              <option key={area} value={area}>
+                                {area}
+                              </option>
+                            ))}
+                        </Field>
+                        <ErrorMessage
+                          name="area_categoria"
+                          component="div"
+                          className="error-message"
+                        />
                       </div>
-                      <div className="form-group horizontal-group two-cols">
-                        {" "}
+                      <div className="form-group">
+                        <label htmlFor="tipo_leccion_editar">
+                          <FiBriefcase /> Tipo de Lección:
+                        </label>
+                        <Field
+                          as="select"
+                          name="tipo_leccion"
+                          id="tipo_leccion_editar"
+                        >
+                          <option value="">Seleccionar tipo</option>
+                          <option value="Oportunidad">Oportunidad</option>
+                          <option value="Amenaza">Amenaza</option>
+                        </Field>
+                        <ErrorMessage
+                          name="tipo_leccion"
+                          component="div"
+                          className="error-message"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="fecha_editar">
+                          <FiCalendar /> Fecha:
+                        </label>
+                        <Field
+                          type="date"
+                          name="fecha"
+                          id="fecha_editar"
+                          placeholder="dd/mm/aaaa"
+                        />
+                        <ErrorMessage
+                          name="fecha"
+                          component="div"
+                          className="error-message"
+                        />
+                      </div>
+                      <div className="form-group">
                         {/* Nueva agrupación */}
-                        <div>
-                          <label htmlFor="creado_por_simulado_editar">
-                            <FiUser /> Creado por:
-                          </label>
-                          <Field
-                            type="text"
-                            name="creado_por_nombre" // Este campo es de la data original
-                            id="creado_por_simulado_editar"
-                            placeholder="Nombre del responsable" // Placeholder
-                            disabled // Mantener deshabilitado como en el original
-                          />
-                          {/* <ErrorMessage name="creado_por_nombre" component="div" className="error-message" /> */}
-                        </div>
-                        <div>
-                          <label htmlFor="reportado_por_editar">
-                            <FiUser /> Reportado Por:
-                          </label>
-                          <Field
-                            type="text"
-                            name="reportado_por"
-                            id="reportado_por_editar"
-                            placeholder="Nombre del reportador"
-                          />
-                          <ErrorMessage
-                            name="reportado_por"
-                            component="div"
-                            className="error-message"
-                          />
-                        </div>
+                        {/* Contenido del primer div (creado_por) */}
+                        <label htmlFor="creado_por_simulado_editar">
+                          <FiUser /> Creado por:
+                        </label>
+                        <Field
+                          type="text"
+                          name="creado_por_nombre" // Este campo es de la data original
+                          id="creado_por_simulado_editar"
+                          placeholder="Nombre del responsable" // Placeholder
+                          disabled // Mantener deshabilitado como en el original
+                        />
+                        {/* <ErrorMessage name="creado_por_nombre" component="div" className="error-message" /> */}
+                      </div>
+                      <div className="form-group">
+                        {/* Contenido del segundo div (reportado_por) */}
+                        <label htmlFor="reportado_por_editar">
+                          <FiUser /> Reportado Por:
+                        </label>
+                        <Field
+                          type="text"
+                          name="reportado_por"
+                          id="reportado_por_editar"
+                          placeholder="Nombre del reportador"
+                        />
+                        <ErrorMessage
+                          name="reportado_por"
+                          component="div"
+                          className="error-message"
+                        />
                       </div>
                       <div className="form-group">
                         {" "}

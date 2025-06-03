@@ -501,6 +501,25 @@ app.put(
   }
 );
 
+// --- Endpoint para listado simple de proyectos ---
+app.get(
+  "/api/proyectos/listado-simple", // Eliminado :area de la ruta
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    try {
+      // const { area } = req.params; // 'area' ya no se usa aquí
+      const [proyectos] = await db.execute(
+        "SELECT id_proyecto, nombre_proyecto FROM proyectos ORDER BY nombre_proyecto ASC" // Eliminado WHERE area = ?
+      );
+      res.status(200).json(proyectos);
+    } catch (error) {
+      console.error("Error en GET /api/proyectos/listado-simple:", error); // Log actualizado
+      next(error);
+    }
+  }
+);
+// --- Fin Endpoint listado simple de proyectos ---
+
 app.get(
   "/api/Proyectos/:area",
   passport.authenticate("jwt", { session: false }),
@@ -1477,25 +1496,6 @@ app.patch(
     }
   }
 );
-
-// --- Endpoint para listado simple de proyectos ---
-app.get(
-  "/api/proyectos/listado-simple", // Eliminado :area de la ruta
-  passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    try {
-      // const { area } = req.params; // 'area' ya no se usa aquí
-      const [proyectos] = await db.execute(
-        "SELECT id_proyecto, nombre_proyecto FROM proyectos ORDER BY nombre_proyecto ASC" // Eliminado WHERE area = ?
-      );
-      res.status(200).json(proyectos);
-    } catch (error) {
-      console.error("Error en GET /api/proyectos/listado-simple:", error); // Log actualizado
-      next(error);
-    }
-  }
-);
-// --- Fin Endpoint listado simple de proyectos ---
 
 // --- Endpoints para Lecciones Aprendidas ---
 

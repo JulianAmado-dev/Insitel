@@ -516,13 +516,13 @@
 }
 
 /* Colores de borde para secciones (ejemplos) */
-.modal-section.info-basica { border-left-color: #3498db; /* Azul */ }
-.modal-section.descripcion-situacion { border-left-color: #f39c12; /* Naranja */ }
-.modal-section.impacto-proyecto { border-left-color: #e74c3c; /* Rojo */ }
-.modal-section.acciones-implementadas { border-left-color: #9b59b6; /* Morado */ }
-.modal-section.leccion-final { border-left-color: #2ecc71; /* Verde */ }
+.modal-section.info-basica { border-left-color: #3498db !important; /* Azul */ }
+.modal-section.descripcion-situacion { border-left-color: #f39c12 !important; /* Naranja */ }
+.modal-section.impacto-proyecto { border-left-color: #e74c3c !important; /* Rojo */ }
+.modal-section.acciones-implementadas { border-left-color: #9b59b6 !important; /* Morado */ }
+.modal-section.leccion-final { border-left-color: #2ecc71 !important; /* Verde */ }
 
-.icon-placeholder svg { 
+.icon-placeholder svg {
   vertical-align: middle;
 }
 
@@ -643,7 +643,7 @@
 /* Overriding old modal section styles for V2 if needed, or use new ones */
 .modal-v2 .modal-section {
   border: 1px solid #dee2e6; /* Lighter border for sections */
-  border-left-width: 3px; /* Thinner accent border */
+  border-left-width: 3px; /* Thinner accent border - Restaurado */
   border-radius: 8px; /* Consistent rounding */
   padding: 20px;
   margin-bottom: 20px;
@@ -661,19 +661,26 @@
 .modal-v2 .modal-section-title svg { /* Icons in section titles */
   margin-right: 10px;
   font-size: 1.2em; /* Consistent icon size */
-  color: #007bff; /* Blue icons */
+  /* color: #6c757d; */ /* Color de icono neutro/grisáceo - Se sobreescribirá abajo */
 }
+
+/* Specific icon colors for modal sections to match border - Restaurado */
+.modal-v2 .modal-section.info-basica .modal-section-title svg { color: #3498db; } /* Blue */
+.modal-v2 .modal-section.descripcion-situacion .modal-section-title svg { color: #f39c12; } /* Orange */
+.modal-v2 .modal-section.impacto-proyecto .modal-section-title svg { color: #e74c3c; } /* Red */
+.modal-v2 .modal-section.acciones-implementadas .modal-section-title svg { color: #9b59b6; } /* Purple */
+.modal-v2 .modal-section.leccion-final .modal-section-title svg { color: #2ecc71; } /* Green */
 
 /* Form group adjustments for V2 */
 .modal-v2 .form-group {
   margin-bottom: 18px;
 }
-.modal-v2 .form-group.horizontal-group {
-  gap: 25px; /* Slightly more gap */
-}
-.modal-v2 .form-group.horizontal-group.two-cols > div {
-  flex-basis: calc(50% - 12.5px);
-}
+/* .modal-v2 .form-group.horizontal-group { */ /* Ya no se usa para la estructura principal de Información Básica */
+  /* gap: 25px; */
+/* } */
+/* .modal-v2 .form-group.horizontal-group.two-cols > div { */ /* Ya no se usa para la estructura principal de Información Básica */
+  /* flex-basis: calc(50% - 12.5px); */
+/* } */
 
 
 .modal-v2 .form-group label {
