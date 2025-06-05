@@ -29,6 +29,7 @@ import {
   FiCalendar,
   FiBriefcase, // For "Tipo de Lección" or "Área/Categoría"
 } from "react-icons/fi";
+import { Tag, Target, Presentation } from "lucide-react";
 import { FaStar, FaSort } from "react-icons/fa";
 import "./LeccionesAprendidas.css";
 // import { max } from "lodash"; // Removed unused import
@@ -169,9 +170,8 @@ function LeccionesAprendidas() {
         if (projectIdFromUrl) {
           setSelectedProyectoId(projectIdFromUrl);
         } else {
-           setLecciones(fetchedLecciones); // If no project filter, show all (or apply other default filters)
+          setLecciones(fetchedLecciones); // If no project filter, show all (or apply other default filters)
         }
-
       } catch (err) {
         const errorMessage = err.message || "Error al cargar datos iniciales.";
         setError(errorMessage);
@@ -189,7 +189,7 @@ function LeccionesAprendidas() {
 
   // Effect for filtering based on selectedArea, selectedTipo, selectedProyectoId, globalFilter
   useEffect(() => {
-    let filteredData = [...allLecciones]; 
+    let filteredData = [...allLecciones];
 
     if (selectedArea) {
       filteredData = filteredData.filter(
@@ -202,9 +202,9 @@ function LeccionesAprendidas() {
         (leccion) => leccion.tipo_leccion === selectedTipo
       );
     }
-    
+
     // This filter is now prioritized by the initial load effect if projectId is in URL
-    if (selectedProyectoId) { 
+    if (selectedProyectoId) {
       const projectId = parseInt(selectedProyectoId, 10);
       filteredData = filteredData.filter(
         (leccion) => leccion.id_proyecto === projectId
@@ -329,6 +329,7 @@ function LeccionesAprendidas() {
       {
         accessorKey: "titulo",
         header: "Título",
+        /* size: 30, */
         cell: (info) => (
           <span
             onClick={() => handleOpenEditarModal(info.row.original)}
@@ -380,7 +381,7 @@ function LeccionesAprendidas() {
     onSortingChange: setSorting,
     initialState: { pagination: { pageSize: 5 } },
     enableColumnResizing: true, // Enable column resizing
-    columnResizeMode: "onChange", // Recommended mode
+    columnResizeMode: "onEnd", // Recommended mode
   });
 
   const [viewMode, setViewMode] = useState("table");
@@ -424,7 +425,12 @@ function LeccionesAprendidas() {
         <div className="acciones-cabecera">
           <button onClick={handleOpenCrearModal} className="btn-nueva-leccion">
             <FiPlusCircle
-              style={{ marginRight: "5px", verticalAlign: "middle" , width: "20px", height: "20px" }}
+              style={{
+                marginRight: "5px",
+                verticalAlign: "middle",
+                width: "20px",
+                height: "20px",
+              }}
             />{" "}
             Nueva lección
           </button>
@@ -504,7 +510,13 @@ function LeccionesAprendidas() {
       {viewMode === "table" && (
         <>
           <div className="tabla-responsive-container">
-            <table className="tabla-lecciones">
+            <table
+              className="tabla-lecciones"
+              style={{
+                width: table.getTotalSize(),
+                borderCollapse: "collapse",
+              }}
+            >
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
@@ -557,6 +569,15 @@ function LeccionesAprendidas() {
                               <div
                                 onMouseDown={header.getResizeHandler()}
                                 onTouchStart={header.getResizeHandler()}
+                                style={{
+                                  userSelect: "none",
+                                  touchAction: "none",
+                                  position: "absolute",
+                                  right: 0,
+                                  top: 0,
+                                  height: "100%",
+                                  width: "3px",
+                                }}
                                 className={`resizer ${
                                   header.column.getIsResizing()
                                     ? "isResizing"
@@ -781,133 +802,179 @@ function LeccionesAprendidas() {
                         Información Básica
                       </h3>
                       <div className="form-group">
-                        <label htmlFor="titulo_crear" style={{ display: "flex", alignItems: "left" }}>
-                          <FiFileText /> Título:
-                        </label>
-                        <Field
-                          type="text"
-                          name="titulo"
-                          id="titulo_crear"
-                          placeholder="Ingrese un título descriptivo para la lección aprendida"
-                          style={{ width: "100%", maxWidth: "600px" }}
-                        />
-                        <ErrorMessage
-                          name="titulo"
-                          component="div"
-                          className="error-message"
-                        />
+                        <div
+                          style={{
+                            width: "100%",
+                            maxWidth: "100%",
+                            minWidth: "100%",
+                          }}
+                        >
+                          <label htmlFor="titulo_crear">
+                            <Tag /> Título:
+                          </label>
+                          <Field
+                            type="text"
+                            name="titulo"
+                            id="titulo_crear"
+                            placeholder="Ingrese un título descriptivo para la lección aprendida"
+                            style={{
+                              width: "100%",
+                              maxWidth: "100%",
+                              minWidth: "100%",
+                            }}
+                          />
+                          <ErrorMessage
+                            name="titulo"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
                       </div>
                       {/* Creado por field removed from form as it's handled by backend */}
-                      <div className="form-group">
-                        <label htmlFor="area_categoria_crear">
-                          <FiBriefcase /> Área/Categoría:
-                        </label>
-                        <Field
-                          as="select"
-                          name="area_categoria"
-                          id="area_categoria_crear"
-                        >
-                          <option value="">Seleccionar área</option>
-                          {[
-                            ...new Set(
-                              allLecciones.map((item) => item.area_categoria)
-                            ),
-                          ]
-                            .sort()
-                            .map((area) => (
-                              <option key={area} value={area}>
-                                {area}
+                      <div
+                        className="form-group"
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          gap: "10px",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div>
+                          <label htmlFor="area_categoria_crear">
+                            <Target /> Área/Categoría:
+                          </label>
+                          <Field
+                            as="select"
+                            name="area_categoria"
+                            style={{ maxWidth: 280, width: 280, minWidth: 280 }}
+                            id="area_categoria_crear"
+                          >
+                            <option value="">Seleccionar área</option>
+                            {[
+                              ...new Set(
+                                allLecciones.map((item) => item.area_categoria)
+                              ),
+                            ]
+                              .sort()
+                              .map((area) => (
+                                <option key={area} value={area}>
+                                  {area}
+                                </option>
+                              ))}
+                          </Field>
+                          <ErrorMessage
+                            name="area_categoria"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="tipo_leccion_crear">
+                            <Presentation /> Tipo de Lección:
+                          </label>
+                          <Field
+                            as="select"
+                            name="tipo_leccion"
+                            id="tipo_leccion_crear"
+                            style={{ maxWidth: 280, width: 280, minWidth: 280 }}
+                          >
+                            <option value="">Seleccionar tipo</option>
+                            <option value="Oportunidad">Oportunidad</option>
+                            <option value="Amenaza">Amenaza</option>
+                          </Field>
+                          <ErrorMessage
+                            name="tipo_leccion"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="fecha_crear">
+                            <FiCalendar /> Fecha:
+                          </label>
+                          <Field
+                            style={{ maxWidth: 280, width: 280, minWidth: 280 }}
+                            type="date"
+                            name="fecha"
+                            id="fecha_crear"
+                            placeholder="dd/mm/aaaa"
+                          />
+                          <ErrorMessage
+                            name="fecha"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className="form-group"
+                        style={{
+                          position: "relative",
+                          display: "flex",
+                          flexDirection: "row",
+                          gap: "10px",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div style={{ width: "50%" }}>
+                          <label htmlFor="reportado_por_crear">
+                            <FiUser /> Reportado Por:
+                          </label>
+                          <Field
+                            style={{
+                              maxWidth: "100%",
+                              width: "100%",
+                              minWidth: "100%",
+                            }}
+                            type="text"
+                            name="reportado_por"
+                            id="reportado_por_crear"
+                            placeholder="Nombre del reportador"
+                          />
+                          <ErrorMessage
+                            name="reportado_por"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="id_proyecto_crear">
+                            <FiBriefcase /> Proyecto:
+                          </label>
+                          <Field
+                            as="select"
+                            name="id_proyecto"
+                            id="id_proyecto_crear"
+                          >
+                            <option value="">Seleccione un proyecto</option>
+                            {proyectosLista.map((p) => (
+                              <option key={p.id_proyecto} value={p.id_proyecto}>
+                                {p.nombre_proyecto}
                               </option>
                             ))}
-                        </Field>
-                        <ErrorMessage
-                          name="area_categoria"
-                          component="div"
-                          className="error-message"
-                        />
+                          </Field>
+                          <ErrorMessage
+                            name="id_proyecto"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
                       </div>
-                      <div className="form-group">
-                        <label htmlFor="tipo_leccion_crear">
-                          <FiBriefcase /> Tipo de Lección:
-                        </label>
-                        <Field
-                          as="select"
-                          name="tipo_leccion"
-                          id="tipo_leccion_crear"
-                        >
-                          <option value="">Seleccionar tipo</option>
-                          <option value="Oportunidad">Oportunidad</option>
-                          <option value="Amenaza">Amenaza</option>
-                        </Field>
-                        <ErrorMessage
-                          name="tipo_leccion"
-                          component="div"
-                          className="error-message"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="fecha_crear">
-                          <FiCalendar /> Fecha:
-                        </label>
-                        <Field
-                          type="date"
-                          name="fecha"
-                          id="fecha_crear"
-                          placeholder="dd/mm/aaaa"
-                        />
-                        <ErrorMessage
-                          name="fecha"
-                          component="div"
-                          className="error-message"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="reportado_por_crear">
-                          <FiUser /> Reportado Por:
-                        </label>
-                        <Field
-                          type="text"
-                          name="reportado_por"
-                          id="reportado_por_crear"
-                          placeholder="Nombre del reportador"
-                        />
-                        <ErrorMessage
-                          name="reportado_por"
-                          component="div"
-                          className="error-message"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="id_proyecto_crear">
-                          <FiBriefcase /> Proyecto:
-                        </label>
-                        <Field
-                          as="select"
-                          name="id_proyecto"
-                          id="id_proyecto_crear"
-                        >
-                          <option value="">Seleccione un proyecto</option>
-                          {proyectosLista.map((p) => (
-                            <option key={p.id_proyecto} value={p.id_proyecto}>
-                              {p.nombre_proyecto}
-                            </option>
-                          ))}
-                        </Field>
-                        <ErrorMessage
-                          name="id_proyecto"
-                          component="div"
-                          className="error-message"
-                        />
-                      </div>
+                      <div className="form-group"></div>
                     </div>
                     {/* Las demás secciones mantienen su estructura */}
-                    <div className="modal-section descripcion-situacion">
+                    <div
+                      className="modal-section descripcion-situacion"
+                      style={{ maxWidth: "100%" }}
+                    >
                       <h3 className="modal-section-title">
                         <FiAlertTriangle className="icon-placeholder" />
                         Descripción de la Situación
                       </h3>
                       <div className="form-group">
                         <Field
+                          style={{ maxWidth: "100%" }}
                           as="textarea"
                           name="descripcion_situacion"
                           id="descripcion_situacion_crear"
@@ -920,45 +987,57 @@ function LeccionesAprendidas() {
                         />
                       </div>
                     </div>
-                    <div className="modal-section impacto-proyecto">
-                      <h3 className="modal-section-title">
-                        <FiTarget className="icon-placeholder" />
-                        Impacto en el Proyecto
-                      </h3>
-                      <div className="form-group">
-                        <Field
-                          as="textarea"
-                          name="descripcion_impacto"
-                          id="descripcion_impacto_crear"
-                          placeholder="Describa cómo afectó esta situación a los objetivos del proyecto..."
-                        />
-                        <ErrorMessage
-                          name="descripcion_impacto"
-                          component="div"
-                          className="error-message"
-                        />
+                    <div style={{ display: "flex", gap: "2%" }}>
+                      <div
+                        className="modal-section impacto-proyecto"
+                        style={{ width: "49%" }}
+                      >
+                        <h3 className="modal-section-title">
+                          <FiTarget className="icon-placeholder" />
+                          Impacto en el Proyecto
+                        </h3>
+                        <div className="form-group">
+                          <Field
+                            as="textarea"
+                            name="descripcion_impacto"
+                            id="descripcion_impacto_crear"
+                            placeholder="Describa cómo afectó esta situación a los objetivos del proyecto..."
+                          />
+                          <ErrorMessage
+                            name="descripcion_impacto"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className="modal-section acciones-implementadas"
+                        style={{ width: "49%" }}
+                      >
+                        <h3 className="modal-section-title">
+                          <FiTool className="icon-placeholder" />
+                          Acciones Implementadas
+                        </h3>
+                        <div className="form-group">
+                          <Field
+                            as="textarea"
+                            name="acciones_correctivas"
+                            id="acciones_correctivas_crear"
+                            placeholder="Describa las medidas tomadas para resolver la situación y prevenir su recurrencia..."
+                          />
+                          <ErrorMessage
+                            name="acciones_correctivas"
+                            component="div"
+                            className="error-message"
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="modal-section acciones-implementadas">
-                      <h3 className="modal-section-title">
-                        <FiTool className="icon-placeholder" />
-                        Acciones Implementadas
-                      </h3>
-                      <div className="form-group">
-                        <Field
-                          as="textarea"
-                          name="acciones_correctivas"
-                          id="acciones_correctivas_crear"
-                          placeholder="Describa las medidas tomadas para resolver la situación y prevenir su recurrencia..."
-                        />
-                        <ErrorMessage
-                          name="acciones_correctivas"
-                          component="div"
-                          className="error-message"
-                        />
-                      </div>
-                    </div>
-                    <div className="modal-section leccion-final">
+
+                    <div
+                      className="modal-section leccion-final"
+                      style={{ maxWidth: "100%" }}
+                    >
                       <h3 className="modal-section-title">
                         <FiMessageCircle className="icon-placeholder" />
                         Lección Aprendida
@@ -966,6 +1045,7 @@ function LeccionesAprendidas() {
                       <div className="form-group">
                         <Field
                           as="textarea"
+                          style={{ maxWidth: "100%" }}
                           name="leccion_aprendida_recomendaciones"
                           id="leccion_aprendida_recomendaciones_crear"
                           placeholder="Resuma la lección aprendida, recomendaciones para futuros proyectos, mejores prácticas identificadas..."
@@ -1195,6 +1275,7 @@ function LeccionesAprendidas() {
                       </h3>
                       <div className="form-group">
                         <Field
+                          style={{ maxWidth: "100%" }}
                           as="textarea"
                           name="descripcion_situacion"
                           id="descripcion_situacion_editar"

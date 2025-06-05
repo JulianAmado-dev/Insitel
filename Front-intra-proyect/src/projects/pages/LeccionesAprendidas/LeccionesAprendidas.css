@@ -48,7 +48,7 @@
   align-items: center;
   margin-bottom: 25px;
   padding-bottom: 15px;
-  /* border-bottom: 1px solid #dee2e6; /* Borde sutil - Se puede quitar si la línea azul ya separa suficiente */
+  border-bottom: 1px solid #dee2e6; /* Borde sutil - Se puede quitar si la línea azul ya separa suficiente */
 }
 
 .pagina-cabecera h1 {
@@ -127,6 +127,7 @@
   background-color: #fff;
   font-size: 0.9em;
   color: #495057;
+  max-width: 180px;
   min-width: 180px; /* Ancho mínimo para selectores */
 }
 
@@ -373,7 +374,7 @@
 }
 
 .modal-content {
-  width: 900px; /* Ancho del modal aumentado */
+  width: 1000px; /* Ancho del modal aumentado */
   max-width: 95%;
   background-color: white;
   border: 1px solid #bdc3c7;
@@ -414,11 +415,12 @@
 }
 
 .form-group label {
+  justify-content: left;
   display: block;
   margin-bottom: 8px;
   font-weight: bold;
-  color: #34495e;
-  font-size: 0.95em;
+  color: #16191d;
+  font-size: 1em;
 }
 
 .form-group select,
@@ -583,6 +585,7 @@
 }
 
 .modal-header-v2 {
+  text-align: left; /* Align text to the left */
   display: flex;
   justify-content: space-between;
   align-items: flex-start; /* Align items to the top */
@@ -714,13 +717,13 @@
   align-items: center;
   margin-bottom: 8px;
   font-weight: 500; /* Medium weight */
-  color: #495057;
-  font-size: 0.9em;
+  color: #16191d;
+  font-size: 1em;
 }
 .modal-v2 .form-group label svg {
   margin-right: 8px;
-  font-size: 1.1em; /* Icon size in labels */
-  color: #6c757d; /* Subtler icon color */
+  font-size: 1em; /* Icon size in labels */
+  color: #0d0e0f; /* Subtler icon color */
 }
 
 .modal-v2 .form-group select,
