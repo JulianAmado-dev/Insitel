@@ -381,7 +381,7 @@ function LeccionesAprendidas() {
     onSortingChange: setSorting,
     initialState: { pagination: { pageSize: 5 } },
     enableColumnResizing: true, // Enable column resizing
-    columnResizeMode: "onChange", 
+    columnResizeMode: "onChange",
   });
 
   const [viewMode, setViewMode] = useState("table");
@@ -513,7 +513,7 @@ function LeccionesAprendidas() {
             <table
               className="tabla-lecciones"
               style={{
-                width: table.getTotalSize(),
+                /* width: table.getTotalSize(), */
                 borderCollapse: "collapse",
               }}
             >

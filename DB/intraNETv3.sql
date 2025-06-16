@@ -380,36 +380,6 @@ CREATE TABLE `intraNet_DB`.`presupuesto_servicio` (
     FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 ) ENGINE=InnoDB COMMENT='Líneas de detalle de Servicios para un presupuesto';
 
--- Tabla de Datos: Formulario "Riesgos" (1 Proyecto -> N Riesgos)
-CREATE TABLE `intraNet_DB`.`formulario_riesgos`(
-  `id_riesgo` INT NOT NULL AUTO_INCREMENT,
-  `id_proyecto` INT NOT NULL,
-  `descripcion` TEXT NULL,
-  `estado` ENUM('identificado','cercano', 'disparado', 'evitado', 'mitigado', 'aceptado', 'transferido') NULL,
-  `fecha_de_identificacion` DATETIME NULL,
-  `tipo` ENUM('Negativo','Positivo') NULL,
-  `categoria` ENUM('Técnico', 'Diseño', 'Recurso Humano', 'Recurso Fisico', 'Recurso Técnico') NULL,
-  `probabilidad` INT NULL CHECK (`probabilidad` BETWEEN 1 AND 5),
-  `impacto` INT NULL CHECK (`impacto` BETWEEN 1 AND 5),
-  `id_responsable` INT NULL,
-  `fecha_probable_materializacion` DATETIME NULL,
-  `evento_disparador` VARCHAR(400) NULL,
-  `posibles_consecuencias` TEXT NULL,
-  `plan_respuesta` ENUM('evitar', 'transferir', 'mitigar', 'aceptar') NULL,
-  `descripcion_plan_respuesta` TEXT NULL,
-  `fecha_real_materializacion` DATETIME NULL,
-  `descripcion_accion_tomada` TEXT NULL,
-  `efectividad` INT NULL CHECK (`efectividad` BETWEEN 1 AND 5),
-  `notas` TEXT NULL,
-  `creado_en` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `actualizado_en` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_riesgo`),
-  INDEX `idx_riesgos_proyecto` (`id_proyecto`),
-  INDEX `idx_riesgos_responsable` (`id_responsable`),
-  FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
-    FOREIGN KEY (`id_responsable`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
-) ENGINE=InnoDB COMMENT='Registro de riesgos identificados para un proyecto';
-
 -- Tabla de Datos: Formulario "Verificación" (Principal) (1 Proyecto -> N Verificaciones)
 CREATE TABLE `intraNet_DB`.`formulario_verificacion` (
     `id_formulario_verificacion` INT NOT NULL AUTO_INCREMENT,
@@ -479,6 +449,58 @@ CREATE TABLE `intraNet_DB`.`lecciones_aprendidas`(
     FOREIGN KEY(`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
     FOREIGN KEY (`creado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 );
+
+-- Tabla de Datos: Formulario "Riesgos" (1 Proyecto -> N Riesgos)
+CREATE TABLE `intraNet_DB`.`formulario_riesgos`(
+  `id_riesgo` INT NOT NULL AUTO_INCREMENT,
+  `id_proyecto` INT NOT NULL,
+  `descripcion` TEXT NULL,
+  `estado` ENUM('identificado','cercano', 'disparado', 'evitado', 'mitigado', 'aceptado', 'transferido') NULL,
+  `fecha_de_identificacion` DATETIME NULL,
+  `tipo` ENUM('Negativo','Positivo') NULL,
+  `categoria` ENUM('Técnico', 'Diseño', 'Recurso Humano', 'Recurso Fisico', 'Recurso Técnico') NULL,
+  `probabilidad` INT NULL CHECK (`probabilidad` BETWEEN 1 AND 5),
+  `impacto` INT NULL CHECK (`impacto` BETWEEN 1 AND 20),
+  `id_responsable` INT NULL,
+  `fecha_probable_materializacion` DATETIME NULL,
+  `evento_disparador` VARCHAR(400) NULL,
+  `posibles_consecuencias` TEXT NULL,
+  `plan_respuesta` ENUM('evitar', 'transferir', 'mitigar', 'aceptar') NULL,
+  `descripcion_plan_respuesta` TEXT NULL,
+  
+  `creado_en` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_riesgo`),
+  INDEX `idx_riesgos_proyecto` (`id_proyecto`),
+  INDEX `idx_riesgos_responsable` (`id_responsable`),
+  FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos`(`id_proyecto`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_responsable`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
+) ENGINE=InnoDB COMMENT='Registro de riesgos identificados para un proyecto';
+
+create table `intraNet_DB`.`evaluacion_riesgos`(
+	`id_riesgo` INT NOT NULL,
+    `id_evaluacion_riesgos` INT NOT NULL auto_increment,
+    `nueva_probabilidad` INT NOT NULL CHECK (`nueva_probabilidad` BETWEEN 1 AND 5),
+    `nuevo_impacto` INT NOT NULL CHECK (`nueva_probabilidad` BETWEEN 1 AND 20),
+	`fecha_evaluacion` DATETIME NULL,
+
+	PRIMARY KEY(`id_evaluacion_riesgos`) ,
+    FOREIGN KEY(`id_riesgo`) REFERENCES `formulario_riesgos`(`id_riesgo`) ON DELETE CASCADE
+);
+
+CREATE TABLE `intraNet_DB`.`materializacion_riegos`(
+	`id_riesgo` INT NOT NULL,
+    `id_materializacion_riesgo` INT NOT NULL auto_increment,
+	`fecha_real_materializacion` DATETIME NULL,
+	`descripcion_accion_tomada` TEXT NULL,
+	`efectividad` INT NULL CHECK (`efectividad` BETWEEN 1 AND 5),
+	`notas` TEXT NULL,
+
+	PRIMARY KEY(`id_materializacion_riesgo`) ,
+    FOREIGN KEY(`id_riesgo`) REFERENCES `formulario_riesgos`(`id_riesgo`) ON DELETE CASCADE
+);
+
+
 -- ======================================================================
 -- INSERTS INICIALES (Catálogos) - EJEMPLO
 -- ======================================================================

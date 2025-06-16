@@ -1,0 +1,14 @@
+.critical-risk {
+  background-color: red;
+  color: white;
+}
+
+.medium-risk {
+  background-color: orange;
+  color: white;
+}
+
+.low-risk {
+  background-color: rgb(32, 165, 65);
+  color: black;
+}
