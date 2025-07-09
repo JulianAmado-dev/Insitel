@@ -1,0 +1,86 @@
+.riesgos-preview-card {
+  /* Herencia de .forms-card si es necesario o estilos específicos */
+  /* background-color: var(--color-background-light); */ /* Ejemplo */
+}
+
+.riesgos-preview-card .form-header.riesgos {
+  /* background-color: var(--color-riesgos-light); */ /* Color temático para riesgos */
+  /* border-bottom: 3px solid var(--color-riesgos-dark); */
+}
+
+.riesgos-preview-card .form-header.riesgos .form-icon {
+  color: var(--color-riesgos-dark); /* Ajusta según tu paleta */
+}
+
+.riesgos-preview-card .form-content {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.riesgos-preview-card .total-riesgos {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.riesgos-preview-card .riesgos-summary-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Espacio entre ítems de la lista */
+}
+
+.riesgos-preview-card .riesgos-summary-list li {
+  display: flex;
+  align-items: center;
+  font-size: 0.95em;
+  color: var(--color-text-secondary);
+}
+
+.riesgos-preview-card .riesgos-summary-list span[class*="-dot"] {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.riesgos-preview-card .risk-critical-dot {
+  background-color: var(--color-risk-critical, #e53e3e); /* Rojo oscuro */
+}
+
+.riesgos-preview-card .risk-moderate-dot {
+  background-color: var(--color-risk-moderate, #dd6b20); /* Naranja */
+}
+
+.riesgos-preview-card .risk-low-dot {
+  background-color: var(--color-risk-low, #d69e2e); /* Amarillo/Dorado */
+}
+
+.riesgos-preview-card .no-riesgos-message {
+  font-style: italic;
+  color: var(--color-success, #38a169); /* Verde */
+  text-align: center;
+  padding: 10px 0;
+}
+
+.riesgos-preview-card .form-footer {
+  /* Estilos heredados de .forms-card .form-footer o específicos */
+  border-top: 1px solid var(--color-border-light);
+  padding: 10px 15px;
+  background-color: var(--color-background-very-light); /* Un fondo ligeramente diferente para el footer */
+}
+
+.riesgos-preview-card .form-button {
+  /* Estilos heredados o específicos */
+  /* background-color: var(--color-riesgos-dark); */
+  /* color: white; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

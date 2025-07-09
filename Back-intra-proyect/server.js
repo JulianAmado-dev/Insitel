@@ -1530,10 +1530,17 @@ app.get(
       `;
       console.log("Executing query for /api/lecciones-aprendidas:", query);
       const [lecciones] = await db.execute(query);
-      console.log("GET /api/lecciones-aprendidas: Query successful, number of lessons:", lecciones.length);
+      console.log(
+        "GET /api/lecciones-aprendidas: Query successful, number of lessons:",
+        lecciones.length
+      );
       res.status(200).json(lecciones);
     } catch (error) {
-      console.error("Error in GET /api/lecciones-aprendidas:", error.message, error.stack); // Log sin :area
+      console.error(
+        "Error in GET /api/lecciones-aprendidas:",
+        error.message,
+        error.stack
+      ); // Log sin :area
       next(error);
     }
   }
@@ -1742,24 +1749,41 @@ app.get(
         // 2. Risk Summary
         const [riskRows] = await connection.execute(
           `SELECT
-            COUNT(*) as cant_riesgos,
-            SUM(CASE WHEN probabilidad * impacto >= 15 THEN 1 ELSE 0 END) as cant_riesgos_criticos,
-            SUM(CASE WHEN probabilidad * impacto >= 8 AND probabilidad * impacto < 15 THEN 1 ELSE 0 END) as cant_riesgos_moderados,
-            SUM(CASE WHEN probabilidad * impacto >= 1 AND probabilidad * impacto < 8 THEN 1 ELSE 0 END) as cant_riesgos_leves,
-            SUM(CASE WHEN probabilidad IS NULL OR impacto IS NULL OR probabilidad = 0 OR impacto = 0 THEN 1 ELSE 0 END) as cant_riesgos_nulos
-          FROM formulario_riesgos
-          WHERE id_proyecto = ?`,
+            COUNT(fr.id_riesgo) as cant_riesgos,
+            SUM(CASE WHEN er.probabilidad * er.impacto >= 15 THEN 1 ELSE 0 END) as cant_riesgos_criticos,
+            SUM(CASE WHEN er.probabilidad * er.impacto >= 8 AND er.probabilidad * er.impacto < 15 THEN 1 ELSE 0 END) as cant_riesgos_moderados,
+            SUM(CASE WHEN er.probabilidad * er.impacto >= 1 AND er.probabilidad * er.impacto < 8 THEN 1 ELSE 0 END) as cant_riesgos_leves,
+            SUM(CASE WHEN er.probabilidad IS NULL OR er.impacto IS NULL OR er.probabilidad = 0 OR er.impacto = 0 THEN 1 ELSE 0 END) as cant_riesgos_nulos
+          FROM formulario_riesgos fr
+          LEFT JOIN (
+            SELECT
+                id_riesgo, probabilidad, impacto,
+                ROW_NUMBER() OVER(PARTITION BY id_riesgo ORDER BY fecha_evaluacion DESC, id_evaluacion_riesgos DESC) as rn
+            FROM evaluacion_riesgos
+          ) er ON fr.id_riesgo = er.id_riesgo AND er.rn = 1
+          WHERE fr.id_proyecto = ?`,
           [id_proyecto]
         );
-        const risks = riskRows[0] || { cant_riesgos: 0, cant_riesgos_criticos: 0, cant_riesgos_moderados: 0, cant_riesgos_leves: 0, cant_riesgos_nulos: 0 };
+        const risks = riskRows[0] || {
+          cant_riesgos: 0,
+          cant_riesgos_criticos: 0,
+          cant_riesgos_moderados: 0,
+          cant_riesgos_leves: 0,
+          cant_riesgos_nulos: 0,
+        };
 
         // 3. Form Statuses & Count
         const formStatusQueries = {
-          general: "SELECT COUNT(*) as count FROM formulario_general WHERE id_proyecto = ?",
-          alcance: "SELECT COUNT(*) as count FROM formulario_alcance WHERE id_proyecto = ?",
-          presupuesto: "SELECT COUNT(*) as count FROM formulario_presupuesto WHERE id_proyecto = ?",
-          riesgos: "SELECT COUNT(*) as count FROM formulario_riesgos WHERE id_proyecto = ?", // Status based on existence of any risk
-          verificacion: "SELECT COUNT(*) as count FROM formulario_verificacion WHERE id_proyecto = ?",
+          general:
+            "SELECT COUNT(*) as count FROM formulario_general WHERE id_proyecto = ?",
+          alcance:
+            "SELECT COUNT(*) as count FROM formulario_alcance WHERE id_proyecto = ?",
+          presupuesto:
+            "SELECT COUNT(*) as count FROM formulario_presupuesto WHERE id_proyecto = ?",
+          riesgos:
+            "SELECT COUNT(*) as count FROM formulario_riesgos WHERE id_proyecto = ?", // Status based on existence of any risk
+          verificacion:
+            "SELECT COUNT(*) as count FROM formulario_verificacion WHERE id_proyecto = ?",
           // 'validacion' and 'controlVersiones' are not in DB schema, will be 'Pendiente'
         };
 
@@ -1768,7 +1792,10 @@ app.get(
         const totalFormsToTrack = 6; // general, alcance, presupuesto, riesgos, verificacion, validacion (mock had controlVersiones too)
 
         for (const formKey in formStatusQueries) {
-          const [countRows] = await connection.execute(formStatusQueries[formKey], [id_proyecto]);
+          const [countRows] = await connection.execute(
+            formStatusQueries[formKey],
+            [id_proyecto]
+          );
           if (countRows[0].count > 0) {
             formulariosStatus[formKey] = "Completado";
             completedFormsCount++;
@@ -1777,14 +1804,14 @@ app.get(
           }
         }
         // Add forms not in DB as 'Pendiente'
-        formulariosStatus.validacion = "Pendiente"; 
+        formulariosStatus.validacion = "Pendiente";
         // formulariosStatus.controlVersiones = "Pendiente"; // If tracking this one too
 
         const formulariosCount = {
           completed: completedFormsCount,
           total: totalFormsToTrack, // Adjust if controlVersiones is also tracked
         };
-        
+
         // 4. Team Members
         const [teamRows] = await connection.execute(
           `SELECT
@@ -1827,7 +1854,10 @@ app.get(
         if (connection) connection.release();
       }
     } catch (error) {
-      console.error(`Error en GET /api/proyectos/:area/:id_proyecto/home-details:`, error);
+      console.error(
+        `Error en GET /api/proyectos/:area/:id_proyecto/home-details:`,
+        error
+      );
       next(error);
     }
   }
@@ -2099,6 +2129,511 @@ app.delete(
 );
 */
 // --- End Commenting out Old Endpoints ---
+
+// --- Formulario Riesgos Endpoints ---
+
+// GET riesgos (todos o filtrados por id_proyecto como query param)
+app.get(
+  "/api/riesgos", // Ruta modificada
+  /* passport.authenticate("jwt", { session: false }), */
+  async (req, res, next) => {
+    const { id_proyecto } = req.query; // id_proyecto ahora es un query parameter opcional
+    let query = `
+      SELECT 
+        fr.*, 
+        e_resp.nombres AS nombre_responsable_nombres, 
+        e_resp.apellidos AS nombre_responsable_apellidos,
+        er.probabilidad, 
+        er.impacto,
+        er.fecha_evaluacion,
+        er.justificacion AS justificacion_evaluacion,
+        e_eval.nombres AS evaluado_por_nombres,
+        e_eval.apellidos AS evaluado_por_apellidos,
+        proj.nombre_proyecto  -- Added project name
+      FROM formulario_riesgos fr
+      LEFT JOIN empleados e_resp ON fr.id_responsable = e_resp.id_empleado
+      LEFT JOIN proyectos proj ON fr.id_proyecto = proj.id_proyecto -- Added join for proyectos
+      LEFT JOIN (
+        SELECT 
+          id_riesgo, probabilidad, impacto, fecha_evaluacion, justificacion, evaluado_por_id,
+          ROW_NUMBER() OVER(PARTITION BY id_riesgo ORDER BY fecha_evaluacion DESC, id_evaluacion_riesgos DESC) as rn
+        FROM evaluacion_riesgos
+      ) er ON fr.id_riesgo = er.id_riesgo AND er.rn = 1
+      LEFT JOIN empleados e_eval ON er.evaluado_por_id = e_eval.id_empleado
+    `;
+    const queryParams = [];
+
+    if (id_proyecto) {
+      if (isNaN(parseInt(id_proyecto))) {
+        return next(boom.badRequest("El ID del proyecto debe ser un número."));
+      }
+      query += " WHERE fr.id_proyecto = ?";
+      queryParams.push(id_proyecto);
+    }
+    query += " ORDER BY fr.creado_en DESC";
+
+    try {
+      const [riesgosRows] = await db.execute(query, queryParams);
+      const riesgos = riesgosRows.map((r) => ({
+        ...r,
+        nombre_responsable:
+          r.nombre_responsable_nombres || r.nombre_responsable_apellidos
+            ? `${r.nombre_responsable_nombres || ""} ${
+                r.nombre_responsable_apellidos || ""
+              }`.trim()
+            : null,
+        evaluado_por:
+          r.evaluado_por_nombres || r.evaluado_por_apellidos
+            ? `${r.evaluado_por_nombres || ""} ${
+                r.evaluado_por_apellidos || ""
+              }`.trim()
+            : null,
+      }));
+      res.status(200).json(riesgos);
+    } catch (error) {
+      const logMessage = id_proyecto
+        ? `/api/riesgos?id_proyecto=${id_proyecto}`
+        : "/api/riesgos";
+      console.error(`Error en GET ${logMessage}:`, error);
+      next(boom.internal("Error al obtener los riesgos."));
+    }
+  }
+);
+
+// POST para crear un nuevo riesgo (id_proyecto es opcional en el body)
+app.post(
+  "/api/riesgos", // Ruta modificada
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const {
+      id_proyecto, // id_proyecto ahora viene del body y es opcional
+      descripcion,
+      estado,
+      fecha_de_identificacion,
+      tipo,
+      categoria,
+      id_responsable,
+      fecha_probable_materializacion,
+      evento_disparador,
+      posibles_consecuencias,
+      plan_respuesta,
+      descripcion_plan_respuesta,
+      // Campos para la evaluación inicial
+      probabilidad,
+      impacto,
+      justificacion,
+    } = req.body;
+    const evaluado_por_id = req.user.id_empleado;
+
+    // Basic validation
+    if (
+      !descripcion ||
+      !estado ||
+      !fecha_de_identificacion ||
+      !tipo ||
+      !categoria ||
+      probabilidad == null ||
+      impacto == null
+    ) {
+      return next(
+        boom.badRequest(
+          "Faltan campos requeridos para crear el riesgo y su evaluación inicial."
+        )
+      );
+    }
+    if (id_proyecto && isNaN(parseInt(id_proyecto))) {
+      return next(
+        boom.badRequest("El ID del proyecto proporcionado debe ser un número.")
+      );
+    }
+
+    try {
+      await executeTransaction(async (connection) => {
+        // 1. Insertar en formulario_riesgos (sin probabilidad e impacto)
+        const [resultFormulario] = await connection.execute(
+          `INSERT INTO formulario_riesgos (
+            id_proyecto, descripcion, estado, fecha_de_identificacion, tipo, categoria,
+            id_responsable, fecha_probable_materializacion,
+            evento_disparador, posibles_consecuencias, plan_respuesta, descripcion_plan_respuesta,
+            creado_en, actualizado_en
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [
+            id_proyecto || null,
+            descripcion,
+            estado,
+            fecha_de_identificacion,
+            tipo,
+            categoria,
+            id_responsable || null,
+            fecha_probable_materializacion || null,
+            evento_disparador || null,
+            posibles_consecuencias || null,
+            plan_respuesta || null,
+            descripcion_plan_respuesta || null,
+          ]
+        );
+        const id_riesgo_creado = resultFormulario.insertId;
+
+        if (!id_riesgo_creado) {
+          throw boom.internal("No se pudo crear el riesgo principal.");
+        }
+
+        // 2. Insertar la evaluación inicial en evaluacion_riesgos
+        await connection.execute(
+          `INSERT INTO evaluacion_riesgos (
+            id_riesgo, probabilidad, impacto, justificacion, evaluado_por_id 
+            -- fecha_evaluacion se establece por DEFAULT CURRENT_TIMESTAMP
+          ) VALUES (?, ?, ?, ?, ?)`,
+          [
+            id_riesgo_creado,
+            probabilidad,
+            impacto,
+            justificacion || "",
+            evaluado_por_id,
+          ]
+        );
+
+        res.status(201).json({
+          id_riesgo: id_riesgo_creado,
+          message: "Riesgo y evaluación inicial creados exitosamente.",
+        });
+      });
+    } catch (error) {
+      console.error(`Error en POST /api/riesgos:`, error);
+      // Asegurarse de que el error se propague para el rollback si está dentro de executeTransaction
+      if (!res.headersSent) {
+        // Evitar enviar múltiples respuestas si el error ya fue manejado por executeTransaction
+        next(
+          boom.internal("Error al crear el riesgo y su evaluación inicial.")
+        );
+      } else {
+        // Si executeTransaction ya respondió (por ejemplo, con un rollback), solo loguear.
+        console.error(
+          "Error after headers sent in POST /api/riesgos, possibly during commit/rollback:",
+          error
+        );
+      }
+    }
+  }
+);
+
+// GET un riesgo específico por su ID
+app.get(
+  "/api/riesgos/:id_riesgo",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    try {
+      const [riesgoRows] = await db.execute(
+        `SELECT fr.*, CONCAT(e.nombres, ' ', e.apellidos) as nombre_responsable 
+         FROM formulario_riesgos fr
+         LEFT JOIN empleados e ON fr.id_responsable = e.id_empleado
+         WHERE fr.id_riesgo = ?`,
+        [id_riesgo]
+      );
+      if (riesgoRows.length === 0) {
+        return next(boom.notFound("Riesgo no encontrado."));
+      }
+      res.status(200).json(riesgoRows[0]);
+    } catch (error) {
+      console.error(`Error en GET /api/riesgos/${id_riesgo}:`, error);
+      next(boom.internal("Error al obtener el riesgo."));
+    }
+  }
+);
+
+// PUT para actualizar un riesgo específico
+app.put(
+  "/api/riesgos/:id_riesgo",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    const {
+      // Se eliminan probabilidad e impacto de aquí, ya que no se actualizan directamente en formulario_riesgos
+      descripcion,
+      estado,
+      fecha_de_identificacion,
+      tipo,
+      categoria,
+      id_responsable,
+      fecha_probable_materializacion,
+      evento_disparador,
+      posibles_consecuencias,
+      plan_respuesta,
+      descripcion_plan_respuesta,
+    } = req.body;
+
+    // Basic validation (probabilidad e impacto ya no son obligatorios aquí)
+    if (
+      !descripcion ||
+      !estado ||
+      !fecha_de_identificacion ||
+      !tipo ||
+      !categoria
+    ) {
+      return next(
+        boom.badRequest("Faltan campos requeridos para actualizar el riesgo.")
+      );
+    }
+
+    try {
+      const [result] = await db.execute(
+        `UPDATE formulario_riesgos SET
+          descripcion = ?, estado = ?, fecha_de_identificacion = ?, tipo = ?, categoria = ?,
+          id_responsable = ?, fecha_probable_materializacion = ?,
+          evento_disparador = ?, posibles_consecuencias = ?, plan_respuesta = ?, descripcion_plan_respuesta = ?,
+          actualizado_en = CURRENT_TIMESTAMP
+        WHERE id_riesgo = ?`,
+        [
+          descripcion,
+          estado,
+          fecha_de_identificacion,
+          tipo,
+          categoria,
+          id_responsable || null,
+          fecha_probable_materializacion || null,
+          evento_disparador || null,
+          posibles_consecuencias || null,
+          plan_respuesta || null,
+          descripcion_plan_respuesta || null,
+          id_riesgo,
+        ]
+      );
+
+      if (result.affectedRows === 0) {
+        return next(
+          boom.notFound("Riesgo no encontrado o sin cambios para actualizar.")
+        );
+      }
+      res.status(200).json({ message: "Riesgo actualizado exitosamente." });
+    } catch (error) {
+      console.error(`Error en PUT /api/riesgos/${id_riesgo}:`, error);
+      next(boom.internal("Error al actualizar el riesgo."));
+    }
+  }
+);
+
+// DELETE un riesgo específico
+app.delete(
+  "/api/riesgos/:id_riesgo",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    try {
+      // Asumiendo ON DELETE CASCADE para evaluacion_riesgos y materializacion_riesgos en la BD
+      const [result] = await db.execute(
+        "DELETE FROM formulario_riesgos WHERE id_riesgo = ?",
+        [id_riesgo]
+      );
+
+      if (result.affectedRows === 0) {
+        return next(boom.notFound("Riesgo no encontrado para eliminar."));
+      }
+      res.status(200).json({ message: "Riesgo eliminado exitosamente." }); // O 204 No Content
+    } catch (error) {
+      console.error(`Error en DELETE /api/riesgos/${id_riesgo}:`, error);
+      next(boom.internal("Error al eliminar el riesgo."));
+    }
+  }
+);
+
+// --- Fin Formulario Riesgos Endpoints ---
+
+// --- Evaluacion Riesgos Endpoints ---
+
+// GET todas las evaluaciones para un riesgo específico
+app.get(
+  "/api/riesgos/:id_riesgo/evaluaciones",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    try {
+      const [evaluaciones] = await db.execute(
+        `SELECT er.*, CONCAT(e.nombres, ' ', e.apellidos) as nombre_evaluador
+         FROM evaluacion_riesgos er
+         LEFT JOIN empleados e ON er.evaluado_por_id = e.id_empleado
+         WHERE er.id_riesgo = ? 
+         ORDER BY er.fecha_evaluacion DESC`,
+        [id_riesgo]
+      );
+      res.status(200).json(evaluaciones);
+    } catch (error) {
+      console.error(
+        `Error en GET /api/riesgos/${id_riesgo}/evaluaciones:`,
+        error
+      );
+      next(boom.internal("Error al obtener las evaluaciones del riesgo."));
+    }
+  }
+);
+
+// POST para crear una nueva evaluación para un riesgo
+app.post(
+  "/api/riesgos/:id_riesgo/evaluaciones",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    const {
+      probabilidad,
+      impacto,
+      fecha_evaluacion,
+      justificacion, // Cambiado de nueva_probabilidad/nuevo_impacto
+    } = req.body;
+    const evaluado_por_id = req.user.id_empleado; // Asignar el usuario autenticado
+
+    // fecha_evaluacion no es obligatoria en el body si la DB la pone por defecto, pero si se envía, se usa.
+    // Si la DB no la pone por defecto y no se envía, la query fallará o insertará NULL.
+    // Asumimos que la DB tiene DEFAULT CURRENT_TIMESTAMP para fecha_evaluacion
+    if (probabilidad == null || impacto == null || !justificacion) {
+      // fecha_evaluacion es opcional en el body
+      return next(
+        boom.badRequest(
+          "Faltan campos requeridos para la evaluación (probabilidad, impacto, justificación)."
+        )
+      );
+    }
+
+    try {
+      const query = `INSERT INTO evaluacion_riesgos (
+                       id_riesgo, probabilidad, impacto, justificacion, evaluado_por_id
+                       ${fecha_evaluacion ? ", fecha_evaluacion" : ""}
+                     ) VALUES (?, ?, ?, ?, ? ${fecha_evaluacion ? ", ?" : ""})`;
+      const params = [
+        id_riesgo,
+        probabilidad,
+        impacto,
+        justificacion,
+        evaluado_por_id,
+      ];
+      if (fecha_evaluacion) {
+        params.push(fecha_evaluacion);
+      }
+
+      const [result] = await db.execute(query, params);
+      const id_evaluacion_creada = result.insertId;
+      res.status(201).json({
+        id_evaluacion_riesgos: id_evaluacion_creada,
+        message: "Evaluación de riesgo creada exitosamente.",
+      });
+    } catch (error) {
+      console.error(
+        `Error en POST /api/riesgos/${id_riesgo}/evaluaciones:`,
+        error
+      );
+      next(boom.internal("Error al crear la evaluación de riesgo."));
+    }
+  }
+);
+// --- Fin Evaluacion Riesgos Endpoints ---
+
+// --- Materializacion Riesgos Endpoints ---
+
+// GET todas las materializaciones para un riesgo específico
+app.get(
+  "/api/riesgos/:id_riesgo/materializaciones",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    try {
+      const [materializaciones] = await db.execute(
+        `SELECT mr.*, CONCAT(e.nombres, ' ', e.apellidos) as nombre_registrador
+         FROM materializacion_riesgos mr  -- Corregido el nombre de la tabla aquí si fue actualizado en DB
+         LEFT JOIN empleados e ON mr.registrado_por_id = e.id_empleado
+         WHERE mr.id_riesgo = ? 
+         ORDER BY mr.fecha_real_materializacion DESC`,
+        [id_riesgo]
+      );
+      res.status(200).json(materializaciones);
+    } catch (error) {
+      console.error(
+        `Error en GET /api/riesgos/${id_riesgo}/materializaciones:`,
+        error
+      );
+      next(boom.internal("Error al obtener las materializaciones del riesgo."));
+    }
+  }
+);
+
+// POST para crear una nueva materialización para un riesgo
+app.post(
+  "/api/riesgos/:id_riesgo/materializaciones",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const { id_riesgo } = req.params;
+    if (isNaN(parseInt(id_riesgo))) {
+      return next(boom.badRequest("El ID del riesgo debe ser un número."));
+    }
+    const {
+      fecha_real_materializacion,
+      descripcion_evento_materializado,
+      descripcion_accion_tomada,
+      consecuencias_reales_detalladas,
+      efectividad,
+      notas,
+    } = req.body;
+    const registrado_por_id = req.user.id_empleado; // Asignar el usuario autenticado
+
+    if (
+      !fecha_real_materializacion ||
+      !descripcion_evento_materializado ||
+      !descripcion_accion_tomada ||
+      efectividad == null
+    ) {
+      return next(
+        boom.badRequest("Faltan campos requeridos para la materialización.")
+      );
+    }
+
+    try {
+      const [result] = await db.execute(
+        `INSERT INTO materializacion_riesgos ( -- Corregido el nombre de la tabla aquí si fue actualizado en DB
+          id_riesgo, fecha_real_materializacion, descripcion_evento_materializado, 
+          descripcion_accion_tomada, consecuencias_reales_detalladas, efectividad, notas, registrado_por_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id_riesgo,
+          fecha_real_materializacion,
+          descripcion_evento_materializado,
+          descripcion_accion_tomada,
+          consecuencias_reales_detalladas || null,
+          efectividad,
+          notas || null,
+          registrado_por_id,
+        ]
+      );
+      const id_materializacion_creada = result.insertId;
+      res.status(201).json({
+        id_materializacion_riesgo: id_materializacion_creada,
+        message: "Materialización de riesgo creada exitosamente.",
+      });
+    } catch (error) {
+      console.error(
+        `Error en POST /api/riesgos/${id_riesgo}/materializaciones:`,
+        error
+      );
+      next(boom.internal("Error al crear la materialización de riesgo."));
+    }
+  }
+);
+// --- Fin Materializacion Riesgos Endpoints ---
 
 app.use((err, req, res, next) => {
   // Handle multer errors specifically for better client feedback

@@ -1,14 +1,447 @@
+/* General Styles */
+.fr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background-color: #f8f9fa; /* Light gray background */
+  border-bottom: 1px solid #dee2e6; /* Subtle border */
+  margin-bottom: 20px;
+}
+
+.fr-header-title-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.fr-header-title {
+  font-size: 1.8em;
+  color: #333;
+  margin: 0;
+}
+
+.fr-header-area {
+  font-size: 0.9em;
+  color: #555;
+  margin: 0;
+}
+
+.fr-header-badge {
+  background-color: #007bff; /* Blue badge */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8em;
+}
+
+/* Summary Section: Cards and Matrix */
+.fr-summary-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px; /* Space between cards container and matrix container */
+  padding: 0 25px;
+  margin-bottom: 20px;
+}
+
+.fr-cards-container {
+  display: flex;
+  gap: 15px; /* Space between individual cards */
+  width: 48%; /* Roughly half, considering gap */
+  flex-wrap: wrap; /* Allow cards to wrap if needed */
+}
+
+.fr-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  flex-grow: 1; /* Allow cards to grow and fill space */
+  min-width: 150px; /* Minimum width for a card */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.fr-card-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.fr-card-icon {
+  font-size: 1.5em;
+  margin-right: 10px;
+  color: #007bff;
+}
+
+.fr-card-title {
+  font-size: 0.9em;
+  color: #333;
+  margin: 0;
+}
+
+.fr-card-value {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #007bff;
+  text-align: right;
+  margin: 0;
+}
+
+.fr-matrix-container {
+  width: 48%; /* Roughly half, considering gap */
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.fr-matrix-title {
+  font-size: 1.2em;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.fr-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fr-matrix-table th,
+.fr-matrix-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.85em;
+}
+
+.fr-matrix-table th {
+  background-color: #f2f2f2;
+}
+
+/* Risk Level Colors for Matrix and Main Table */
 .critical-risk {
-  background-color: red;
+  background-color: #dc3545; /* Red */
   color: white;
 }
 
 .medium-risk {
-  background-color: orange;
-  color: white;
+  background-color: #ffc107; /* Orange/Yellow */
+  color: black;
 }
 
 .low-risk {
-  background-color: rgb(32, 165, 65);
-  color: black;
+  background-color: #28a745; /* Green */
+  color: white;
+}
+
+/* Actions Section: Search and Add Button */
+.fr-actions-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  margin-bottom: 20px;
+}
+
+.fr-search-input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  width: 300px;
+}
+
+.fr-add-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.fr-add-button-icon {
+  margin-right: 8px;
+}
+
+.fr-add-button:hover {
+  background-color: #0056b3;
+}
+
+/* Main Table Section */
+.fr-main-table-section {
+  padding: 0 25px;
+  margin-bottom: 20px;
+  overflow-x: auto; /* For responsiveness on smaller screens */
+}
+
+.fr-main-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.fr-main-table th,
+.fr-main-table td {
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.9em;
+}
+
+.fr-main-table th {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.fr-main-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.fr-main-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Pagination Controls */
+.fr-pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+  gap: 10px;
+}
+
+.fr-pagination-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fr-pagination-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.fr-pagination-info {
+  font-size: 0.9em;
+}
+
+.fr-pagination-select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Modal Styles */
+.fr-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure modals are on top */
+}
+
+.fr-modal {
+  background-color: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 700px; /* Default max-width, can be overridden */
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.fr-modal-close-button {
+  position: relative;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #555;
+}
+
+.fr-modal header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.fr-modal header h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.fr-modal .modal-subtitle-v2 { /* Reusing class from LeccionesAprendidas for consistency if desired */
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 0;
+}
+
+.fr-modal section {
+  margin-bottom: 20px;
+}
+
+.fr-modal footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.fr-modal footer button {
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.fr-modal footer button:first-of-type { /* Typically Cancel button */
+  background-color: #6c757d;
+  color: white;
+}
+.fr-modal footer button:first-of-type:hover {
+  background-color: #5a6268;
+}
+
+.fr-modal footer button:last-of-type { /* Typically Save/Update button */
+  background-color: #007bff;
+  color: white;
+}
+.fr-modal footer button:last-of-type:hover {
+  background-color: #0056b3;
+}
+
+/* Specific modal sizing if needed */
+.fr-crear-riesgo-modal, .fr-editar-riesgo-modal {
+  max-width: 800px; /* Larger for main forms */
+}
+
+.fr-evaluacion-tabla-modal, .fr-materializacion-tabla-modal {
+  max-width: 900px; /* For tables inside modals */
+}
+
+.fr-evaluar-riesgo-form-modal, .fr-crear-materializacion-modal {
+  max-width: 600px; /* Smaller forms */
+}
+
+/* Placeholder for Formik fields styling - to be expanded */
+.fr-modal .form-group {
+  margin-bottom: 15px;
+}
+
+.fr-modal .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.fr-modal .form-group input[type="text"],
+.fr-modal .form-group input[type="date"],
+.fr-modal .form-group select,
+.fr-modal .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Important for width 100% */
+  font-size: 0.9em;
+}
+
+.fr-modal .form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.fr-modal .error-message {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 4px;
+}
+
+.fr-modal .modal-section-title {
+  font-size: 1.1em;
+  color: #007bff;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #007bff;
+  display: flex;
+  align-items: center;
+}
+.fr-modal .modal-section-title .icon-placeholder {
+  margin-right: 8px;
+}
+
+.fr-modal .modal-info-icon-v2 { /* Reusing class */
+  float: left;
+  margin-right: 15px;
+  font-size: 2em;
+  color: #007bff;
+}
+
+/* Buttons inside Editar Riesgo modal for Evaluar/Materializar */
+.fr-editar-riesgo-modal .modal-section-title button {
+  margin-left: auto; /* Pushes buttons to the right */
+  margin-right: 10px; /* Space between buttons */
+  background-color: #17a2b8; /* Teal color */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  font-size: 0.8em;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fr-editar-riesgo-modal .modal-section-title button:hover {
+  background-color: #138496;
+}
+.fr-editar-riesgo-modal .modal-section-title button .icon {
+  margin-right: 5px;
+}
+
+/* Styling for table inside modal (e.g., MaterializacionTablaModal) */
+.fr-materializacion-tabla-modal section div,
+.fr-evaluacion-tabla-modal section div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.fr-materializacion-tabla-modal section div h3,
+.fr-evaluacion-tabla-modal section div h3 {
+  margin: 0;
+}
+
+.fr-materializacion-tabla-modal section div button,
+.fr-evaluacion-tabla-modal section div button {
+  background-color: #28a745; /* Green */
+  color: white;
+  padding: 8px 12px;
+}
+.fr-materializacion-tabla-modal section div button:hover,
+.fr-evaluacion-tabla-modal section div button:hover {
+  background-color: #218838;
 }

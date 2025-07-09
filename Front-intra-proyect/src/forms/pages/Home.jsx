@@ -23,7 +23,8 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import "./Home.css";
 import { axiosInstance } from "@api/axiosInstance"; // Assuming this is your configured axios
-import LeccionesAprendidasPreviewCard from "../components/LeccionesAprendidasPreviewCard"; // Import the new component
+import LeccionesAprendidasPreviewCard from "../components/LeccionesAprendidasPreviewCard";
+import RiesgosPreviewCard from "../components/RiesgosPreviewCard"; // Importar la nueva tarjeta de riesgos
 
 function Home() {
   const navigate = useNavigate();
@@ -536,6 +537,15 @@ function Home() {
         {lessonsSummary && (
           <LeccionesAprendidasPreviewCard
             lessonsSummary={lessonsSummary}
+            projectId={id_proyecto}
+            projectArea={projectArea}
+          />
+        )}
+
+        {/* Riesgos Preview Card */}
+        {risks && (
+          <RiesgosPreviewCard
+            risksSummary={risks}
             projectId={id_proyecto}
             projectArea={projectArea}
           />

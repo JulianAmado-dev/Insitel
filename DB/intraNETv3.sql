@@ -8,7 +8,7 @@
 -- Crear la base de datos si no existe, con codificación recomendada
 CREATE DATABASE IF NOT EXISTS `intraNet_DB` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Usar la base de datos
+-- Usar la b	ase de datos
 USE `intraNet_DB`;
 
 -- ======================================================================
@@ -29,7 +29,7 @@ DROP TABLE IF EXISTS `registro_verificacion_aprobacion`;
 DROP TABLE IF EXISTS `formulario_verificacion`;
 DROP TABLE IF EXISTS `formularios_proyectos`;
 DROP TABLE IF EXISTS `empleados_proyectos`;
-DROP TABLE IF EXISTS `formularios`;
+DROP TABLE IF EXISTS `formularios`; 
 DROP TABLE IF EXISTS `proyectos`;
 DROP TABLE IF EXISTS `areas`; -- Tabla catálogo
 DROP TABLE IF EXISTS `roles`; -- Tabla catálogo
@@ -106,6 +106,9 @@ CREATE TABLE `intraNet_DB`.`empleados` (
   -- CONSTRAINT `fk_empleados_rol` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`) ON DELETE RESTRICT ON UPDATE CASCADE, 
   -- CONSTRAINT `fk_empleados_area` FOREIGN KEY (`id_area`) REFERENCES `areas` (`id_area`) ON DELETE RESTRICT ON UPDATE CASCADE 
 ) ENGINE=InnoDB COMMENT='Tabla de usuarios/empleados del sistema';
+
+INSERT INTO intranet_db.empleados (correo,contrasena,rol,area,nombres,apellidos,edad,direccion,ciudad) VALUES ('julian@gmail.com', '$2b$10$SsyR5iGVR4VIqzUr/TMa5u9UCjzx/JadPiB4QFQTl61i1GsSbO.Eu',"admin",2,"Julian","Amado",21,"cra 412","Bogotá");
+
 
 -- Tabla de Proyectos
 CREATE TABLE `intraNet_DB`.`proyectos` (
@@ -453,14 +456,12 @@ CREATE TABLE `intraNet_DB`.`lecciones_aprendidas`(
 -- Tabla de Datos: Formulario "Riesgos" (1 Proyecto -> N Riesgos)
 CREATE TABLE `intraNet_DB`.`formulario_riesgos`(
   `id_riesgo` INT NOT NULL AUTO_INCREMENT,
-  `id_proyecto` INT NOT NULL,
+  `id_proyecto` INT NULL,
   `descripcion` TEXT NULL,
   `estado` ENUM('identificado','cercano', 'disparado', 'evitado', 'mitigado', 'aceptado', 'transferido') NULL,
   `fecha_de_identificacion` DATETIME NULL,
   `tipo` ENUM('Negativo','Positivo') NULL,
   `categoria` ENUM('Técnico', 'Diseño', 'Recurso Humano', 'Recurso Fisico', 'Recurso Técnico') NULL,
-  `probabilidad` INT NULL CHECK (`probabilidad` BETWEEN 1 AND 5),
-  `impacto` INT NULL CHECK (`impacto` BETWEEN 1 AND 20),
   `id_responsable` INT NULL,
   `fecha_probable_materializacion` DATETIME NULL,
   `evento_disparador` VARCHAR(400) NULL,
@@ -480,24 +481,31 @@ CREATE TABLE `intraNet_DB`.`formulario_riesgos`(
 create table `intraNet_DB`.`evaluacion_riesgos`(
 	`id_riesgo` INT NOT NULL,
     `id_evaluacion_riesgos` INT NOT NULL auto_increment,
-    `nueva_probabilidad` INT NOT NULL CHECK (`nueva_probabilidad` BETWEEN 1 AND 5),
-    `nuevo_impacto` INT NOT NULL CHECK (`nueva_probabilidad` BETWEEN 1 AND 20),
-	`fecha_evaluacion` DATETIME NULL,
+    `probabilidad` INT NOT NULL CHECK (`probabilidad` BETWEEN 1 AND 5),
+    `impacto` INT NOT NULL CHECK (`impacto` BETWEEN 1 AND 20),
+	`fecha_evaluacion` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `justificacion` TEXT NULL,
+    `evaluado_por_id` INT NULL,
 
-	PRIMARY KEY(`id_evaluacion_riesgos`) ,
-    FOREIGN KEY(`id_riesgo`) REFERENCES `formulario_riesgos`(`id_riesgo`) ON DELETE CASCADE
+	PRIMARY KEY(`id_evaluacion_riesgos`),
+    FOREIGN KEY(`id_riesgo`) REFERENCES `formulario_riesgos`(`id_riesgo`) ON DELETE CASCADE,
+    FOREIGN KEY(`evaluado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 );
 
-CREATE TABLE `intraNet_DB`.`materializacion_riegos`(
+CREATE TABLE `intraNet_DB`.`materializacion_riesgos`(
 	`id_riesgo` INT NOT NULL,
     `id_materializacion_riesgo` INT NOT NULL auto_increment,
 	`fecha_real_materializacion` DATETIME NULL,
+    `descripcion_evento_materializado` TEXT NULL,
 	`descripcion_accion_tomada` TEXT NULL,
+    `consecuencias_reales_detalladas` TEXT NULL,
 	`efectividad` INT NULL CHECK (`efectividad` BETWEEN 1 AND 5),
 	`notas` TEXT NULL,
+    `registrado_por_id` INT NULL,
 
-	PRIMARY KEY(`id_materializacion_riesgo`) ,
-    FOREIGN KEY(`id_riesgo`) REFERENCES `formulario_riesgos`(`id_riesgo`) ON DELETE CASCADE
+	PRIMARY KEY(`id_materializacion_riesgo`),
+    FOREIGN KEY(`id_riesgo`) REFERENCES `formulario_riesgos`(`id_riesgo`) ON DELETE CASCADE,
+    FOREIGN KEY(`registrado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 );
 
 
