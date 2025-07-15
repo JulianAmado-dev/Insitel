@@ -1206,7 +1206,7 @@ app.patch(
 );
 
 app.post(
-  "/api/Proyectos/Create",
+  "/api/Projects/Create",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     console.log("hola 18 - Entrando a la ruta /api/Proyectos/Create");

@@ -508,6 +508,24 @@ CREATE TABLE `intraNet_DB`.`materializacion_riesgos`(
     FOREIGN KEY(`registrado_por_id`) REFERENCES `empleados`(`id_empleado`) ON DELETE SET NULL
 );
 
+INSERT INTO intraNet_DB.areas (nombre_area, descripcion, logo_area) VALUES
+('I+D', 'Innovación y Desarrollo Tecnológico', 'https://example.com/logos/rd.png '),
+('Operaciones', 'Gestión de Operaciones Logísticas y Producción', 'https://example.com/logos/operations.png '),
+('Recursos Humanos', 'Administración de Personal y Cultura Organizacional', 'https://example.com/logos/hr.png ');
+
+INSERT INTO intraNet_DB.areas_navegacion (id_item_nav, id_area, nombre_item_navBar, ruta, padre, is_father, descripcion) VALUES
+(1, 1, 'Proyectos', 'http://localhost:5173/dashboard/I+D/Proyectos', 0, 0, 'Innovación y desarrollo'),
+(2, 1, 'Riesgos', 'http://localhost:5173/dashboard/I+D/Proyectos', 0, 0, 'Operaciones operacionales de operatividad operativa'),
+(3, 1, 'Lecciones aprendidas', 'http://localhost:5173/dashboard/I+D/Proyectos', 0, 0, 'este es una prueba para la base de datos y el sidebar'),
+(4, 2, 'SideBarItem para Operaciones', 'http://localhost:5173/dashboard/I+D/Proyectos', 0, 0, 'este es una prueba para la base de datos y el sidebar'),
+(5, 3, 'Recurso de humano 1', 'http://localhost:5173/dashboard/I+D/Proyectos', 1, 1, 'Innovación y desarrollo'),
+(6, 3, 'Recurso de humano 2', 'http://localhost:5173/dashboard/I+D/Proyectos', 1, 1, 'Operaciones operacionales de operatividad operativa'),
+(7, 3, 'Recurso de humano 3', 'http://localhost:5173/dashboard/I+D/Proyectos', 1, 1, 'este es una prueba para la base de datos y el sidebar'),
+(8, 3, 'Recurso Externo 1', 'http://localhost:5173/dashboard/I+D/Proyectos', 0, 0, 'este es una prueba para la base de datos y el sidebar'),
+(9, 3, 'Recurso interno 1', 'http://localhost:5173/dashboard/I+D/Proyectos', 5, NULL, 'Innovación y desarrollo'),
+(10, 3, 'Recurso interno 2', 'http://localhost:5173/dashboard/I+D/Proyectos', 6, NULL, 'Operaciones operacionales de operatividad operativa'),
+(11, 3, 'Recurso interno 3', 'http://localhost:5173/dashboard/I+D/Proyectos', 7, NULL, 'este es una prueba para la base de datos y el sidebar');
+
 
 -- ======================================================================
 -- INSERTS INICIALES (Catálogos) - EJEMPLO
